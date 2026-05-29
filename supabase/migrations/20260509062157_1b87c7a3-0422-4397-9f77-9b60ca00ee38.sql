@@ -1,0 +1,2 @@
+ALTER TABLE public.team_settings
+ADD COLUMN IF NOT EXISTS shift_schedule_by_day jsonb NOT NULL DEFAULT '{"mon":{"resume":"06:00","end":"16:30","enabled":true},"tue":{"resume":"06:00","end":"16:30","enabled":true},"wed":{"resume":"06:00","end":"16:30","enabled":true},"thu":{"resume":"06:00","end":"16:30","enabled":true},"fri":{"resume":"06:00","end":"12:00","enabled":true},"sat":{"resume":"06:00","end":"16:30","enabled":false},"sun":{"resume":"06:00","end":"16:30","enabled":false}}'::jsonb;

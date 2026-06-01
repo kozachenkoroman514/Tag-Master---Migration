@@ -255,10 +255,10 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "" });
 
-const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
@@ -294,6 +294,7 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
               <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
               ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
               ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
+              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
             </div>
             <div class="qrs">
               <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
@@ -303,8 +304,11 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       })
     );
 
-    const body = `<div class="title">Part</div>${sections.join("")}`;
-    await printLabel("Part Label", body);
+    const specNote = size === "2x4"
+      ? `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`
+      : `<div class="field" style="font-size:9pt;color:#777;margin-top:6pt;">[Spec icons: unit style — TBD]</div>`;
+    const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
+    await printLabel("Part Label", body, size);
     onOpenChange(false);
   };
 
@@ -354,6 +358,15 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
+              <div className="space-y-2">
+                <Label>Goes With</Label>
+                <Input
+                  value={p.goesWith}
+                  onChange={(e) => updatePart(i, { goesWith: e.target.value })}
+                  placeholder="Part number(s) this is set with"
+                />
+                <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
+              </div>
             </div>
           ))}
           {parts.length < 2 && (
@@ -362,6 +375,9 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             </Button>
           )}
         </div>
+        <p className="text-xs text-muted-foreground">
+          Specification icons (based on unit style) will be added to the printed label — definitions TBD.
+        </p>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>

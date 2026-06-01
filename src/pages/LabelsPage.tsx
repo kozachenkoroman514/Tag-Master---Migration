@@ -234,11 +234,40 @@ export default LabelsPage;
 
 // ----------------- Part Label -----------------
 const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
-  const [partType, setPartType] = useState<"wip" | "stock" | "">("");
   const [partNumber, setPartNumber] = useState("");
   const [qty, setQty] = useState("");
   const [jobNumber, setJobNumber] = useState("");
   const [soNumber, setSoNumber] = useState("");
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const handlePrint = async () => {
+    const m = new Set<string>();
+    if (!partNumber.trim()) m.add("partNumber");
+    if (!qty.trim()) m.add("qty");
+    setMissing(m);
+    if (m.size) return;
+
+    const [partQr, jobQr] = await Promise.all([
+      qrDataUrl(partNumber.trim()),
+      jobNumber.trim() ? qrDataUrl(jobNumber.trim()) : Promise.resolve(""),
+    ]);
+    const body = `
+      <div class="row">
+        <div class="grow">
+          <div class="title">Part</div>
+          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(partNumber)}</span></div>
+          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(qty)}</span></div>
+          ${jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(jobNumber)}</div>` : ""}
+          ${soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(soNumber)}</div>` : ""}
+        </div>
+        <div class="qrs">
+          <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
+          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
+        </div>
+      </div>`;
+    await printLabel("Part Label", body);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -248,48 +277,38 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Type *</Label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={partType === "wip"}
-                  onCheckedChange={(c) => setPartType(c ? "wip" : "")}
-                />
-                <span className="text-sm">WIP (Direct)</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={partType === "stock"}
-                  onCheckedChange={(c) => setPartType(c ? "stock" : "")}
-                />
-                <span className="text-sm">Stock</span>
-              </label>
-            </div>
+            <Label htmlFor="part-number">Part Number <Req /></Label>
+            <Input
+              id="part-number"
+              value={partNumber}
+              onChange={(e) => setPartNumber(e.target.value)}
+              className={cls(missing.has("partNumber") && invalidCls)}
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="part-number">Part Number *</Label>
-            <Input id="part-number" value={partNumber} onChange={(e) => setPartNumber(e.target.value)} />
+            <Label htmlFor="part-qty">Qty <Req /></Label>
+            <Input
+              id="part-qty"
+              type="number"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              className={cls(missing.has("qty") && invalidCls)}
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="part-qty">Qty *</Label>
-            <Input id="part-qty" type="number" value={qty} onChange={(e) => setQty(e.target.value)} />
+            <Label htmlFor="part-job">Job Number</Label>
+            <Input id="part-job" value={jobNumber} onChange={(e) => setJobNumber(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
           </div>
-          {partType === "wip" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="part-job">Job Number *</Label>
-                <Input id="part-job" value={jobNumber} onChange={(e) => setJobNumber(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="part-so">SO Number</Label>
-                <Input id="part-so" value={soNumber} onChange={(e) => setSoNumber(e.target.value)} />
-              </div>
-            </>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="part-so">SO Number</Label>
+            <Input id="part-so" value={soNumber} onChange={(e) => setSoNumber(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button>Print</Button>
+          <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -297,20 +316,26 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
 };
 
 // ----------------- Pack Unit Label -----------------
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
 const MultiInput = ({
   label,
   values,
   setValues,
   required,
+  invalid,
 }: {
   label: string;
   values: string[];
   setValues: (v: string[]) => void;
   required?: boolean;
+  invalid?: boolean;
 }) => (
   <div className="space-y-2">
     <Label>
-      {label} {required && "*"}
+      {label} {required && <Req />}
     </Label>
     {values.map((v, i) => (
       <div key={i} className="flex gap-2">
@@ -321,6 +346,7 @@ const MultiInput = ({
             next[i] = e.target.value;
             setValues(next);
           }}
+          className={cls(invalid && i === 0 && !v.trim() && invalidCls)}
         />
         {values.length > 1 && (
           <Button
@@ -349,6 +375,39 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
   const [date, setDate] = useState("");
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const handlePrint = async () => {
+    const m = new Set<string>();
+    if (!soNumbers.some((s) => s.trim())) m.add("so");
+    if (!unitX.trim() || !unitN.trim()) m.add("unitNum");
+    if (!date.trim()) m.add("date");
+    if (!unitSel) m.add("unitSel");
+    if (!area) m.add("area");
+    setMissing(m);
+    if (m.size) return;
+
+    const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
+    const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
+    const jobQrs = await Promise.all(jobs.map((j) => qrDataUrl(j)));
+    const body = `
+      <div class="row">
+        <div class="grow">
+          <div class="title">${escapeHtml(unitSel)}</div>
+          <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
+          <div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>
+          ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
+          ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
+          <div class="field"><b>Area:</b> ${escapeHtml(area)}</div>
+          <div class="field"><b>Date:</b> ${escapeHtml(date)}</div>
+        </div>
+        <div class="qrs">
+          ${jobQrs.map((q, i) => `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>`).join("")}
+        </div>
+      </div>`;
+    await printLabel("Pack Unit Label", body);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -357,21 +416,21 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required />
+          <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
           <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Unit Number *</Label>
+            <Label>Unit Number <Req /></Label>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="X"
                 type="number"
                 value={unitX}
                 onChange={(e) => setUnitX(e.target.value)}
-                className="w-24"
+                className={cls("w-24", missing.has("unitNum") && !unitX.trim() && invalidCls)}
               />
               <span className="text-muted-foreground">out of</span>
               <Input
@@ -379,23 +438,24 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
                 type="number"
                 value={unitN}
                 onChange={(e) => setUnitN(e.target.value)}
-                className="w-24"
+                className={cls("w-24", missing.has("unitNum") && !unitN.trim() && invalidCls)}
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-date">Date (mm/dd/yy) *</Label>
+            <Label htmlFor="pack-date">Date (mm/dd/yy) <Req /></Label>
             <Input
               id="pack-date"
               placeholder="mm/dd/yy"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className={cls(missing.has("date") && invalidCls)}
             />
           </div>
           <div className="space-y-2">
-            <Label>Unit *</Label>
+            <Label>Unit <Req /></Label>
             <Select value={unitSel} onValueChange={setUnitSel}>
-              <SelectTrigger>
+              <SelectTrigger className={cls(missing.has("unitSel") && invalidCls)}>
                 <SelectValue placeholder="Select unit" />
               </SelectTrigger>
               <SelectContent>
@@ -407,9 +467,9 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Area *</Label>
+            <Label>Area <Req /></Label>
             <Select value={area} onValueChange={setArea}>
-              <SelectTrigger>
+              <SelectTrigger className={cls(missing.has("area") && invalidCls)}>
                 <SelectValue placeholder="Select area" />
               </SelectTrigger>
               <SelectContent>
@@ -424,7 +484,7 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button>Print</Button>
+          <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -435,6 +495,21 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
 const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [status, setStatus] = useState("");
   const [reason, setReason] = useState("");
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const handlePrint = async () => {
+    const m = new Set<string>();
+    if (!status) m.add("status");
+    setMissing(m);
+    if (m.size) return;
+    const body = `
+      <div class="center grow" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <div class="title" style="font-size:48pt;">${escapeHtml(status)}</div>
+        ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
+      </div>`;
+    await printLabel("Status Note Label", body);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -444,9 +519,9 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Status *</Label>
+            <Label>Status <Req /></Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
+              <SelectTrigger className={cls(missing.has("status") && invalidCls)}>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -463,7 +538,7 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button>Print</Button>
+          <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -473,6 +548,20 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
 // ----------------- Misc Label -----------------
 const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [text, setText] = useState("");
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const handlePrint = async () => {
+    const m = new Set<string>();
+    if (!text.trim()) m.add("text");
+    setMissing(m);
+    if (m.size) return;
+    const body = `
+      <div class="grow" style="display:flex;align-items:center;justify-content:center;">
+        <div class="huge wrap center">${escapeHtml(text)}</div>
+      </div>`;
+    await printLabel("Misc Label", body);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -481,12 +570,17 @@ const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="misc-text">Text *</Label>
-          <Textarea id="misc-text" value={text} onChange={(e) => setText(e.target.value)} />
+          <Label htmlFor="misc-text">Text <Req /></Label>
+          <Textarea
+            id="misc-text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className={cls(missing.has("text") && invalidCls)}
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button>Print</Button>
+          <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

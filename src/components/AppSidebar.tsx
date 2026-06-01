@@ -5,65 +5,25 @@ import {
   SettingsIcon,
 } from "./NexusMenuIcons";
 
-const NexusHubIcon = ({ className }: { className?: string }) => {
-  // Asymmetrical hub-and-spoke: varying angles, lengths, node sizes, and colors
-  const cx = 32;
-  const cy = 32;
-  const innerR = 8;
+const TagMasterIcon = ({ className }: { className?: string }) => {
   const gold = "hsl(43 90% 50%)";
   const white = "hsl(0 0% 100%)";
-
-  const spokes: {
-    deg: number;
-    outerR: number;
-    nodeR: number;
-    width: number;
-    fill: string | null;
-    stroke: string;
-  }[] = [
-    { deg: 0, outerR: 28, nodeR: 4.2, width: 2.6, fill: white, stroke: white },
-    { deg: 28, outerR: 22, nodeR: 3.0, width: 2.0, fill: null, stroke: white },
-    { deg: 58, outerR: 26, nodeR: 3.6, width: 2.2, fill: null, stroke: gold },
-    { deg: 95, outerR: 20, nodeR: 2.6, width: 1.8, fill: white, stroke: white },
-    { deg: 138, outerR: 29, nodeR: 4.0, width: 2.4, fill: null, stroke: gold },
-    { deg: 172, outerR: 18, nodeR: 2.4, width: 1.6, fill: white, stroke: white },
-    { deg: 210, outerR: 24, nodeR: 3.2, width: 2.0, fill: null, stroke: white },
-    { deg: 250, outerR: 21, nodeR: 2.8, width: 1.8, fill: null, stroke: gold },
-    { deg: 290, outerR: 27, nodeR: 3.8, width: 2.2, fill: null, stroke: white },
-    { deg: 332, outerR: 19, nodeR: 2.6, width: 1.8, fill: white, stroke: white },
-  ];
-
+  const SW = 2.2;
   return (
-    <svg
-      viewBox="0 0 64 64"
-      className={className}
-      stroke={gold}
-      strokeWidth={2.2}
-      strokeLinecap="round"
-    >
-      {spokes.map((s, i) => {
-        const rad = (s.deg * Math.PI) / 180;
-        const x1 = cx + innerR * Math.cos(rad);
-        const y1 = cy + innerR * Math.sin(rad);
-        const x2 = cx + s.outerR * Math.cos(rad);
-        const y2 = cy + s.outerR * Math.sin(rad);
-        return (
-          <g key={i}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth={s.width} />
-            <circle
-              cx={x2}
-              cy={y2}
-              r={s.nodeR}
-              fill={s.fill ?? "none"}
-              stroke={s.stroke}
-              strokeWidth={s.fill ? 0 : 1.4}
-            />
-          </g>
-        );
-      })}
-      {/* Center hub — filled gold */}
-      <circle cx={cx} cy={cy} r={innerR} fill={gold} stroke="none" />
-      <circle cx={cx} cy={cy} r={3} fill="none" stroke={white} strokeWidth={1.8} />
+    <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round">
+      {/* Larger 4x6 label (back) */}
+      <rect x={20} y={10} width={36} height={28} rx={2} fill={white} stroke={gold} strokeWidth={SW} />
+      <line x1={26} y1={18} x2={50} y2={18} stroke={gold} strokeWidth={SW} />
+      <line x1={26} y1={24} x2={44} y2={24} stroke={gold} strokeWidth={SW} />
+      <line x1={26} y1={30} x2={40} y2={30} stroke={gold} strokeWidth={SW} />
+      {/* Smaller 2x4 label (front, overlapping) */}
+      <rect x={8} y={28} width={28} height={26} rx={2} fill={white} stroke={gold} strokeWidth={SW} />
+      <line x1={13} y1={36} x2={31} y2={36} stroke={gold} strokeWidth={SW} />
+      <line x1={13} y1={42} x2={27} y2={42} stroke={gold} strokeWidth={SW} />
+      <line x1={13} y1={48} x2={24} y2={48} stroke={gold} strokeWidth={SW} />
+      {/* Punch holes */}
+      <circle cx={26} cy={14} r={1.4} fill={gold} />
+      <circle cx={13} cy={32} r={1.2} fill={gold} />
     </svg>
   );
 };
@@ -112,9 +72,9 @@ const AppSidebar = () => {
   return (
     <aside className={`fixed left-0 top-0 bottom-0 ${SIDEBAR_W} bg-accent text-accent-foreground flex flex-col items-center z-40 border-r border-border/30`}>
       <div className="flex flex-col items-center gap-1 pt-4 pb-2 px-2 w-full">
-        <NexusHubIcon className="w-20 h-20" />
-        <span className="font-bold text-sm tracking-[0.2em] text-ring text-center leading-tight mt-1 uppercase">
-          Nexus
+        <TagMasterIcon className="w-20 h-20" />
+        <span className="font-bold text-[11px] tracking-[0.2em] text-ring text-center leading-tight mt-1 uppercase">
+          Tag Master
         </span>
         <div className="w-full h-px bg-gradient-to-r from-transparent via-ring/40 to-transparent mt-1" />
       </div>

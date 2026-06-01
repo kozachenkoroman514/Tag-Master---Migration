@@ -507,13 +507,40 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
           </div>
           <div className="space-y-2">
             <Label htmlFor="pack-date">Date (mm/dd/yy) <Req /></Label>
-            <Input
-              id="pack-date"
-              placeholder="mm/dd/yy"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className={cls(missing.has("date") && invalidCls)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="pack-date"
+                placeholder="mm/dd/yy"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={cls(missing.has("date") && invalidCls)}
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cls(missing.has("date") && invalidCls)}
+                    aria-label="Pick a date"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={(() => {
+                      const d = parse(date, "MM/dd/yy", new Date());
+                      return isValid(d) ? d : undefined;
+                    })()}
+                    onSelect={(d) => d && setDate(format(d, "MM/dd/yy"))}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Unit <Req /></Label>

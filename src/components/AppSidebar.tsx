@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  IMDIcon,
   BugIcon,
   SettingsIcon,
 } from "./NexusMenuIcons";
@@ -27,6 +26,28 @@ const TagMasterIcon = ({ className }: { className?: string }) => {
     </svg>
   );
 };
+
+const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
+  const gold = "hsl(43 90% 50%)";
+  const white = "hsl(0 0% 100%)";
+  const SW = 3;
+  return (
+    <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {/* printer body */}
+      <rect x={8} y={20} width={48} height={24} rx={3} fill={gold} />
+      {/* paper feed slot (white) */}
+      <rect x={16} y={36} width={32} height={4} fill={white} />
+      {/* top tray */}
+      <rect x={16} y={12} width={32} height={10} rx={1} fill={gold} />
+      {/* status light */}
+      <circle cx={48} cy={28} r={2.2} fill={white} />
+      {/* label coming out the bottom */}
+      <rect x={18} y={42} width={28} height={18} rx={1.5} fill={white} stroke={gold} strokeWidth={SW} />
+      <line x1={22} y1={48} x2={42} y2={48} stroke={gold} strokeWidth={2.2} />
+      <line x1={22} y1={53} x2={38} y2={53} stroke={gold} strokeWidth={2.2} />
+    </svg>
+  );
+};
 import ThemeToggle from "./ThemeToggle";
 
 const SIDEBAR_W = "w-[100px]";
@@ -41,7 +62,7 @@ const AppSidebar = () => {
   const location = useLocation();
 
   const topItems: NavItem[] = [
-    { to: "/", label: "Labels", icon: (a) => <IMDIcon className="w-11 h-11" active={a} /> },
+    { to: "/", label: "Labels", icon: (a) => <LabelsMenuIcon className="w-11 h-11" active={a} /> },
   ];
   const bottomItems: NavItem[] = [
     { to: "/settings", label: "Settings", icon: (a) => <SettingsIcon className="w-11 h-11" active={a} /> },

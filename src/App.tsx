@@ -3,11 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
-import Index from "./pages/Index.tsx";
-import IMDPage from "./pages/IMDPage.tsx";
-import KioskPage from "./pages/KioskPage.tsx";
+import LabelsPage from "./pages/LabelsPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
-import ReportsPage from "./pages/ReportsPage.tsx";
 import BugReportPage from "./pages/BugReportPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -26,11 +23,8 @@ const App = () => (
     <BrowserRouter>
       <ThemeBoot />
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/imd" element={<IMDPage />} />
-        <Route path="/kiosk" element={<KioskPage />} />
+        <Route path="/" element={<LabelsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
         <Route path="/bug-report" element={<BugReportPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

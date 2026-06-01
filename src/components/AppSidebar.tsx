@@ -1,11 +1,6 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  ILDIcon,
   IMDIcon,
-  KioskIcon,
-  ReportsIcon,
-  NotificationsIcon,
   BugIcon,
   SettingsIcon,
 } from "./NexusMenuIcons";
@@ -72,9 +67,7 @@ const NexusHubIcon = ({ className }: { className?: string }) => {
     </svg>
   );
 };
-import ShelfIcon from "./ShelfIcon";
 import ThemeToggle from "./ThemeToggle";
-import NotificationsOverlay from "./NotificationsOverlay";
 
 const SIDEBAR_W = "w-[100px]";
 
@@ -86,13 +79,9 @@ interface NavItem {
 
 const AppSidebar = () => {
   const location = useLocation();
-  const [notifsOpen, setNotifsOpen] = useState(false);
 
   const topItems: NavItem[] = [
-    { to: "/", label: "ILD", icon: (a) => <ILDIcon className="w-11 h-11" active={a} /> },
-    { to: "/imd", label: "IMD", icon: (a) => <IMDIcon className="w-11 h-11" active={a} /> },
-    { to: "/kiosk", label: "Kiosk", icon: (a) => <KioskIcon className="w-11 h-11" active={a} /> },
-    { to: "/reports", label: "Reports", icon: (a) => <ReportsIcon className="w-11 h-11" active={a} /> },
+    { to: "/", label: "Labels", icon: (a) => <IMDIcon className="w-11 h-11" active={a} /> },
   ];
   const bottomItems: NavItem[] = [
     { to: "/settings", label: "Settings", icon: (a) => <SettingsIcon className="w-11 h-11" active={a} /> },
@@ -133,20 +122,6 @@ const AppSidebar = () => {
       <nav className="flex flex-col gap-2 w-full px-2 mt-1 flex-1 min-h-0 overflow-y-auto">
         {topItems.map(renderLink)}
 
-        <button
-          type="button"
-          onClick={() => setNotifsOpen(true)}
-          title="Notifications"
-          className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-semibold text-center transition-all border-2 ${
-            notifsOpen
-              ? "border-ring text-accent-foreground"
-              : "border-transparent text-accent-foreground/80 hover:bg-accent-foreground/10 hover:text-accent-foreground"
-          }`}
-        >
-          <NotificationsIcon className="w-11 h-11" active={notifsOpen} />
-          Notifications
-        </button>
-
         {(() => {
           const active = location.pathname.startsWith("/bug-report");
           return (
@@ -172,8 +147,6 @@ const AppSidebar = () => {
         <div className="w-full h-px bg-gradient-to-r from-transparent via-ring/40 to-transparent mb-3" />
         <ThemeToggle />
       </div>
-
-      <NotificationsOverlay open={notifsOpen} onClose={() => setNotifsOpen(false)} />
     </aside>
   );
 };

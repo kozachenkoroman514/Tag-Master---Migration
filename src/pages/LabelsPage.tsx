@@ -438,7 +438,7 @@ const MultiInput = ({
   </div>
 );
 
-const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [soNumbers, setSoNumbers] = useState<string[]>([""]);
   const [jobNumbers, setJobNumbers] = useState<string[]>([""]);
   const [projectId, setProjectId] = useState("");
@@ -477,7 +477,7 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
           ${jobQrs.map((q, i) => `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>`).join("")}
         </div>
       </div>`;
-    await printLabel("Pack Unit Label", body);
+    await printLabel("Pack Unit Label", body, size);
     onOpenChange(false);
   };
 
@@ -591,7 +591,7 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
 };
 
 // ----------------- Status Note Label -----------------
-const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [status, setStatus] = useState("");
   const [reason, setReason] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
@@ -606,7 +606,7 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         <div class="title" style="font-size:48pt;">${escapeHtml(status)}</div>
         ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
       </div>`;
-    await printLabel("Status Note Label", body);
+    await printLabel("Status Note Label", body, size);
     onOpenChange(false);
   };
 
@@ -645,7 +645,7 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
 };
 
 // ----------------- Misc Label -----------------
-const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
@@ -658,7 +658,7 @@ const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(text)}</div>
       </div>`;
-    await printLabel("Misc Label", body);
+    await printLabel("Misc Label", body, size);
     onOpenChange(false);
   };
 

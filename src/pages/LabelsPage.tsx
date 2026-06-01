@@ -209,61 +209,44 @@ const LabelsPage = () => {
           </div>
         </div>
 
-        {size === "4x6" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(
-              [
-                { kind: "part", label: "Part", Icon: PartIcon },
-                { kind: "pack-unit", label: "Pack Unit", Icon: PackUnitIcon },
-                { kind: "status-note", label: "Status Note", Icon: StatusNoteIcon },
-                { kind: "misc", label: "Misc", Icon: MiscIcon },
-              ] as { kind: LabelKind; label: string; Icon: React.FC }[]
-            ).map((tile) => (
-              <button
-                key={tile.kind}
-                type="button"
-                onClick={() => setOpenKind(tile.kind)}
-                className="group bg-card border border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-start gap-4 transition-all hover:border-ring hover:ring-2 hover:ring-ring hover:shadow-[0_0_0_4px_hsl(43_90%_50%/0.15)]"
-              >
-                <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
-                  {tile.label}
-                </div>
-                <div className="w-32 h-32">
-                  <tile.Icon />
-                </div>
-                <div className="text-xs text-muted-foreground">4" × 6" label</div>
-              </button>
-            ))}
-            <div className="bg-card border border-dashed border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center gap-3 text-center">
-              <Plus className="h-10 w-10 text-muted-foreground" />
-              <div className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
-                More labels to come!
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {(
+            [
+              { kind: "part", label: "Part", Icon: PartIcon },
+              { kind: "pack-unit", label: "Pack Unit", Icon: PackUnitIcon },
+              { kind: "status-note", label: "Status Note", Icon: StatusNoteIcon },
+              { kind: "misc", label: "Misc", Icon: MiscIcon },
+            ] as { kind: LabelKind; label: string; Icon: React.FC }[]
+          ).map((tile) => (
+            <button
+              key={tile.kind}
+              type="button"
+              onClick={() => setOpenKind(tile.kind)}
+              className="group bg-card border border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-start gap-4 transition-all hover:border-ring hover:ring-2 hover:ring-ring hover:shadow-[0_0_0_4px_hsl(43_90%_50%/0.15)]"
+            >
+              <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
+                {tile.label}
               </div>
+              <div className={size === "2x4" ? "w-20 h-32" : "w-32 h-32"}>
+                <tile.Icon />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {size === "2x4" ? '2" × 4" label' : '4" × 6" label'}
+              </div>
+            </button>
+          ))}
+          <div className="bg-card border border-dashed border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center gap-3 text-center">
+            <Plus className="h-10 w-10 text-muted-foreground" />
+            <div className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
+              More labels to come!
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, col) => (
-              <div
-                key={col}
-                className="bg-card border border-border rounded-lg p-6 min-h-[420px] flex flex-col items-center justify-start gap-4"
-              >
-                <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Column {col + 1}
-                </div>
-                <div className="w-32">
-                  <LabelTileIcon size="2x4" />
-                </div>
-                <div className="text-xs text-muted-foreground">2" × 4" label preview</div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
 
-        <PartLabelDialog open={openKind === "part"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <PackUnitLabelDialog open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <StatusNoteLabelDialog open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <MiscLabelDialog open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <PartLabelDialog size={size} open={openKind === "part"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
       </main>
     </div>
   );

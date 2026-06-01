@@ -230,6 +230,12 @@ const LabelsPage = () => {
                 <div className="text-xs text-muted-foreground">4" × 6" label</div>
               </button>
             ))}
+            <div className="bg-card border border-dashed border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center gap-3 text-center">
+              <Plus className="h-10 w-10 text-muted-foreground" />
+              <div className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
+                More labels to come!
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -258,78 +258,112 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "" });
+
 const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
-  const [partNumber, setPartNumber] = useState("");
-  const [qty, setQty] = useState("");
-  const [jobNumber, setJobNumber] = useState("");
-  const [soNumber, setSoNumber] = useState("");
+  const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const updatePart = (i: number, patch: Partial<PartEntry>) => {
+    setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  };
+  const addPart = () => {
+    if (parts.length < 2) setParts([...parts, emptyPart()]);
+  };
+  const removePart = (i: number) => {
+    setParts(parts.filter((_, idx) => idx !== i));
+  };
 
   const handlePrint = async () => {
     const m = new Set<string>();
-    if (!partNumber.trim()) m.add("partNumber");
-    if (!qty.trim()) m.add("qty");
+    parts.forEach((p, i) => {
+      if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
+      if (!p.qty.trim()) m.add(`qty-${i}`);
+    });
     setMissing(m);
     if (m.size) return;
 
-    const [partQr, jobQr] = await Promise.all([
-      qrDataUrl(partNumber.trim()),
-      jobNumber.trim() ? qrDataUrl(jobNumber.trim()) : Promise.resolve(""),
-    ]);
-    const body = `
-      <div class="row">
-        <div class="grow">
-          <div class="title">Part</div>
-          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(partNumber)}</span></div>
-          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(qty)}</span></div>
-          ${jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(jobNumber)}</div>` : ""}
-          ${soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(soNumber)}</div>` : ""}
-        </div>
-        <div class="qrs">
-          <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
-          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
-        </div>
-      </div>`;
+    const sections = await Promise.all(
+      parts.map(async (p) => {
+        const [partQr, jobQr] = await Promise.all([
+          qrDataUrl(p.partNumber.trim()),
+          p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
+        ]);
+        return `
+          <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
+            <div class="grow">
+              <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
+              <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
+              ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
+              ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
+            </div>
+            <div class="qrs">
+              <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
+              ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
+            </div>
+          </div>`;
+      })
+    );
+
+    const body = `<div class="title">Part</div>${sections.join("")}`;
     await printLabel("Part Label", body);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="part-number">Part Number <Req /></Label>
-            <Input
-              id="part-number"
-              value={partNumber}
-              onChange={(e) => setPartNumber(e.target.value)}
-              className={cls(missing.has("partNumber") && invalidCls)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="part-qty">Qty <Req /></Label>
-            <Input
-              id="part-qty"
-              type="number"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-              className={cls(missing.has("qty") && invalidCls)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="part-job">Job Number</Label>
-            <Input id="part-job" value={jobNumber} onChange={(e) => setJobNumber(e.target.value)} />
-            <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="part-so">SO Number</Label>
-            <Input id="part-so" value={soNumber} onChange={(e) => setSoNumber(e.target.value)} />
-            <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-          </div>
+        <div className="space-y-6">
+          {parts.map((p, i) => (
+            <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-ring uppercase tracking-wide">
+                  Part {i + 1}
+                </div>
+                {parts.length > 1 && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => removePart(i)}>
+                    <X className="h-4 w-4 mr-1" /> Remove
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Part Number <Req /></Label>
+                <Input
+                  value={p.partNumber}
+                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Qty <Req /></Label>
+                <Input
+                  type="number"
+                  value={p.qty}
+                  onChange={(e) => updatePart(i, { qty: e.target.value })}
+                  className={cls(missing.has(`qty-${i}`) && invalidCls)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Job Number</Label>
+                <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>SO Number</Label>
+                <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+              </div>
+            </div>
+          ))}
+          {parts.length < 2 && (
+            <Button type="button" variant="outline" size="sm" onClick={addPart}>
+              <Plus className="h-4 w-4 mr-1" /> Add another part
+            </Button>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

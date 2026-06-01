@@ -30,24 +30,28 @@ const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:rin
 const Req = () => <span className="text-destructive">*</span>;
 
 // --- Printing helpers ---
-async function printLabel(title: string, bodyHtml: string) {
+async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+  const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
+  const labelW = size === "2x4" ? "2in" : "6in";
+  const labelH = size === "2x4" ? "4in" : "4in";
+  const pad = size === "2x4" ? "0.12in" : "0.25in";
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
   win.document.write(`<!doctype html><html><head><title>${title}</title>
 <style>
-  @page { size: 6in 4in; margin: 0; }
+  @page { size: ${pageSize}; margin: 0; }
   html, body { margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: #fff; }
-  .label { width: 6in; height: 4in; padding: 0.25in; box-sizing: border-box; display: flex; flex-direction: column; }
+  .label { width: ${labelW}; height: ${labelH}; padding: ${pad}; box-sizing: border-box; display: flex; flex-direction: column; }
   .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.2in; }
-  .title { font-size: 28pt; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-  .field { font-size: 14pt; margin: 4pt 0; }
+  .title { font-size: ${size === "2x4" ? "16pt" : "28pt"}; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .field { font-size: ${size === "2x4" ? "9pt" : "14pt"}; margin: 3pt 0; }
   .field b { font-weight: 700; }
-  .big { font-size: 22pt; font-weight: 700; }
-  .huge { font-size: 36pt; font-weight: 800; line-height: 1.1; }
+  .big { font-size: ${size === "2x4" ? "13pt" : "22pt"}; font-weight: 700; }
+  .huge { font-size: ${size === "2x4" ? "22pt" : "36pt"}; font-weight: 800; line-height: 1.1; }
   .qrs { display: flex; gap: 0.2in; align-items: flex-end; }
-  .qr { text-align: center; font-size: 9pt; }
-  .qr img { display: block; width: 1.3in; height: 1.3in; }
+  .qr { text-align: center; font-size: 8pt; }
+  .qr img { display: block; width: ${size === "2x4" ? "0.75in" : "1.3in"}; height: ${size === "2x4" ? "0.75in" : "1.3in"}; }
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }

@@ -64,33 +64,58 @@ async function qrDataUrl(text: string) {
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";
-const PartIcon = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
-    <path d="M10 22 L32 10 L54 22 L54 46 L32 58 L10 46 Z" />
-    <path d="M10 22 L32 34 L54 22" />
-    <path d="M32 34 L32 58" />
+
+// Wraps a gold glyph inside a white landscape "label" card (4x6 landscape => 3:2)
+const LabelFrame = ({ children }: { children: React.ReactNode }) => (
+  <svg viewBox="0 0 120 80" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <rect
+      x="3"
+      y="3"
+      width="114"
+      height="74"
+      rx="5"
+      fill="hsl(0 0% 100%)"
+      stroke={tileGold}
+      strokeWidth={2}
+    />
+    <g transform="translate(28 8)">{children}</g>
   </svg>
+);
+const PartIcon = () => (
+  <LabelFrame>
+    <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
+      <path d="M10 22 L32 10 L54 22 L54 46 L32 58 L10 46 Z" />
+      <path d="M10 22 L32 34 L54 22" />
+      <path d="M32 34 L32 58" />
+    </svg>
+  </LabelFrame>
 );
 const PackUnitIcon = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round">
-    <rect x="8" y="32" width="22" height="22" />
-    <rect x="34" y="32" width="22" height="22" />
-    <rect x="21" y="10" width="22" height="22" />
-  </svg>
+  <LabelFrame>
+    <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round">
+      <rect x="8" y="32" width="22" height="22" />
+      <rect x="34" y="32" width="22" height="22" />
+      <rect x="21" y="10" width="22" height="22" />
+    </svg>
+  </LabelFrame>
 );
 const StatusNoteIcon = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
-    <rect x="14" y="12" width="36" height="44" rx="2" />
-    <path d="M24 10 H40 V18 H24 Z" fill={tileGold} />
-    <path d="M32 28 V40" />
-    <circle cx="32" cy="46" r="1.5" fill={tileGold} />
-  </svg>
+  <LabelFrame>
+    <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
+      <rect x="14" y="12" width="36" height="44" rx="2" />
+      <path d="M24 10 H40 V18 H24 Z" fill={tileGold} />
+      <path d="M32 28 V40" />
+      <circle cx="32" cy="46" r="1.5" fill={tileGold} />
+    </svg>
+  </LabelFrame>
 );
 const MiscIcon = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
-    <path d="M12 44 L40 16 L52 28 L24 56 L10 56 L10 42 Z" />
-    <path d="M36 20 L48 32" />
-  </svg>
+  <LabelFrame>
+    <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke={tileGold} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round">
+      <path d="M12 44 L40 16 L52 28 L24 56 L10 56 L10 42 Z" />
+      <path d="M36 20 L48 32" />
+    </svg>
+  </LabelFrame>
 );
 
 type LabelSize = "2x4" | "4x6";

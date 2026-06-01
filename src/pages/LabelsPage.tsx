@@ -30,24 +30,28 @@ const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:rin
 const Req = () => <span className="text-destructive">*</span>;
 
 // --- Printing helpers ---
-async function printLabel(title: string, bodyHtml: string) {
+async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+  const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
+  const labelW = size === "2x4" ? "2in" : "6in";
+  const labelH = size === "2x4" ? "4in" : "4in";
+  const pad = size === "2x4" ? "0.12in" : "0.25in";
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
   win.document.write(`<!doctype html><html><head><title>${title}</title>
 <style>
-  @page { size: 6in 4in; margin: 0; }
+  @page { size: ${pageSize}; margin: 0; }
   html, body { margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: #fff; }
-  .label { width: 6in; height: 4in; padding: 0.25in; box-sizing: border-box; display: flex; flex-direction: column; }
+  .label { width: ${labelW}; height: ${labelH}; padding: ${pad}; box-sizing: border-box; display: flex; flex-direction: column; }
   .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.2in; }
-  .title { font-size: 28pt; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-  .field { font-size: 14pt; margin: 4pt 0; }
+  .title { font-size: ${size === "2x4" ? "16pt" : "28pt"}; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .field { font-size: ${size === "2x4" ? "9pt" : "14pt"}; margin: 3pt 0; }
   .field b { font-weight: 700; }
-  .big { font-size: 22pt; font-weight: 700; }
-  .huge { font-size: 36pt; font-weight: 800; line-height: 1.1; }
+  .big { font-size: ${size === "2x4" ? "13pt" : "22pt"}; font-weight: 700; }
+  .huge { font-size: ${size === "2x4" ? "22pt" : "36pt"}; font-weight: 800; line-height: 1.1; }
   .qrs { display: flex; gap: 0.2in; align-items: flex-end; }
-  .qr { text-align: center; font-size: 9pt; }
-  .qr img { display: block; width: 1.3in; height: 1.3in; }
+  .qr { text-align: center; font-size: 8pt; }
+  .qr img { display: block; width: ${size === "2x4" ? "0.75in" : "1.3in"}; height: ${size === "2x4" ? "0.75in" : "1.3in"}; }
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
@@ -205,61 +209,44 @@ const LabelsPage = () => {
           </div>
         </div>
 
-        {size === "4x6" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {(
-              [
-                { kind: "part", label: "Part", Icon: PartIcon },
-                { kind: "pack-unit", label: "Pack Unit", Icon: PackUnitIcon },
-                { kind: "status-note", label: "Status Note", Icon: StatusNoteIcon },
-                { kind: "misc", label: "Misc", Icon: MiscIcon },
-              ] as { kind: LabelKind; label: string; Icon: React.FC }[]
-            ).map((tile) => (
-              <button
-                key={tile.kind}
-                type="button"
-                onClick={() => setOpenKind(tile.kind)}
-                className="group bg-card border border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-start gap-4 transition-all hover:border-ring hover:ring-2 hover:ring-ring hover:shadow-[0_0_0_4px_hsl(43_90%_50%/0.15)]"
-              >
-                <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
-                  {tile.label}
-                </div>
-                <div className="w-32 h-32">
-                  <tile.Icon />
-                </div>
-                <div className="text-xs text-muted-foreground">4" × 6" label</div>
-              </button>
-            ))}
-            <div className="bg-card border border-dashed border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center gap-3 text-center">
-              <Plus className="h-10 w-10 text-muted-foreground" />
-              <div className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
-                More labels to come!
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {(
+            [
+              { kind: "part", label: "Part", Icon: PartIcon },
+              { kind: "pack-unit", label: "Pack Unit", Icon: PackUnitIcon },
+              { kind: "status-note", label: "Status Note", Icon: StatusNoteIcon },
+              { kind: "misc", label: "Misc", Icon: MiscIcon },
+            ] as { kind: LabelKind; label: string; Icon: React.FC }[]
+          ).map((tile) => (
+            <button
+              key={tile.kind}
+              type="button"
+              onClick={() => setOpenKind(tile.kind)}
+              className="group bg-card border border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-start gap-4 transition-all hover:border-ring hover:ring-2 hover:ring-ring hover:shadow-[0_0_0_4px_hsl(43_90%_50%/0.15)]"
+            >
+              <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
+                {tile.label}
               </div>
+              <div className={size === "2x4" ? "w-20 h-32" : "w-32 h-32"}>
+                <tile.Icon />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {size === "2x4" ? '2" × 4" label' : '4" × 6" label'}
+              </div>
+            </button>
+          ))}
+          <div className="bg-card border border-dashed border-border rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center gap-3 text-center">
+            <Plus className="h-10 w-10 text-muted-foreground" />
+            <div className="text-base font-semibold text-muted-foreground uppercase tracking-wide">
+              More labels to come!
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, col) => (
-              <div
-                key={col}
-                className="bg-card border border-border rounded-lg p-6 min-h-[420px] flex flex-col items-center justify-start gap-4"
-              >
-                <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Column {col + 1}
-                </div>
-                <div className="w-32">
-                  <LabelTileIcon size="2x4" />
-                </div>
-                <div className="text-xs text-muted-foreground">2" × 4" label preview</div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
 
-        <PartLabelDialog open={openKind === "part"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <PackUnitLabelDialog open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <StatusNoteLabelDialog open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
-        <MiscLabelDialog open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <PartLabelDialog size={size} open={openKind === "part"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
       </main>
     </div>
   );
@@ -268,10 +255,10 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "" });
 
-const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
@@ -307,6 +294,7 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
               <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
               ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
               ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
+              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
             </div>
             <div class="qrs">
               <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
@@ -316,8 +304,11 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       })
     );
 
-    const body = `<div class="title">Part</div>${sections.join("")}`;
-    await printLabel("Part Label", body);
+    const specNote = size === "2x4"
+      ? `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`
+      : `<div class="field" style="font-size:9pt;color:#777;margin-top:6pt;">[Spec icons: unit style — TBD]</div>`;
+    const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
+    await printLabel("Part Label", body, size);
     onOpenChange(false);
   };
 
@@ -367,6 +358,15 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
+              <div className="space-y-2">
+                <Label>Goes With</Label>
+                <Input
+                  value={p.goesWith}
+                  onChange={(e) => updatePart(i, { goesWith: e.target.value })}
+                  placeholder="Part number(s) this is set with"
+                />
+                <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
+              </div>
             </div>
           ))}
           {parts.length < 2 && (
@@ -375,6 +375,9 @@ const PartLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
             </Button>
           )}
         </div>
+        <p className="text-xs text-muted-foreground">
+          Specification icons (based on unit style) will be added to the printed label — definitions TBD.
+        </p>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
@@ -435,7 +438,7 @@ const MultiInput = ({
   </div>
 );
 
-const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [soNumbers, setSoNumbers] = useState<string[]>([""]);
   const [jobNumbers, setJobNumbers] = useState<string[]>([""]);
   const [projectId, setProjectId] = useState("");
@@ -474,7 +477,7 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
           ${jobQrs.map((q, i) => `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>`).join("")}
         </div>
       </div>`;
-    await printLabel("Pack Unit Label", body);
+    await printLabel("Pack Unit Label", body, size);
     onOpenChange(false);
   };
 
@@ -588,7 +591,7 @@ const PackUnitLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChan
 };
 
 // ----------------- Status Note Label -----------------
-const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [status, setStatus] = useState("");
   const [reason, setReason] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
@@ -603,7 +606,7 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         <div class="title" style="font-size:48pt;">${escapeHtml(status)}</div>
         ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
       </div>`;
-    await printLabel("Status Note Label", body);
+    await printLabel("Status Note Label", body, size);
     onOpenChange(false);
   };
 
@@ -642,7 +645,7 @@ const StatusNoteLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
 };
 
 // ----------------- Misc Label -----------------
-const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
@@ -655,7 +658,7 @@ const MiscLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(text)}</div>
       </div>`;
-    await printLabel("Misc Label", body);
+    await printLabel("Misc Label", body, size);
     onOpenChange(false);
   };
 

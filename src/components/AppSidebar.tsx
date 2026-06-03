@@ -143,7 +143,41 @@ const AppSidebar = () => {
           );
         })()}
 
-        {bottomItems.map(renderLink)}
+        {(() => {
+          const settingsItem = bottomItems[0];
+          const active = location.pathname.startsWith(settingsItem.to);
+          if (DISABLED_PAGES.settings) {
+            return (
+              <div
+                title="Settings — coming soon"
+                className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-semibold text-center border-2 border-transparent text-accent-foreground/40 opacity-50 cursor-not-allowed"
+              >
+                <div className="relative">
+                  <SettingsIcon className="w-11 h-11" active={false} />
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-accent rounded-full p-0.5 border border-border/30">
+                    <Lock className="w-2.5 h-2.5 text-ring" />
+                  </div>
+                </div>
+                Settings
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={settingsItem.to}
+              to={settingsItem.to}
+              title={settingsItem.label}
+              className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-semibold text-center transition-all border-2 ${
+                active
+                  ? "border-ring text-accent-foreground"
+                  : "border-transparent text-accent-foreground/80 hover:bg-accent-foreground/10 hover:text-accent-foreground"
+              }`}
+            >
+              {settingsItem.icon(active)}
+              {settingsItem.label}
+            </Link>
+          );
+        })()}
       </nav>
 
       <div className="pb-4 pt-2 flex flex-col items-center w-full px-2">

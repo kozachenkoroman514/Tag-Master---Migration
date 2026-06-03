@@ -705,6 +705,32 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
   const handlePrint = async () => {
+    if (size === "4x6") {
+      // 4x6 unit label: all fields optional — blank fields are omitted on print.
+      setMissing(new Set());
+      const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+      await printUnit4x6({
+        orderNumber: firstSo,
+        project: projectId,
+        unitType: unitSel,
+        unitNum: unitX,
+        unitTotal: unitN,
+        date,
+        area,
+        status: "",
+      });
+      setSoNumbers([""]);
+      setJobNumbers([""]);
+      setProjectId("");
+      setUnitX("");
+      setUnitN("");
+      setDate("");
+      setUnitSel("");
+      setArea("");
+      onOpenChange(false);
+      return;
+    }
+
     const m = new Set<string>();
     if (!soNumbers.some((s) => s.trim())) m.add("so");
     if (!unitX.trim() || !unitN.trim()) m.add("unitNum");

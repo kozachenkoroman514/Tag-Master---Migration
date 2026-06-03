@@ -307,7 +307,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
     const specNote = size === "2x4"
       ? `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`
-      : `<div class="field" style="font-size:9pt;color:#777;margin-top:6pt;">[Spec icons: unit style — TBD]</div>`;
+      : "";
     const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
     await printLabel("Part Label", body, size);
     onOpenChange(false);
@@ -390,9 +390,11 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Specification icons (based on unit style) will be added to the printed label — definitions TBD.
-        </p>
+          {size === "2x4" && (
+            <p className="text-xs text-muted-foreground">
+              Specification icons (based on unit style) will be added to the printed label — definitions TBD.
+            </p>
+          )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>

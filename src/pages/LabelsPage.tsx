@@ -269,39 +269,45 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
       ]);
 
       const jobBlock = p.jobNumber.trim()
-        ? `<div class="jqr-pair">
-             <span class="field-static">Job:</span>
-             <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
-             ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+        ? `<div class="jqr-pair jqr-col">
+             <span class="sec-title">Job</span>
+             <div class="jqr-row">
+               <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
+               ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+             </div>
            </div>`
         : `<div class="jqr-pair"></div>`;
 
       const qtyItem = p.qty.trim()
-        ? `<div class="qty-rev-item"><span class="field-static">QTY:</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
+        ? `<div class="qty-rev-item"><span class="sec-title">QTY</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
         : "";
       const revItem = p.rev.trim()
-        ? `<div class="qty-rev-item"><span class="field-static">Rev:</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
+        ? `<div class="qty-rev-item"><span class="sec-title">Rev</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
         : "";
       const qtyRevGroup = (qtyItem || revItem)
         ? `<div class="qty-rev-group">${qtyItem}${revItem}</div>`
         : "";
 
       const jobLine = (p.jobNumber.trim() || qtyItem || revItem)
-        ? `<div class="job-line">${jobBlock}${qtyRevGroup}</div>`
+        ? `<div class="job-line"><div class="job-inputs-row">${jobBlock}${qtyRevGroup}</div></div>`
         : "";
 
       const partLine = p.partNumber.trim()
         ? `<div class="part-line">
-             <span class="field-static">Part:</span>
-             <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
-             ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+             <span class="sec-title">Part</span>
+             <div class="part-inputs-row">
+               <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
+               ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+             </div>
            </div>`
         : "";
 
       const descLine = p.description.trim()
         ? `<div class="desc-line">
-             <span class="desc-static">Description:</span>
-             <span class="desc-input">${escapeHtml(p.description)}</span>
+             <span class="sec-title-inline">Description</span>
+             <div class="desc-inputs-row">
+               <span class="desc-input">${escapeHtml(p.description)}</span>
+             </div>
            </div>`
         : "";
 
@@ -313,7 +319,7 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
 
   const partRows = rows.filter(Boolean).join("");
   const footer = orderNumber.trim()
-    ? `<div class="footer-bar"><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
+    ? `<div class="footer-bar"><span class="sec-title">Sales Order</span><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
     : "";
 
   const win = window.open("", "_blank", "width=800,height=600");
@@ -324,31 +330,36 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 6in; height: 4in; border: 1.5pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
-  .label-header { border-bottom: 1.5pt solid #000; padding: 7px 14px; }
+  .label-header { border-bottom: 1.5pt solid #000; padding: 2px 14px; }
   .logo-text { font-size: 28px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
   .logo-reg { font-size: 15px; vertical-align: super; }
   .parts-area { flex: 1; display: flex; flex-direction: column; }
   .part-row { flex: 1; display: flex; flex-direction: column; border-bottom: 1.5pt solid #000; }
   .part-row:last-of-type { border-bottom: none; }
-  .job-line { display: flex; align-items: center; padding: 7px 12px 4px 12px; gap: 0; border-bottom: 1px solid #ccc; }
+  .sec-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; display: block; white-space: nowrap; }
+  .sec-title-inline { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; white-space: nowrap; flex-shrink: 0; }
+  .job-line { display: flex; flex-direction: column; padding: 2px 12px 1px 12px; border-bottom: 1px solid #ccc; }
+  .job-inputs-row { display: flex; align-items: flex-end; width: 100%; }
   .jqr-pair { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .field-static { font-size: 20px; font-weight: 700; text-transform: uppercase; white-space: nowrap; margin-right: 2px; }
-  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 20px; font-weight: 700; padding: 0 4px; min-height: 22px; display: inline-block; }
+  .jqr-col { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .jqr-row { display: flex; align-items: center; gap: 8px; }
+  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
   .red-input.job-num { min-width: 108px; }
   .red-input.qty-num { min-width: 56px; text-align: center; }
   .red-input.rev-val { min-width: 46px; text-align: center; }
-  .qty-rev-group { display: flex; align-items: center; gap: 16px; margin-left: auto; }
-  .qty-rev-item { display: flex; align-items: center; gap: 5px; }
+  .qty-rev-group { display: flex; align-items: flex-end; gap: 16px; margin-left: auto; }
+  .qty-rev-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
   .qr-mini { width: 54px; height: 54px; flex-shrink: 0; }
   .qr-mini img { width: 100%; height: 100%; }
-  .part-line { display: flex; align-items: center; padding: 5px 12px 3px 12px; gap: 10px; border-bottom: 1px solid #ccc; }
-  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; }
+  .part-line { display: flex; flex-direction: column; padding: 1px 12px 1px 12px; gap: 1px; border-bottom: 1px solid #ccc; }
+  .part-inputs-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
   .qr-part { width: 64px; height: 64px; flex-shrink: 0; }
   .qr-part img { width: 100%; height: 100%; }
-  .desc-line { display: flex; align-items: center; padding: 4px 12px 6px 12px; gap: 6px; }
-  .desc-static { font-size: 14px; font-weight: 700; white-space: nowrap; }
-  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; }
-  .footer-bar { border-top: 1.5pt solid #000; padding: 6px 14px 8px 14px; }
+  .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 1px 12px 3px 12px; gap: 8px; }
+  .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
+  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; display: inline-block; }
+  .footer-bar { border-top: 1.5pt solid #000; padding: 2px 14px 3px 14px; display: flex; flex-direction: column; gap: 1px; }
   .footer-input { font-size: 32px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; display: block; width: 100%; border-bottom: 1.5pt solid #000; }
 </style></head><body>
 <div class="label">
@@ -545,6 +556,97 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+// 4x6 Pack Unit (Unit) label — mirrors the Electric Mirror unit label spec.
+// Any blank field (and its section title) is omitted from the print output.
+async function printUnit4x6(opts: {
+  orderNumber: string;
+  project: string;
+  unitType: string;
+  unitNum: string;
+  unitTotal: string;
+  date: string;
+  area: string;
+  status: string;
+}) {
+  const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status } = opts;
+
+  const orderRow = orderNumber.trim()
+    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input">${escapeHtml(orderNumber)}</div></div>`
+    : "";
+  const projectRow = project.trim()
+    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input">${escapeHtml(project)}</div></div>`
+    : "";
+
+  const unitCell = unitType.trim()
+    ? `<div class="meta-cell unit-cell"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`
+    : "";
+  const ofCell = (unitNum.trim() || unitTotal.trim())
+    ? `<div class="meta-cell of-cell">
+         ${unitNum.trim() ? `<span class="meta-input num-input">${escapeHtml(unitNum)}</span>` : `<span class="meta-input num-input"></span>`}
+         <span class="of-word">of</span>
+         ${unitTotal.trim() ? `<span class="meta-input total-input">${escapeHtml(unitTotal)}</span>` : `<span class="meta-input total-input"></span>`}
+       </div>`
+    : "";
+  const dateCell = date.trim()
+    ? `<div class="meta-cell date-cell"><span class="meta-label">Date:</span><span class="meta-input date-input">${escapeHtml(date)}</span></div>`
+    : "";
+  const metaRow = (unitCell || ofCell || dateCell)
+    ? `<div class="meta-row">${unitCell}${ofCell}${dateCell}</div>`
+    : "";
+
+  const areaCell = area.trim()
+    ? `<div class="area-cell"><span class="meta-label">Area:</span><span class="area-input">${escapeHtml(area)}</span></div>`
+    : "";
+  const statusCell = status.trim()
+    ? `<div class="status-cell"><span class="status-label-sm">Status</span><span class="status-input">${escapeHtml(status)}</span></div>`
+    : "";
+  const bottomRow = (areaCell || statusCell)
+    ? `<div class="bottom-row">${areaCell}${statusCell}</div>`
+    : "";
+
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(`<!doctype html><html><head><title>Unit Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 6in 4in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 6in; height: 4in; border: 2pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .section-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
+  .order-row { border-bottom: 2pt solid #000; padding: 4px 14px 2px 14px; display: flex; flex-direction: column; }
+  .order-input { font-size: 64px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; }
+  .project-row { border-bottom: 2pt solid #000; padding: 4px 14px 6px 14px; display: flex; flex-direction: column; }
+  .project-input { font-size: 24px; font-weight: 700; line-height: 1.15; }
+  .meta-row { border-bottom: 2pt solid #000; display: flex; align-items: stretch; }
+  .meta-cell { display: flex; align-items: center; padding: 4px 10px; gap: 6px; }
+  .meta-cell.unit-cell { flex: 0 0 auto; border-right: 1.5pt solid #000; gap: 8px; }
+  .meta-cell.of-cell   { flex: 1; border-right: 1.5pt solid #000; gap: 6px; }
+  .meta-cell.date-cell { flex: 0 0 auto; }
+  .meta-label { font-size: 18px; font-weight: 700; white-space: nowrap; }
+  .unit-select { font-size: 20px; font-weight: 700; border-bottom: 2pt solid #000; padding-right: 4px; }
+  .meta-input { font-size: 20px; font-weight: 700; border-bottom: 1.5pt solid #000; text-align: center; display: inline-block; min-height: 22px; padding: 0 4px; }
+  .meta-input.num-input { min-width: 40px; }
+  .meta-input.total-input { min-width: 40px; }
+  .meta-input.date-input { min-width: 70px; letter-spacing: 1px; }
+  .of-word { font-size: 20px; font-weight: 700; }
+  .bottom-row { display: flex; align-items: stretch; min-height: 56px; flex: 1; }
+  .area-cell { flex: 1; display: flex; align-items: center; padding: 4px 10px; gap: 8px; border-right: 1.5pt solid #000; }
+  .area-input { flex: 1; font-size: 24px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 1.5pt solid #000; display: inline-block; min-height: 26px; padding: 0 4px; }
+  .status-cell { width: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
+  .status-label-sm { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+  .status-input { width: 100%; font-size: 24px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 1.5pt solid #000; display: inline-block; min-height: 26px; padding: 0 4px; }
+</style></head><body>
+<div class="label">
+  ${orderRow}
+  ${projectRow}
+  ${metaRow}
+  ${bottomRow}
+</div>
+<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
+</body></html>`);
+  win.document.close();
+}
+
 const MultiInput = ({
   label,
   values,
@@ -603,6 +705,32 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
   const handlePrint = async () => {
+    if (size === "4x6") {
+      // 4x6 unit label: all fields optional — blank fields are omitted on print.
+      setMissing(new Set());
+      const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+      await printUnit4x6({
+        orderNumber: firstSo,
+        project: projectId,
+        unitType: unitSel,
+        unitNum: unitX,
+        unitTotal: unitN,
+        date,
+        area,
+        status: "",
+      });
+      setSoNumbers([""]);
+      setJobNumbers([""]);
+      setProjectId("");
+      setUnitX("");
+      setUnitN("");
+      setDate("");
+      setUnitSel("");
+      setArea("");
+      onOpenChange(false);
+      return;
+    }
+
     const m = new Set<string>();
     if (!soNumbers.some((s) => s.trim())) m.add("so");
     if (!unitX.trim() || !unitN.trim()) m.add("unitNum");

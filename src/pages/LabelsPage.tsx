@@ -381,6 +381,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       // 4x6: all fields optional — blank fields (and their labels) are omitted on print.
       setMissing(new Set());
       await printPart4x6(parts, orderNumber);
+      setParts([emptyPart()]);
+      setOrderNumber("");
       onOpenChange(false);
       return;
     }
@@ -419,6 +421,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
     const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
     await printLabel("Part Label", body, size);
+    setParts([emptyPart()]);
     onOpenChange(false);
   };
 

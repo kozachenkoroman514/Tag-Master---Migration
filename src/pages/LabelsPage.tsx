@@ -368,6 +368,16 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 />
                 <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
               </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={p.description}
+                  onChange={(e) => updatePart(i, { description: e.target.value })}
+                  placeholder="Optional description for this part"
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
+              </div>
             </div>
           ))}
           {parts.length < 2 && (

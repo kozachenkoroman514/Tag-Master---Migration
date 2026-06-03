@@ -769,6 +769,9 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
       </div>`;
     await printLabel("Status Note Label", body, size);
+    setStatus("");
+    setReason("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 

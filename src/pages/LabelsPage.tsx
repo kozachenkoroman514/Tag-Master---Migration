@@ -390,9 +390,11 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Specification icons (based on unit style) will be added to the printed label — definitions TBD.
-        </p>
+          {size === "2x4" && (
+            <p className="text-xs text-muted-foreground">
+              Specification icons (based on unit style) will be added to the printed label — definitions TBD.
+            </p>
+          )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>

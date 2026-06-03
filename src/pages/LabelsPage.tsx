@@ -255,12 +255,116 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "" });
+
+// 4x6 Part label print — mirrors the Electric Mirror label spec.
+// Any field left blank (and its static label) is omitted from the print output.
+async function printPart4x6(parts: PartEntry[], orderNumber: string) {
+  const rows = await Promise.all(
+    parts.map(async (p) => {
+      const [partQr, jobQr] = await Promise.all([
+        p.partNumber.trim() ? qrDataUrl(p.partNumber.trim()) : Promise.resolve(""),
+        p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
+      ]);
+
+      const jobBlock = p.jobNumber.trim()
+        ? `<div class="jqr-pair">
+             <span class="field-static">Job:</span>
+             <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
+             ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+           </div>`
+        : `<div class="jqr-pair"></div>`;
+
+      const qtyItem = p.qty.trim()
+        ? `<div class="qty-rev-item"><span class="field-static">QTY:</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
+        : "";
+      const revItem = p.rev.trim()
+        ? `<div class="qty-rev-item"><span class="field-static">Rev:</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
+        : "";
+      const qtyRevGroup = (qtyItem || revItem)
+        ? `<div class="qty-rev-group">${qtyItem}${revItem}</div>`
+        : "";
+
+      const jobLine = (p.jobNumber.trim() || qtyItem || revItem)
+        ? `<div class="job-line">${jobBlock}${qtyRevGroup}</div>`
+        : "";
+
+      const partLine = p.partNumber.trim()
+        ? `<div class="part-line">
+             <span class="field-static">Part:</span>
+             <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
+             ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+           </div>`
+        : "";
+
+      const descLine = p.description.trim()
+        ? `<div class="desc-line">
+             <span class="desc-static">Description:</span>
+             <span class="desc-input">${escapeHtml(p.description)}</span>
+           </div>`
+        : "";
+
+      const inner = `${jobLine}${partLine}${descLine}`;
+      if (!inner) return "";
+      return `<div class="part-row">${inner}</div>`;
+    })
+  );
+
+  const partRows = rows.filter(Boolean).join("");
+  const footer = orderNumber.trim()
+    ? `<div class="footer-bar"><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
+    : "";
+
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(`<!doctype html><html><head><title>Part Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 6in 4in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 6in; height: 4in; border: 1.5pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .label-header { border-bottom: 1.5pt solid #000; padding: 7px 14px; }
+  .logo-text { font-size: 28px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
+  .logo-reg { font-size: 15px; vertical-align: super; }
+  .parts-area { flex: 1; display: flex; flex-direction: column; }
+  .part-row { flex: 1; display: flex; flex-direction: column; border-bottom: 1.5pt solid #000; }
+  .part-row:last-of-type { border-bottom: none; }
+  .job-line { display: flex; align-items: center; padding: 7px 12px 4px 12px; gap: 0; border-bottom: 1px solid #ccc; }
+  .jqr-pair { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .field-static { font-size: 20px; font-weight: 700; text-transform: uppercase; white-space: nowrap; margin-right: 2px; }
+  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 20px; font-weight: 700; padding: 0 4px; min-height: 22px; display: inline-block; }
+  .red-input.job-num { min-width: 108px; }
+  .red-input.qty-num { min-width: 56px; text-align: center; }
+  .red-input.rev-val { min-width: 46px; text-align: center; }
+  .qty-rev-group { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+  .qty-rev-item { display: flex; align-items: center; gap: 5px; }
+  .qr-mini { width: 54px; height: 54px; flex-shrink: 0; }
+  .qr-mini img { width: 100%; height: 100%; }
+  .part-line { display: flex; align-items: center; padding: 5px 12px 3px 12px; gap: 10px; border-bottom: 1px solid #ccc; }
+  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; }
+  .qr-part { width: 64px; height: 64px; flex-shrink: 0; }
+  .qr-part img { width: 100%; height: 100%; }
+  .desc-line { display: flex; align-items: center; padding: 4px 12px 6px 12px; gap: 6px; }
+  .desc-static { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; }
+  .footer-bar { border-top: 1.5pt solid #000; padding: 6px 14px 8px 14px; }
+  .footer-input { font-size: 32px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; display: block; width: 100%; border-bottom: 1.5pt solid #000; }
+</style></head><body>
+<div class="label">
+  <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
+  <div class="parts-area">${partRows}</div>
+  ${footer}
+</div>
+<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
+</body></html>`);
+  win.document.close();
+}
 
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [orderNumber, setOrderNumber] = useState("");
 
   const updatePart = (i: number, patch: Partial<PartEntry>) => {
     setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -273,6 +377,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   };
 
   const handlePrint = async () => {
+    if (size === "4x6") {
+      // 4x6: all fields optional — blank fields (and their labels) are omitted on print.
+      setMissing(new Set());
+      await printPart4x6(parts, orderNumber);
+      onOpenChange(false);
+      return;
+    }
+
     const m = new Set<string>();
     parts.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
@@ -294,8 +406,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
               ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
               ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-              ${size === "2x4" && p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-              ${size === "4x6" && p.description.trim() ? `<div class="field wrap"><b>Desc:</b> ${escapeHtml(p.description)}</div>` : ""}
+              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
             </div>
             <div class="qrs">
               <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
@@ -305,9 +416,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       })
     );
 
-    const specNote = size === "2x4"
-      ? `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`
-      : "";
+    const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
     const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
     await printLabel("Part Label", body, size);
     onOpenChange(false);
@@ -333,7 +442,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Part Number <Req /></Label>
+                <Label>Part Number {size === "2x4" && <Req />}</Label>
                 <Input
                   value={p.partNumber}
                   onChange={(e) => updatePart(i, { partNumber: e.target.value })}
@@ -341,7 +450,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 />
               </div>
               <div className="space-y-2">
-                <Label>Qty <Req /></Label>
+                <Label>Qty {size === "2x4" && <Req />}</Label>
                 <Input
                   type="number"
                   value={p.qty}
@@ -349,16 +458,29 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   className={cls(missing.has(`qty-${i}`) && invalidCls)}
                 />
               </div>
+              {size === "4x6" && (
+                <div className="space-y-2">
+                  <Label>Rev</Label>
+                  <Input
+                    value={p.rev}
+                    onChange={(e) => updatePart(i, { rev: e.target.value })}
+                    placeholder="A"
+                  />
+                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Job Number</Label>
                 <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
-              <div className="space-y-2">
-                <Label>SO Number</Label>
-                <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-              </div>
+              {size === "2x4" && (
+                <div className="space-y-2">
+                  <Label>SO Number</Label>
+                  <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
+                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                </div>
+              )}
               {size === "2x4" && (
                 <div className="space-y-2">
                   <Label>Goes With</Label>
@@ -388,6 +510,17 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             <Button type="button" variant="outline" size="sm" onClick={addPart}>
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
+          )}
+          {size === "4x6" && (
+            <div className="space-y-2 border-t border-border pt-4">
+              <Label>Order Number / Footer</Label>
+              <Input
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                placeholder="455100 (Lines 1-2)"
+              />
+              <p className="text-xs text-muted-foreground">Optional. Appears in the footer of the label. Leave blank to omit.</p>
+            </div>
           )}
         </div>
           {size === "2x4" && (

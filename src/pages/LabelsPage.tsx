@@ -255,8 +255,8 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "" });
 
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
@@ -295,6 +295,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
               ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
               ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
+              ${p.description.trim() ? `<div class="field wrap"><b>Desc:</b> ${escapeHtml(p.description)}</div>` : ""}
             </div>
             <div class="qrs">
               <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
@@ -366,6 +367,16 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   placeholder="Part number(s) this is set with"
                 />
                 <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={p.description}
+                  onChange={(e) => updatePart(i, { description: e.target.value })}
+                  placeholder="Optional description for this part"
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
               </div>
             </div>
           ))}

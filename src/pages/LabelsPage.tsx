@@ -824,6 +824,8 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <div class="huge wrap center">${escapeHtml(text)}</div>
       </div>`;
     await printLabel("Misc Label", body, size);
+    setText("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 

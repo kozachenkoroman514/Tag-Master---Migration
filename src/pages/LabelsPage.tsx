@@ -381,6 +381,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       // 4x6: all fields optional — blank fields (and their labels) are omitted on print.
       setMissing(new Set());
       await printPart4x6(parts, orderNumber);
+      setParts([emptyPart()]);
+      setOrderNumber("");
       onOpenChange(false);
       return;
     }
@@ -419,6 +421,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
     const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
     await printLabel("Part Label", body, size);
+    setParts([emptyPart()]);
     onOpenChange(false);
   };
 
@@ -628,6 +631,15 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </div>
       </div>`;
     await printLabel("Pack Unit Label", body, size);
+    setSoNumbers([""]);
+    setJobNumbers([""]);
+    setProjectId("");
+    setUnitX("");
+    setUnitN("");
+    setDate("");
+    setUnitSel("");
+    setArea("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 
@@ -757,6 +769,9 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
       </div>`;
     await printLabel("Status Note Label", body, size);
+    setStatus("");
+    setReason("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 
@@ -809,6 +824,8 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <div class="huge wrap center">${escapeHtml(text)}</div>
       </div>`;
     await printLabel("Misc Label", body, size);
+    setText("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 

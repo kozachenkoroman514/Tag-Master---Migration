@@ -269,39 +269,45 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
       ]);
 
       const jobBlock = p.jobNumber.trim()
-        ? `<div class="jqr-pair">
-             <span class="field-static">Job:</span>
-             <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
-             ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+        ? `<div class="jqr-pair jqr-col">
+             <span class="sec-title">Job</span>
+             <div class="jqr-row">
+               <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
+               ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+             </div>
            </div>`
         : `<div class="jqr-pair"></div>`;
 
       const qtyItem = p.qty.trim()
-        ? `<div class="qty-rev-item"><span class="field-static">QTY:</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
+        ? `<div class="qty-rev-item"><span class="sec-title">QTY</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
         : "";
       const revItem = p.rev.trim()
-        ? `<div class="qty-rev-item"><span class="field-static">Rev:</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
+        ? `<div class="qty-rev-item"><span class="sec-title">Rev</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
         : "";
       const qtyRevGroup = (qtyItem || revItem)
         ? `<div class="qty-rev-group">${qtyItem}${revItem}</div>`
         : "";
 
       const jobLine = (p.jobNumber.trim() || qtyItem || revItem)
-        ? `<div class="job-line">${jobBlock}${qtyRevGroup}</div>`
+        ? `<div class="job-line"><div class="job-inputs-row">${jobBlock}${qtyRevGroup}</div></div>`
         : "";
 
       const partLine = p.partNumber.trim()
         ? `<div class="part-line">
-             <span class="field-static">Part:</span>
-             <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
-             ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+             <span class="sec-title">Part</span>
+             <div class="part-inputs-row">
+               <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
+               ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+             </div>
            </div>`
         : "";
 
       const descLine = p.description.trim()
         ? `<div class="desc-line">
-             <span class="desc-static">Description:</span>
-             <span class="desc-input">${escapeHtml(p.description)}</span>
+             <span class="sec-title-inline">Description</span>
+             <div class="desc-inputs-row">
+               <span class="desc-input">${escapeHtml(p.description)}</span>
+             </div>
            </div>`
         : "";
 
@@ -313,7 +319,7 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
 
   const partRows = rows.filter(Boolean).join("");
   const footer = orderNumber.trim()
-    ? `<div class="footer-bar"><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
+    ? `<div class="footer-bar"><span class="sec-title">Sales Order</span><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
     : "";
 
   const win = window.open("", "_blank", "width=800,height=600");
@@ -324,31 +330,36 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 6in; height: 4in; border: 1.5pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
-  .label-header { border-bottom: 1.5pt solid #000; padding: 7px 14px; }
+  .label-header { border-bottom: 1.5pt solid #000; padding: 2px 14px; }
   .logo-text { font-size: 28px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
   .logo-reg { font-size: 15px; vertical-align: super; }
   .parts-area { flex: 1; display: flex; flex-direction: column; }
   .part-row { flex: 1; display: flex; flex-direction: column; border-bottom: 1.5pt solid #000; }
   .part-row:last-of-type { border-bottom: none; }
-  .job-line { display: flex; align-items: center; padding: 7px 12px 4px 12px; gap: 0; border-bottom: 1px solid #ccc; }
+  .sec-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; display: block; white-space: nowrap; }
+  .sec-title-inline { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; white-space: nowrap; flex-shrink: 0; }
+  .job-line { display: flex; flex-direction: column; padding: 2px 12px 1px 12px; border-bottom: 1px solid #ccc; }
+  .job-inputs-row { display: flex; align-items: flex-end; width: 100%; }
   .jqr-pair { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .field-static { font-size: 20px; font-weight: 700; text-transform: uppercase; white-space: nowrap; margin-right: 2px; }
-  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 20px; font-weight: 700; padding: 0 4px; min-height: 22px; display: inline-block; }
+  .jqr-col { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .jqr-row { display: flex; align-items: center; gap: 8px; }
+  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
   .red-input.job-num { min-width: 108px; }
   .red-input.qty-num { min-width: 56px; text-align: center; }
   .red-input.rev-val { min-width: 46px; text-align: center; }
-  .qty-rev-group { display: flex; align-items: center; gap: 16px; margin-left: auto; }
-  .qty-rev-item { display: flex; align-items: center; gap: 5px; }
+  .qty-rev-group { display: flex; align-items: flex-end; gap: 16px; margin-left: auto; }
+  .qty-rev-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
   .qr-mini { width: 54px; height: 54px; flex-shrink: 0; }
   .qr-mini img { width: 100%; height: 100%; }
-  .part-line { display: flex; align-items: center; padding: 5px 12px 3px 12px; gap: 10px; border-bottom: 1px solid #ccc; }
-  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; }
+  .part-line { display: flex; flex-direction: column; padding: 1px 12px 1px 12px; gap: 1px; border-bottom: 1px solid #ccc; }
+  .part-inputs-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
   .qr-part { width: 64px; height: 64px; flex-shrink: 0; }
   .qr-part img { width: 100%; height: 100%; }
-  .desc-line { display: flex; align-items: center; padding: 4px 12px 6px 12px; gap: 6px; }
-  .desc-static { font-size: 14px; font-weight: 700; white-space: nowrap; }
-  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; }
-  .footer-bar { border-top: 1.5pt solid #000; padding: 6px 14px 8px 14px; }
+  .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 1px 12px 3px 12px; gap: 8px; }
+  .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
+  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; display: inline-block; }
+  .footer-bar { border-top: 1.5pt solid #000; padding: 2px 14px 3px 14px; display: flex; flex-direction: column; gap: 1px; }
   .footer-input { font-size: 32px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; display: block; width: 100%; border-bottom: 1.5pt solid #000; }
 </style></head><body>
 <div class="label">

@@ -406,8 +406,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
               ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
               ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-              ${size === "2x4" && p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-              ${size === "4x6" && p.description.trim() ? `<div class="field wrap"><b>Desc:</b> ${escapeHtml(p.description)}</div>` : ""}
+              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
             </div>
             <div class="qrs">
               <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
@@ -417,9 +416,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       })
     );
 
-    const specNote = size === "2x4"
-      ? `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`
-      : "";
+    const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
     const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
     await printLabel("Part Label", body, size);
     onOpenChange(false);

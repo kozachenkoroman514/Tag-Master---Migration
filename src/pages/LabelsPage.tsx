@@ -359,25 +359,29 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
                 <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
-              <div className="space-y-2">
-                <Label>Goes With</Label>
-                <Input
-                  value={p.goesWith}
-                  onChange={(e) => updatePart(i, { goesWith: e.target.value })}
-                  placeholder="Part number(s) this is set with"
-                />
-                <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={p.description}
-                  onChange={(e) => updatePart(i, { description: e.target.value })}
-                  placeholder="Optional description for this part"
-                  rows={2}
-                />
-                <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
-              </div>
+              {size === "2x4" && (
+                <div className="space-y-2">
+                  <Label>Goes With</Label>
+                  <Input
+                    value={p.goesWith}
+                    onChange={(e) => updatePart(i, { goesWith: e.target.value })}
+                    placeholder="Part number(s) this is set with"
+                  />
+                  <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
+                </div>
+              )}
+              {size === "4x6" && (
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={p.description}
+                    onChange={(e) => updatePart(i, { description: e.target.value })}
+                    placeholder="Optional description for this part"
+                    rows={2}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
+                </div>
+              )}
             </div>
           ))}
           {parts.length < 2 && (

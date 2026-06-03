@@ -631,6 +631,15 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </div>
       </div>`;
     await printLabel("Pack Unit Label", body, size);
+    setSoNumbers([""]);
+    setJobNumbers([""]);
+    setProjectId("");
+    setUnitX("");
+    setUnitN("");
+    setDate("");
+    setUnitSel("");
+    setArea("");
+    setMissing(new Set());
     onOpenChange(false);
   };
 

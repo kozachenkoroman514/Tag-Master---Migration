@@ -111,6 +111,22 @@ const AppSidebar = () => {
 
         {(() => {
           const active = location.pathname.startsWith("/bug-report");
+          if (DISABLED_PAGES.bugReport) {
+            return (
+              <div
+                title="Bug Report — coming soon"
+                className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-[10px] font-semibold text-center border-2 border-transparent text-accent-foreground/40 opacity-50 cursor-not-allowed"
+              >
+                <div className="relative">
+                  <BugIcon className="w-11 h-11" active={false} />
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-accent rounded-full p-0.5 border border-border/30">
+                    <Lock className="w-2.5 h-2.5 text-ring" />
+                  </div>
+                </div>
+                Bug Report
+              </div>
+            );
+          }
           return (
             <Link
               to="/bug-report"

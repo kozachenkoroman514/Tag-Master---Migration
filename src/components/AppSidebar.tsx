@@ -1,8 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
+import { Lock } from "lucide-react";
 import {
   BugIcon,
   SettingsIcon,
 } from "./NexusMenuIcons";
+
+const DISABLED_PAGES = {
+  bugReport: true,
+  settings: true,
+};
 
 const TagMasterIcon = ({ className }: { className?: string }) => {
   const gold = "hsl(43 90% 50%)";

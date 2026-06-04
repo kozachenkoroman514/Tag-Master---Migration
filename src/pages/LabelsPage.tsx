@@ -691,9 +691,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     if (size === "4x6") {
       // 4x6 unit label: all fields optional — blank fields are omitted on print.
       setMissing(new Set());
-      const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
       await printUnit4x6({
-        orderNumber: firstSo,
+        orderNumber: "",
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,
@@ -761,7 +760,9 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+          {size === "2x4" && (
+            <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+          )}
           <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>

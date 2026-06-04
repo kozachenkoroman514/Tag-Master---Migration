@@ -442,7 +442,7 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }
   .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
   .desc-input { flex: 1; border: none; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
-  @media print { .label { transform: scale(0.95); transform-origin: center center; border-color: #222; } }
+  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
 </style></head><body>
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>

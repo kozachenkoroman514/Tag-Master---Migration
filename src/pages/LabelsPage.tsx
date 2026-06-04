@@ -852,7 +852,6 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [date, setDate] = useState("");
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
-  const [status, setStatus] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const [previewHtml, setPreviewHtml] = useState("");
 
@@ -869,7 +868,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           unitTotal: unitN,
           date,
           area,
-          status,
+          status: "",
         });
         if (!cancelled) setPreviewHtml(doc);
       } else {
@@ -882,7 +881,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area, status]);
+  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
 
   const handlePrint = async () => {
     if (size === "4x6") {
@@ -896,7 +895,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         unitTotal: unitN,
         date,
         area,
-        status,
+        status: "",
       });
       setSoNumbers([""]);
       setJobNumbers([""]);
@@ -906,7 +905,6 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
-      setStatus("");
       onOpenChange(false);
       return;
     }
@@ -933,7 +931,6 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     setDate("");
     setUnitSel("");
     setArea("");
-    setStatus("");
     setMissing(new Set());
     onOpenChange(false);
   };
@@ -948,7 +945,6 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
-      setStatus("");
       setMissing(new Set());
     }
     onOpenChange(val);
@@ -1056,17 +1052,6 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
-          {size === "4x6" && (
-            <div className="space-y-2">
-              <Label htmlFor="unit-status">Status</Label>
-              <Input
-                id="unit-status"
-                placeholder="TOP"
-                value={status}
-                onChange={(e) => setStatus(e.target.value.toUpperCase())}
-              />
-            </div>
-          )}
           </div>
           <PreviewPane html={previewHtml} size={size} />
         </div>

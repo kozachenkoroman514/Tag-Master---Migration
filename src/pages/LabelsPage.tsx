@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -29,15 +29,13 @@ const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).j
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
 const Req = () => <span className="text-destructive">*</span>;
 
-// --- Printing helpers ---
-async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+// --- Label HTML doc builders (shared by print window + live preview iframe) ---
+function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
   const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
   const labelW = size === "2x4" ? "2in" : "6in";
   const labelH = size === "2x4" ? "4in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>${title}</title>
+  return `<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>
   @page { size: ${pageSize}; margin: 0; }
   html, body { margin: 0; padding: 0; }
@@ -55,9 +53,17 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
-</style></head><body><div class="label">${bodyHtml}</div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); };</script>
-</body></html>`);
+</style></head><body><div class="label">${bodyHtml}</div></body></html>`;
+}
+
+async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  const doc = buildGenericDoc(title, bodyHtml, size).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); };<\/script></body></html>`,
+  );
+  win.document.write(doc);
   win.document.close();
 }
 
@@ -69,6 +75,60 @@ async function qrDataUrl(text: string) {
     return "";
   }
 }
+
+// In-memory cache so the live preview doesn't regenerate the same QR repeatedly.
+const qrPreviewCache = new Map<string, string>();
+async function cachedQr(text: string): Promise<string> {
+  if (!text) return "";
+  const hit = qrPreviewCache.get(text);
+  if (hit !== undefined) return hit;
+  const url = await qrDataUrl(text);
+  qrPreviewCache.set(text, url);
+  return url;
+}
+
+// Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
+// then CSS-transformed to fit the side panel.
+const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
+  const isWide = size === "4x6";
+  const nativeW = isWide ? 576 : 192; // 6in / 2in @ 96dpi
+  const nativeH = isWide ? 384 : 384; // 4in @ 96dpi
+  const targetW = 320;
+  const scale = targetW / nativeW;
+  return (
+    <div
+      className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
+      style={{ width: nativeW * scale, height: nativeH * scale }}
+    >
+      <iframe
+        title="Label preview"
+        srcDoc={html}
+        sandbox="allow-same-origin"
+        style={{
+          width: nativeW,
+          height: nativeH,
+          border: 0,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          display: "block",
+          background: "#fff",
+        }}
+      />
+    </div>
+  );
+};
+
+const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
+  <div className="border-l border-border pl-4 flex flex-col items-start gap-2 overflow-y-auto">
+    <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+      Live preview
+    </div>
+    <LabelPreview html={html} size={size} />
+    <div className="text-[10px] text-muted-foreground">
+      {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
+    </div>
+  </div>
+);
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";
@@ -258,15 +318,12 @@ export default LabelsPage;
 type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string };
 const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "" });
 
-// 4x6 Part label print — mirrors the Electric Mirror label spec.
-// Any field left blank (and its static label) is omitted from the print output.
-async function printPart4x6(parts: PartEntry[]) {
-  const rows = await Promise.all(
-    parts.map(async (p) => {
-      const [partQr, jobQr] = await Promise.all([
-        p.partNumber.trim() ? qrDataUrl(p.partNumber.trim()) : Promise.resolve(""),
-        p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
-      ]);
+// 4x6 Part label — pure HTML doc builder shared by print + live preview.
+// Any field left blank (and its static label) is omitted from the output.
+function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const rows = parts.map((p, i) => {
+      const partQr = qrs[i]?.part || "";
+      const jobQr = qrs[i]?.job || "";
 
       const jobBlock = p.jobNumber.trim()
         ? `<div class="jqr-pair jqr-col">
@@ -314,14 +371,11 @@ async function printPart4x6(parts: PartEntry[]) {
       const inner = `${jobLine}${partLine}${descLine}`;
       if (!inner) return "";
       return `<div class="part-row">${inner}</div>`;
-    })
-  );
+    });
 
   const partRows = rows.filter(Boolean).join("");
 
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>Part Label</title>
+  return `<!doctype html><html><head><title>Part Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
@@ -363,14 +417,72 @@ async function printPart4x6(parts: PartEntry[]) {
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
   <div class="parts-area">${partRows}</div>
 </div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
-</body></html>`);
+</body></html>`;
+}
+
+async function computePartQrs(parts: PartEntry[]): Promise<Array<{ part: string; job: string }>> {
+  return Promise.all(
+    parts.map(async (p) => ({
+      part: p.partNumber.trim() ? await cachedQr(p.partNumber.trim()) : "",
+      job: p.jobNumber.trim() ? await cachedQr(p.jobNumber.trim()) : "",
+    })),
+  );
+}
+
+async function printPart4x6(parts: PartEntry[]) {
+  const qrs = await computePartQrs(parts);
+  const doc = buildPart4x6Doc(parts, qrs).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
   win.document.close();
+}
+
+// 2x4 Part label body (used by both print + preview, via the generic doc wrapper).
+function buildPart2x4Body(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const sections = parts.map((p, i) => {
+    const partQr = qrs[i]?.part || "";
+    const jobQr = qrs[i]?.job || "";
+    return `
+      <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
+        <div class="grow">
+          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
+          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
+          ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
+          ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
+          ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
+        </div>
+        <div class="qrs">
+          ${partQr ? `<div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>` : ""}
+          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+  const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
+  return `<div class="title">Part</div>${sections}${specNote}`;
 }
 
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [previewHtml, setPreviewHtml] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const qrs = await computePartQrs(parts);
+      if (cancelled) return;
+      if (size === "4x6") {
+        setPreviewHtml(buildPart4x6Doc(parts, qrs));
+      } else {
+        setPreviewHtml(buildGenericDoc("Part Label", buildPart2x4Body(parts, qrs), size));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [parts, size]);
 
   const updatePart = (i: number, patch: Partial<PartEntry>) => {
     setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -400,31 +512,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     setMissing(m);
     if (m.size) return;
 
-    const sections = await Promise.all(
-      parts.map(async (p) => {
-        const [partQr, jobQr] = await Promise.all([
-          qrDataUrl(p.partNumber.trim()),
-          p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
-        ]);
-        return `
-          <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
-            <div class="grow">
-              <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
-              <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
-              ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
-              ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-            </div>
-            <div class="qrs">
-              <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
-              ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
-            </div>
-          </div>`;
-      })
-    );
-
-    const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
-    const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
+    const qrs = await computePartQrs(parts);
+    const body = buildPart2x4Body(parts, qrs);
     await printLabel("Part Label", body, size);
     setParts([emptyPart()]);
     onOpenChange(false);
@@ -432,11 +521,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-6 overflow-y-auto pr-2">
           {parts.map((p, i) => (
             <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
               <div className="flex items-center justify-between">
@@ -519,12 +609,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
           )}
-        </div>
           {size === "2x4" && (
             <p className="text-xs text-muted-foreground">
               Specification icons (based on unit style) will be added to the printed label — definitions TBD.
             </p>
           )}
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
@@ -539,9 +631,9 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-// 4x6 Pack Unit (Unit) label — mirrors the Electric Mirror unit label spec.
-// Any blank field (and its section title) is omitted from the print output.
-async function printUnit4x6(opts: {
+// 4x6 Pack Unit (Unit) label — pure HTML doc builder shared by print + preview.
+// Any blank field (and its section title) is omitted from the output.
+type Unit4x6Opts = {
   orderNumber: string;
   project: string;
   unitType: string;
@@ -550,7 +642,8 @@ async function printUnit4x6(opts: {
   date: string;
   area: string;
   status: string;
-}) {
+};
+function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status } = opts;
 
   const orderRow = orderNumber.trim()
@@ -587,9 +680,7 @@ async function printUnit4x6(opts: {
     ? `<div class="bottom-row">${areaCell}${statusCell}</div>`
     : "";
 
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>Unit Label</title>
+  return `<!doctype html><html><head><title>Unit Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
@@ -625,9 +716,48 @@ async function printUnit4x6(opts: {
   ${metaRow}
   ${bottomRow}
 </div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
-</body></html>`);
+</body></html>`;
+}
+
+async function printUnit4x6(opts: Unit4x6Opts) {
+  const doc = buildUnit4x6Doc(opts).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
   win.document.close();
+}
+
+// 2x4 Pack Unit label body builder (used by print + preview).
+function buildPackUnit2x4Body(opts: {
+  sos: string[];
+  jobs: string[];
+  projectId: string;
+  unitX: string;
+  unitN: string;
+  date: string;
+  unitSel: string;
+  area: string;
+  jobQrs: string[];
+}): string {
+  const { sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs } = opts;
+  return `
+    <div class="row">
+      <div class="grow">
+        <div class="title">${escapeHtml(unitSel)}</div>
+        <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
+        ${sos.length ? `<div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>` : ""}
+        ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
+        ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
+        ${area ? `<div class="field"><b>Area:</b> ${escapeHtml(area)}</div>` : ""}
+        ${date ? `<div class="field"><b>Date:</b> ${escapeHtml(date)}</div>` : ""}
+      </div>
+      <div class="qrs">
+        ${jobQrs.map((q, i) => q ? `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>` : "").join("")}
+      </div>
+    </div>`;
 }
 
 const MultiInput = ({
@@ -686,13 +816,42 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [previewHtml, setPreviewHtml] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (size === "4x6") {
+        const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+        const doc = buildUnit4x6Doc({
+          orderNumber: firstSo,
+          project: projectId,
+          unitType: unitSel,
+          unitNum: unitX,
+          unitTotal: unitN,
+          date,
+          area,
+          status: "",
+        });
+        if (!cancelled) setPreviewHtml(doc);
+      } else {
+        const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
+        const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
+        const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
+        if (cancelled) return;
+        const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
+        setPreviewHtml(buildGenericDoc("Pack Unit Label", body, size));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
 
   const handlePrint = async () => {
     if (size === "4x6") {
       // 4x6 unit label: all fields optional — blank fields are omitted on print.
       setMissing(new Set());
       await printUnit4x6({
-        orderNumber: "",
+        orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,
@@ -724,22 +883,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
     const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
     const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobQrs = await Promise.all(jobs.map((j) => qrDataUrl(j)));
-    const body = `
-      <div class="row">
-        <div class="grow">
-          <div class="title">${escapeHtml(unitSel)}</div>
-          <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
-          <div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>
-          ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
-          ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
-          <div class="field"><b>Area:</b> ${escapeHtml(area)}</div>
-          <div class="field"><b>Date:</b> ${escapeHtml(date)}</div>
-        </div>
-        <div class="qrs">
-          ${jobQrs.map((q, i) => `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>`).join("")}
-        </div>
-      </div>`;
+    const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
+    const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
     await printLabel("Pack Unit Label", body, size);
     setSoNumbers([""]);
     setJobNumbers([""]);
@@ -755,11 +900,12 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-4 overflow-y-auto pr-2">
           {size === "2x4" && (
             <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
           )}
@@ -854,6 +1000,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -870,17 +1018,19 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
   const [reason, setReason] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
+  const buildBody = (s: string, r: string) => `
+      <div class="center grow" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <div class="title" style="font-size:48pt;">${escapeHtml(s)}</div>
+        ${r.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(r)}</div>` : ""}
+      </div>`;
+  const previewHtml = buildGenericDoc("Status Note Label", buildBody(status, reason), size);
+
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!status) m.add("status");
     setMissing(m);
     if (m.size) return;
-    const body = `
-      <div class="center grow" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
-        <div class="title" style="font-size:48pt;">${escapeHtml(status)}</div>
-        ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
-      </div>`;
-    await printLabel("Status Note Label", body, size);
+    await printLabel("Status Note Label", buildBody(status, reason), size);
     setStatus("");
     setReason("");
     setMissing(new Set());
@@ -889,11 +1039,12 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-4 overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label>Status <Req /></Label>
             <Select value={status} onValueChange={setStatus}>
@@ -911,6 +1062,8 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
             <Label htmlFor="reason">Reason</Label>
             <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -926,16 +1079,18 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
+  const buildBody = (t: string) => `
+      <div class="grow" style="display:flex;align-items:center;justify-content:center;">
+        <div class="huge wrap center">${escapeHtml(t)}</div>
+      </div>`;
+  const previewHtml = buildGenericDoc("Misc Label", buildBody(text), size);
+
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!text.trim()) m.add("text");
     setMissing(m);
     if (m.size) return;
-    const body = `
-      <div class="grow" style="display:flex;align-items:center;justify-content:center;">
-        <div class="huge wrap center">${escapeHtml(text)}</div>
-      </div>`;
-    await printLabel("Misc Label", body, size);
+    await printLabel("Misc Label", buildBody(text), size);
     setText("");
     setMissing(new Set());
     onOpenChange(false);
@@ -943,11 +1098,12 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-2 overflow-y-auto pr-2">
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea
             id="misc-text"
@@ -955,6 +1111,8 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
           />
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

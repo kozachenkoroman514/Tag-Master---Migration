@@ -517,8 +517,16 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     onOpenChange(false);
   };
 
+  const handleClose = (val: boolean) => {
+    if (!val) {
+      setParts([emptyPart()]);
+      setMissing(new Set());
+    }
+    onOpenChange(val);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
@@ -616,7 +624,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>

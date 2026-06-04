@@ -1018,17 +1018,19 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
   const [reason, setReason] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
+  const buildBody = (s: string, r: string) => `
+      <div class="center grow" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <div class="title" style="font-size:48pt;">${escapeHtml(s)}</div>
+        ${r.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(r)}</div>` : ""}
+      </div>`;
+  const previewHtml = buildGenericDoc("Status Note Label", buildBody(status, reason), size);
+
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!status) m.add("status");
     setMissing(m);
     if (m.size) return;
-    const body = `
-      <div class="center grow" style="display:flex;flex-direction:column;justify-content:center;align-items:center;">
-        <div class="title" style="font-size:48pt;">${escapeHtml(status)}</div>
-        ${reason.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(reason)}</div>` : ""}
-      </div>`;
-    await printLabel("Status Note Label", body, size);
+    await printLabel("Status Note Label", buildBody(status, reason), size);
     setStatus("");
     setReason("");
     setMissing(new Set());
@@ -1037,11 +1039,12 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-4 overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label>Status <Req /></Label>
             <Select value={status} onValueChange={setStatus}>
@@ -1059,6 +1062,8 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
             <Label htmlFor="reason">Reason</Label>
             <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -1074,16 +1079,18 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
+  const buildBody = (t: string) => `
+      <div class="grow" style="display:flex;align-items:center;justify-content:center;">
+        <div class="huge wrap center">${escapeHtml(t)}</div>
+      </div>`;
+  const previewHtml = buildGenericDoc("Misc Label", buildBody(text), size);
+
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!text.trim()) m.add("text");
     setMissing(m);
     if (m.size) return;
-    const body = `
-      <div class="grow" style="display:flex;align-items:center;justify-content:center;">
-        <div class="huge wrap center">${escapeHtml(text)}</div>
-      </div>`;
-    await printLabel("Misc Label", body, size);
+    await printLabel("Misc Label", buildBody(text), size);
     setText("");
     setMissing(new Set());
     onOpenChange(false);
@@ -1091,11 +1098,12 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-2 overflow-y-auto pr-2">
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea
             id="misc-text"
@@ -1103,6 +1111,8 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
           />
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

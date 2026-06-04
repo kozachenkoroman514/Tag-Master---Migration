@@ -440,7 +440,7 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .qr-part img { width: 100%; height: 100%; }
   .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }
   .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
-  .desc-input { flex: 1; border: none; border-bottom: 2px solid #555; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
+  .desc-input { flex: 1; border: none; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
 </style></head><body>
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
@@ -679,15 +679,17 @@ type Unit4x6Opts = {
   date: string;
   area: string;
   status: string;
+  orderQr?: string;
+  projectQr?: string;
 };
 function buildUnit4x6Doc(opts: Unit4x6Opts): string {
-  const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status } = opts;
+  const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status, orderQr, projectQr } = opts;
 
   const orderRow = orderNumber.trim()
-    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input">${escapeHtml(orderNumber)}</div></div>`
+    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box"><img src="${orderQr}" alt="Order QR"/></div>` : ""}</div></div>`
     : "";
   const projectRow = project.trim()
-    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input">${escapeHtml(project)}</div></div>`
+    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box"><img src="${projectQr}" alt="Project QR"/></div>` : ""}</div></div>`
     : "";
 
   const unitCell = unitType.trim()
@@ -725,9 +727,13 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
   .order-row { border-bottom: 3px solid #000; padding: 6px 14px 4px 14px; display: flex; flex-direction: column; }
+  .order-input-row { display: flex; align-items: center; gap: 10px; }
   .order-input { font-size: 88px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; color: #000; }
   .project-row { border-bottom: 3px solid #000; padding: 6px 14px 8px 14px; min-height: 90px; display: flex; flex-direction: column; }
-  .project-input { font-size: 24px; font-weight: 700; line-height: 1.15; }
+  .project-input-row { display: flex; align-items: flex-start; gap: 10px; }
+  .project-input { flex: 1; min-width: 0; font-size: 36px; font-weight: 700; line-height: 1.15; word-break: break-word; }
+  .qr-box { width: 82px; height: 82px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .qr-box img { width: 100%; height: 100%; }
   .meta-row { border-bottom: 3px solid #000; display: flex; align-items: stretch; }
   .meta-cell { display: flex; align-items: center; padding: 6px 10px; gap: 6px; }
   .meta-cell.unit-cell { flex: 0 0 auto; border-right: 2px solid #000; gap: 8px; }
@@ -757,7 +763,11 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
 }
 
 async function printUnit4x6(opts: Unit4x6Opts) {
-  const doc = buildUnit4x6Doc(opts).replace(
+  const [orderQr, projectQr] = await Promise.all([
+    opts.orderNumber.trim() ? cachedQr(opts.orderNumber.trim()) : Promise.resolve(""),
+    opts.project.trim() ? cachedQr(opts.project.trim()) : Promise.resolve(""),
+  ]);
+  const doc = buildUnit4x6Doc({ ...opts, orderQr, projectQr }).replace(
     "</body></html>",
     `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
   );
@@ -860,6 +870,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     (async () => {
       if (size === "4x6") {
         const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+        const [orderQr, projectQr] = await Promise.all([
+          firstSo ? cachedQr(firstSo) : Promise.resolve(""),
+          projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
+        ]);
+        if (cancelled) return;
         const doc = buildUnit4x6Doc({
           orderNumber: firstSo,
           project: projectId,
@@ -869,6 +884,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           date,
           area,
           status: "",
+          orderQr,
+          projectQr,
         });
         if (!cancelled) setPreviewHtml(doc);
       } else {

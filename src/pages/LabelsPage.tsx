@@ -562,7 +562,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
           {parts.map((p, i) => (
             <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">

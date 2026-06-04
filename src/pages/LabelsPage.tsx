@@ -19,6 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
+import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
+import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
+import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
+import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";

@@ -93,7 +93,7 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
   const isWide = size === "4x6";
   const nativeW = isWide ? 576 : 192; // 6in / 2in @ 96dpi
   const nativeH = isWide ? 384 : 384; // 4in @ 96dpi
-  const targetW = 320;
+  const targetW = 640;
   const scale = targetW / nativeW;
   return (
     <div
@@ -519,11 +519,11 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[1fr_680px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto pr-2">
           {parts.map((p, i) => (
             <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
@@ -898,11 +898,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[1fr_680px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto pr-2">
           {size === "2x4" && (
             <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
@@ -1037,11 +1037,11 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[1fr_680px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label>Status <Req /></Label>
@@ -1096,11 +1096,11 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[1fr_680px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto pr-2">
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea

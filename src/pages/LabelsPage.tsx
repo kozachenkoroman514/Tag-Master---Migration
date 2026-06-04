@@ -150,7 +150,7 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
 };
 
 const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
-  <div className="border-l border-border pl-4 flex flex-col items-start gap-2 overflow-y-auto">
+  <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
     <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
       Live preview
     </div>

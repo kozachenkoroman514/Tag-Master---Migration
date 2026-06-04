@@ -22,21 +22,17 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
 const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
   const gold = "hsl(43 90% 50%)";
   const white = "hsl(0 0% 100%)";
-  const SW = 3;
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* printer body */}
-      <rect x={8} y={20} width={48} height={24} rx={3} fill={gold} />
-      {/* paper feed slot (white) */}
-      <rect x={16} y={36} width={32} height={4} fill={white} />
-      {/* top tray */}
-      <rect x={16} y={12} width={32} height={10} rx={1} fill={gold} />
-      {/* status light */}
-      <circle cx={48} cy={28} r={2.2} fill={white} />
-      {/* label coming out the bottom */}
-      <rect x={18} y={42} width={28} height={18} rx={1.5} fill={white} stroke={gold} strokeWidth={SW} />
-      <line x1={22} y1={48} x2={42} y2={48} stroke={gold} strokeWidth={2.2} />
-      <line x1={22} y1={53} x2={38} y2={53} stroke={gold} strokeWidth={2.2} />
+      {/* back label — gold */}
+      <rect x={10} y={8} width={38} height={24} rx={4} fill={gold} transform="rotate(12 29 20)" />
+      <line x1={16} y1={16} x2={42} y2={16} stroke="hsl(43 90% 70%)" strokeWidth={2} transform="rotate(12 29 20)" />
+      <line x1={16} y1={21} x2={38} y2={21} stroke="hsl(43 90% 70%)" strokeWidth={2} transform="rotate(12 29 20)" />
+
+      {/* front label — white */}
+      <rect x={18} y={22} width={38} height={24} rx={4} fill={white} stroke={gold} strokeWidth={2.5} transform="rotate(-8 37 34)" />
+      <line x1={24} y1={30} x2={50} y2={30} stroke={gold} strokeWidth={2.2} transform="rotate(-8 37 34)" />
+      <line x1={24} y1={36} x2={46} y2={36} stroke={gold} strokeWidth={2.2} transform="rotate(-8 37 34)" />
     </svg>
   );
 };

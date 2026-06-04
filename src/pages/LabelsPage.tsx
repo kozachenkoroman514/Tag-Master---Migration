@@ -579,12 +579,9 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Part Number {size === "2x4" && <Req />}</Label>
-                <Input
-                  value={p.partNumber}
-                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
-                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
-                />
+                <Label>Job Number</Label>
+                <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
               <div className="space-y-2">
                 <Label>Qty {size === "2x4" && <Req />}</Label>
@@ -607,10 +604,25 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Job Number</Label>
-                <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                <Label>Part Number {size === "2x4" && <Req />}</Label>
+                <Input
+                  value={p.partNumber}
+                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                />
               </div>
+              {size === "4x6" && (
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={p.description}
+                    onChange={(e) => updatePart(i, { description: e.target.value })}
+                    placeholder="Optional description for this part"
+                    rows={2}
+                  />
+                  <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
+                </div>
+              )}
               {size === "2x4" && (
                 <div className="space-y-2">
                   <Label>SO Number</Label>
@@ -627,18 +639,6 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     placeholder="Part number(s) this is set with"
                   />
                   <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
-                </div>
-              )}
-              {size === "4x6" && (
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={p.description}
-                    onChange={(e) => updatePart(i, { description: e.target.value })}
-                    placeholder="Optional description for this part"
-                    rows={2}
-                  />
-                  <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
                 </div>
               )}
             </div>

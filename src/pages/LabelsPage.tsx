@@ -380,38 +380,36 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 6in; height: 4in; border: 1.5pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
-  .label-header { border-bottom: 1.5pt solid #000; padding: 2px 14px; }
-  .logo-text { font-size: 28px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
+  .label { width: 6in; height: 4in; border: 2.5px solid #222; display: flex; flex-direction: column; overflow: hidden; }
+  .label-header { border-bottom: 2.5px solid #222; padding: 0px 14px 1px 14px; }
+  .logo-text { font-size: 22px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
   .logo-reg { font-size: 15px; vertical-align: super; }
   .parts-area { flex: 1; display: flex; flex-direction: column; }
-  .part-row { flex: 1; display: flex; flex-direction: column; border-bottom: 1.5pt solid #000; }
+  .part-row { flex: 1; display: flex; flex-direction: column; border-bottom: 2.5px solid #222; }
   .part-row:last-of-type { border-bottom: none; }
-  .sec-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; display: block; white-space: nowrap; }
-  .sec-title-inline { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; white-space: nowrap; flex-shrink: 0; }
-  .job-line { display: flex; flex-direction: column; padding: 2px 12px 1px 12px; border-bottom: 1px solid #ccc; }
-  .job-inputs-row { display: flex; align-items: flex-end; width: 100%; }
+  .sec-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; display: block; margin-bottom: -2px; white-space: nowrap; }
+  .sec-title-inline { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; white-space: nowrap; flex-shrink: 0; margin-bottom: -2px; }
+  .job-line { display: flex; flex-direction: column; padding: 0px 12px 0px 12px; border-bottom: 1px solid #ccc; }
+  .job-inputs-row { display: flex; align-items: center; width: 100%; }
   .jqr-pair { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .jqr-col { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .jqr-col { flex-direction: column; align-items: flex-start; gap: 0; }
   .jqr-row { display: flex; align-items: center; gap: 8px; }
-  .red-input { border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
+  .red-input { border: none; border-bottom: 2.5px solid #222; font-size: 18px; font-weight: 700; color: #000; padding: 0 2px; min-height: 20px; display: inline-block; }
   .red-input.job-num { min-width: 108px; }
-  .red-input.qty-num { min-width: 56px; text-align: center; }
-  .red-input.rev-val { min-width: 46px; text-align: center; }
-  .qty-rev-group { display: flex; align-items: flex-end; gap: 16px; margin-left: auto; }
-  .qty-rev-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
-  .qr-mini { width: 54px; height: 54px; flex-shrink: 0; }
+  .red-input.qty-num { min-width: 56px; }
+  .red-input.rev-val { min-width: 46px; }
+  .qty-rev-group { display: flex; align-items: flex-start; gap: 16px; margin-left: auto; }
+  .qty-rev-item { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+  .qr-mini { width: 58px; height: 58px; flex-shrink: 0; }
   .qr-mini img { width: 100%; height: 100%; }
-  .part-line { display: flex; flex-direction: column; padding: 1px 12px 1px 12px; gap: 1px; border-bottom: 1px solid #ccc; }
+  .part-line { display: flex; flex-direction: column; padding: 0px 12px 0px 12px; border-bottom: 1px solid #ccc; }
   .part-inputs-row { display: flex; align-items: center; gap: 10px; width: 100%; }
-  .part-number-input { flex: 1; border: none; border-bottom: 1.5pt solid #000; font-size: 22px; font-weight: 700; padding: 0 4px; min-height: 24px; display: inline-block; }
+  .part-number-input { flex: 1; border: none; border-bottom: 2.5px solid #222; font-size: 18px; font-weight: 700; color: #000; padding: 0 2px; min-height: 20px; display: inline-block; }
   .qr-part { width: 64px; height: 64px; flex-shrink: 0; }
   .qr-part img { width: 100%; height: 100%; }
-  .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 1px 12px 3px 12px; gap: 8px; }
+  .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }
   .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
-  .desc-input { flex: 1; border: none; border-bottom: 1pt solid #555; font-size: 14px; font-weight: 600; padding: 0 4px; min-height: 16px; display: inline-block; }
-  .footer-bar { border-top: 1.5pt solid #000; padding: 2px 14px 3px 14px; display: flex; flex-direction: column; gap: 1px; }
-  .footer-input { font-size: 32px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; display: block; width: 100%; border-bottom: 1.5pt solid #000; }
+  .desc-input { flex: 1; border: none; border-bottom: 2px solid #555; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
 </style></head><body>
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>

@@ -697,8 +697,17 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   ${metaRow}
   ${bottomRow}
 </div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
-</body></html>`);
+</body></html>`;
+}
+
+async function printUnit4x6(opts: Unit4x6Opts) {
+  const doc = buildUnit4x6Doc(opts).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
   win.document.close();
 }
 

@@ -330,7 +330,7 @@ const LabelsPage = () => {
               <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
                 {tile.label}
               </div>
-              <div className={size === "2x4" ? "w-20 h-32" : "w-48 h-48"}>
+              <div className={size === "2x4" ? "w-20 h-32" : "w-64 h-64"}>
                 {size === "4x6" ? (
                   <img
                     src={FOUR_BY_SIX_ICONS[tile.kind].url}

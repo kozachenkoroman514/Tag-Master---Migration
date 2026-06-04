@@ -19,6 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
+import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
+import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
+import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
+import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";
@@ -221,6 +225,13 @@ const MiscIcon = () => (
 type LabelSize = "2x4" | "4x6";
 type LabelKind = "part" | "pack-unit" | "status-note" | "misc";
 
+const FOUR_BY_SIX_ICONS: Record<LabelKind, { url: string }> = {
+  "part": partLabelIcon,
+  "pack-unit": unitLabelIcon,
+  "status-note": statusLabelIcon,
+  "misc": sampleLabelIcon,
+};
+
 const LabelTileIcon = ({ size }: { size: LabelSize }) => {
   const gold = "hsl(43 90% 50%)";
   const SW = 2;
@@ -320,7 +331,15 @@ const LabelsPage = () => {
                 {tile.label}
               </div>
               <div className={size === "2x4" ? "w-20 h-32" : "w-32 h-32"}>
-                <tile.Icon />
+                {size === "4x6" ? (
+                  <img
+                    src={FOUR_BY_SIX_ICONS[tile.kind].url}
+                    alt={`${tile.label} 4x6 label`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <tile.Icon />
+                )}
               </div>
               <div className="text-xs text-muted-foreground">
                 {size === "2x4" ? '2" × 4" label' : '4" × 6" label'}

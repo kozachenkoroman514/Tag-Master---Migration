@@ -852,6 +852,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [date, setDate] = useState("");
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
+  const [status, setStatus] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const [previewHtml, setPreviewHtml] = useState("");
 
@@ -868,7 +869,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           unitTotal: unitN,
           date,
           area,
-          status: "",
+          status,
         });
         if (!cancelled) setPreviewHtml(doc);
       } else {
@@ -881,7 +882,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
+  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area, status]);
 
   const handlePrint = async () => {
     if (size === "4x6") {
@@ -895,7 +896,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         unitTotal: unitN,
         date,
         area,
-        status: "",
+        status,
       });
       setSoNumbers([""]);
       setJobNumbers([""]);
@@ -905,6 +906,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
+      setStatus("");
       onOpenChange(false);
       return;
     }
@@ -931,6 +933,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     setDate("");
     setUnitSel("");
     setArea("");
+    setStatus("");
     setMissing(new Set());
     onOpenChange(false);
   };
@@ -945,6 +948,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
+      setStatus("");
       setMissing(new Set());
     }
     onOpenChange(val);

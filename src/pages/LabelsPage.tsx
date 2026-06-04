@@ -870,6 +870,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     (async () => {
       if (size === "4x6") {
         const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+        const [orderQr, projectQr] = await Promise.all([
+          firstSo ? cachedQr(firstSo) : Promise.resolve(""),
+          projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
+        ]);
+        if (cancelled) return;
         const doc = buildUnit4x6Doc({
           orderNumber: firstSo,
           project: projectId,
@@ -879,6 +884,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           date,
           area,
           status: "",
+          orderQr,
+          projectQr,
         });
         if (!cancelled) setPreviewHtml(doc);
       } else {

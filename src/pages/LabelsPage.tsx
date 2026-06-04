@@ -998,11 +998,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-date">Date (mm/dd/yy) <Req /></Label>
+            <Label htmlFor="pack-date">Date (mm/dd) <Req /></Label>
             <div className="flex gap-2">
               <Input
                 id="pack-date"
-                placeholder="mm/dd/yy"
+                placeholder="mm/dd"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className={cls(missing.has("date") && invalidCls)}
@@ -1023,10 +1023,10 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                   <Calendar
                     mode="single"
                     selected={(() => {
-                      const d = parse(date, "MM/dd/yy", new Date());
+                      const d = parse(date, "MM/dd", new Date());
                       return isValid(d) ? d : undefined;
                     })()}
-                    onSelect={(d) => d && setDate(format(d, "MM/dd/yy"))}
+                    onSelect={(d) => d && setDate(format(d, "MM/dd"))}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />

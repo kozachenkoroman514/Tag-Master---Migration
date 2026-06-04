@@ -468,6 +468,21 @@ function buildPart2x4Body(parts: PartEntry[], qrs: Array<{ part: string; job: st
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [previewHtml, setPreviewHtml] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const qrs = await computePartQrs(parts);
+      if (cancelled) return;
+      if (size === "4x6") {
+        setPreviewHtml(buildPart4x6Doc(parts, qrs));
+      } else {
+        setPreviewHtml(buildGenericDoc("Part Label", buildPart2x4Body(parts, qrs), size));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [parts, size]);
 
   const updatePart = (i: number, patch: Partial<PartEntry>) => {
     setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -497,31 +512,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     setMissing(m);
     if (m.size) return;
 
-    const sections = await Promise.all(
-      parts.map(async (p) => {
-        const [partQr, jobQr] = await Promise.all([
-          qrDataUrl(p.partNumber.trim()),
-          p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
-        ]);
-        return `
-          <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
-            <div class="grow">
-              <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
-              <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
-              ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
-              ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-              ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-            </div>
-            <div class="qrs">
-              <div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>
-              ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
-            </div>
-          </div>`;
-      })
-    );
-
-    const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
-    const body = `<div class="title">Part</div>${sections.join("")}${specNote}`;
+    const qrs = await computePartQrs(parts);
+    const body = buildPart2x4Body(parts, qrs);
     await printLabel("Part Label", body, size);
     setParts([emptyPart()]);
     onOpenChange(false);
@@ -529,11 +521,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-6 overflow-y-auto pr-2">
           {parts.map((p, i) => (
             <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
               <div className="flex items-center justify-between">
@@ -616,12 +609,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
           )}
-        </div>
           {size === "2x4" && (
             <p className="text-xs text-muted-foreground">
               Specification icons (based on unit style) will be added to the printed label — definitions TBD.
             </p>
           )}
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>

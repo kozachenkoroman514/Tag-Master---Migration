@@ -816,13 +816,42 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [previewHtml, setPreviewHtml] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (size === "4x6") {
+        const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+        const doc = buildUnit4x6Doc({
+          orderNumber: firstSo,
+          project: projectId,
+          unitType: unitSel,
+          unitNum: unitX,
+          unitTotal: unitN,
+          date,
+          area,
+          status: "",
+        });
+        if (!cancelled) setPreviewHtml(doc);
+      } else {
+        const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
+        const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
+        const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
+        if (cancelled) return;
+        const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
+        setPreviewHtml(buildGenericDoc("Pack Unit Label", body, size));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
 
   const handlePrint = async () => {
     if (size === "4x6") {
       // 4x6 unit label: all fields optional — blank fields are omitted on print.
       setMissing(new Set());
       await printUnit4x6({
-        orderNumber: "",
+        orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,
@@ -854,22 +883,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
     const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
     const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobQrs = await Promise.all(jobs.map((j) => qrDataUrl(j)));
-    const body = `
-      <div class="row">
-        <div class="grow">
-          <div class="title">${escapeHtml(unitSel)}</div>
-          <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
-          <div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>
-          ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
-          ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
-          <div class="field"><b>Area:</b> ${escapeHtml(area)}</div>
-          <div class="field"><b>Date:</b> ${escapeHtml(date)}</div>
-        </div>
-        <div class="qrs">
-          ${jobQrs.map((q, i) => `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>`).join("")}
-        </div>
-      </div>`;
+    const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
+    const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
     await printLabel("Pack Unit Label", body, size);
     setSoNumbers([""]);
     setJobNumbers([""]);
@@ -885,11 +900,12 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="grid grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-4 overflow-y-auto pr-2">
           {size === "2x4" && (
             <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
           )}
@@ -984,6 +1000,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
+          </div>
+          <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

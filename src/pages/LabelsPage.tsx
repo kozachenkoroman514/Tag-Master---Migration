@@ -727,7 +727,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
   .order-row { border-bottom: 3px solid #000; padding: 6px 14px 4px 14px; display: flex; flex-direction: column; }
-  .order-input-row { display: flex; align-items: center; gap: 10px; }
+  .order-input-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
   .order-input { font-size: 88px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; color: #000; }
   .project-row { border-bottom: 3px solid #000; padding: 6px 14px 8px 14px; min-height: 90px; display: flex; flex-direction: column; }
   .project-input-row { display: flex; align-items: flex-start; gap: 10px; }

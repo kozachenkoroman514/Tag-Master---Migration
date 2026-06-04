@@ -331,7 +331,15 @@ const LabelsPage = () => {
                 {tile.label}
               </div>
               <div className={size === "2x4" ? "w-20 h-32" : "w-32 h-32"}>
-                <tile.Icon />
+                {size === "4x6" ? (
+                  <img
+                    src={FOUR_BY_SIX_ICONS[tile.kind].url}
+                    alt={`${tile.label} 4x6 label`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <tile.Icon />
+                )}
               </div>
               <div className="text-xs text-muted-foreground">
                 {size === "2x4" ? '2" × 4" label' : '4" × 6" label'}

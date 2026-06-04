@@ -93,7 +93,7 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
   const isWide = size === "4x6";
   const nativeW = isWide ? 576 : 192; // 6in / 2in @ 96dpi
   const nativeH = isWide ? 384 : 384; // 4in @ 96dpi
-  const targetW = 320;
+  const targetW = 640;
   const scale = targetW / nativeW;
   return (
     <div

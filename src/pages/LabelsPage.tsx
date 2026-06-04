@@ -612,9 +612,9 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-// 4x6 Pack Unit (Unit) label — mirrors the Electric Mirror unit label spec.
-// Any blank field (and its section title) is omitted from the print output.
-async function printUnit4x6(opts: {
+// 4x6 Pack Unit (Unit) label — pure HTML doc builder shared by print + preview.
+// Any blank field (and its section title) is omitted from the output.
+type Unit4x6Opts = {
   orderNumber: string;
   project: string;
   unitType: string;
@@ -623,7 +623,8 @@ async function printUnit4x6(opts: {
   date: string;
   area: string;
   status: string;
-}) {
+};
+function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status } = opts;
 
   const orderRow = orderNumber.trim()
@@ -660,9 +661,7 @@ async function printUnit4x6(opts: {
     ? `<div class="bottom-row">${areaCell}${statusCell}</div>`
     : "";
 
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>Unit Label</title>
+  return `<!doctype html><html><head><title>Unit Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }

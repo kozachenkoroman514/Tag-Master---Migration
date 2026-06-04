@@ -440,7 +440,7 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .qr-part img { width: 100%; height: 100%; }
   .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }
   .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
-  .desc-input { flex: 1; border: none; border-bottom: 2px solid #555; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
+  .desc-input { flex: 1; border: none; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
 </style></head><body>
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>

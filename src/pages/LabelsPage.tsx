@@ -318,15 +318,12 @@ export default LabelsPage;
 type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string };
 const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "" });
 
-// 4x6 Part label print — mirrors the Electric Mirror label spec.
-// Any field left blank (and its static label) is omitted from the print output.
-async function printPart4x6(parts: PartEntry[]) {
-  const rows = await Promise.all(
-    parts.map(async (p) => {
-      const [partQr, jobQr] = await Promise.all([
-        p.partNumber.trim() ? qrDataUrl(p.partNumber.trim()) : Promise.resolve(""),
-        p.jobNumber.trim() ? qrDataUrl(p.jobNumber.trim()) : Promise.resolve(""),
-      ]);
+// 4x6 Part label — pure HTML doc builder shared by print + live preview.
+// Any field left blank (and its static label) is omitted from the output.
+function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const rows = parts.map((p, i) => {
+      const partQr = qrs[i]?.part || "";
+      const jobQr = qrs[i]?.job || "";
 
       const jobBlock = p.jobNumber.trim()
         ? `<div class="jqr-pair jqr-col">
@@ -374,14 +371,11 @@ async function printPart4x6(parts: PartEntry[]) {
       const inner = `${jobLine}${partLine}${descLine}`;
       if (!inner) return "";
       return `<div class="part-row">${inner}</div>`;
-    })
-  );
+    });
 
   const partRows = rows.filter(Boolean).join("");
 
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>Part Label</title>
+  return `<!doctype html><html><head><title>Part Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
@@ -423,8 +417,27 @@ async function printPart4x6(parts: PartEntry[]) {
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
   <div class="parts-area">${partRows}</div>
 </div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
-</body></html>`);
+</body></html>`;
+}
+
+async function computePartQrs(parts: PartEntry[]): Promise<Array<{ part: string; job: string }>> {
+  return Promise.all(
+    parts.map(async (p) => ({
+      part: p.partNumber.trim() ? await cachedQr(p.partNumber.trim()) : "",
+      job: p.jobNumber.trim() ? await cachedQr(p.jobNumber.trim()) : "",
+    })),
+  );
+}
+
+async function printPart4x6(parts: PartEntry[]) {
+  const qrs = await computePartQrs(parts);
+  const doc = buildPart4x6Doc(parts, qrs).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
   win.document.close();
 }
 

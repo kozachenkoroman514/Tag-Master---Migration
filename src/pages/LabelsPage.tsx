@@ -441,6 +441,30 @@ async function printPart4x6(parts: PartEntry[]) {
   win.document.close();
 }
 
+// 2x4 Part label body (used by both print + preview, via the generic doc wrapper).
+function buildPart2x4Body(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const sections = parts.map((p, i) => {
+    const partQr = qrs[i]?.part || "";
+    const jobQr = qrs[i]?.job || "";
+    return `
+      <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
+        <div class="grow">
+          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
+          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
+          ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
+          ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
+          ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
+        </div>
+        <div class="qrs">
+          ${partQr ? `<div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>` : ""}
+          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+  const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
+  return `<div class="title">Part</div>${sections}${specNote}`;
+}
+
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());

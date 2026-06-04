@@ -62,7 +62,7 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   if (!win) return;
   const doc = buildGenericDoc(title, bodyHtml, size).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   win.document.write(doc);
   win.document.close();

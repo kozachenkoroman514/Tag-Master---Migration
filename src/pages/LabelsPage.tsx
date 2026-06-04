@@ -683,30 +683,30 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 6in; height: 4in; border: 2pt solid #000; display: flex; flex-direction: column; overflow: hidden; }
-  .section-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
-  .order-row { border-bottom: 2pt solid #000; padding: 4px 14px 2px 14px; display: flex; flex-direction: column; }
-  .order-input { font-size: 64px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; }
-  .project-row { border-bottom: 2pt solid #000; padding: 4px 14px 6px 14px; display: flex; flex-direction: column; }
+  .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .section-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
+  .order-row { border-bottom: 3px solid #000; padding: 6px 14px 4px 14px; display: flex; flex-direction: column; }
+  .order-input { font-size: 88px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; color: #000; }
+  .project-row { border-bottom: 3px solid #000; padding: 6px 14px 8px 14px; min-height: 90px; display: flex; flex-direction: column; }
   .project-input { font-size: 24px; font-weight: 700; line-height: 1.15; }
-  .meta-row { border-bottom: 2pt solid #000; display: flex; align-items: stretch; }
-  .meta-cell { display: flex; align-items: center; padding: 4px 10px; gap: 6px; }
-  .meta-cell.unit-cell { flex: 0 0 auto; border-right: 1.5pt solid #000; gap: 8px; }
-  .meta-cell.of-cell   { flex: 1; border-right: 1.5pt solid #000; gap: 6px; }
+  .meta-row { border-bottom: 3px solid #000; display: flex; align-items: stretch; }
+  .meta-cell { display: flex; align-items: center; padding: 6px 10px; gap: 6px; }
+  .meta-cell.unit-cell { flex: 0 0 auto; border-right: 2px solid #000; gap: 8px; }
+  .meta-cell.of-cell   { flex: 1; border-right: 2px solid #000; gap: 6px; }
   .meta-cell.date-cell { flex: 0 0 auto; }
-  .meta-label { font-size: 18px; font-weight: 700; white-space: nowrap; }
-  .unit-select { font-size: 20px; font-weight: 700; border-bottom: 2pt solid #000; padding-right: 4px; }
-  .meta-input { font-size: 20px; font-weight: 700; border-bottom: 1.5pt solid #000; text-align: center; display: inline-block; min-height: 22px; padding: 0 4px; }
-  .meta-input.num-input { min-width: 40px; }
-  .meta-input.total-input { min-width: 40px; }
-  .meta-input.date-input { min-width: 70px; letter-spacing: 1px; }
-  .of-word { font-size: 20px; font-weight: 700; }
-  .bottom-row { display: flex; align-items: stretch; min-height: 56px; flex: 1; }
-  .area-cell { flex: 1; display: flex; align-items: center; padding: 4px 10px; gap: 8px; border-right: 1.5pt solid #000; }
-  .area-input { flex: 1; font-size: 24px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 1.5pt solid #000; display: inline-block; min-height: 26px; padding: 0 4px; }
+  .meta-label { font-size: 20px; font-weight: 700; white-space: nowrap; }
+  .unit-select { font-size: 22px; font-weight: 700; border-bottom: 2.5px solid #000; padding-right: 4px; }
+  .meta-input { font-size: 22px; font-weight: 700; border-bottom: 2px solid #000; text-align: center; display: inline-block; min-height: 26px; padding: 0 4px; }
+  .meta-input.num-input { min-width: 52px; }
+  .meta-input.total-input { min-width: 52px; }
+  .meta-input.date-input { min-width: 80px; letter-spacing: 1px; }
+  .of-word { font-size: 22px; font-weight: 700; }
+  .bottom-row { display: flex; align-items: stretch; min-height: 62px; flex: 1; }
+  .area-cell { flex: 1; display: flex; align-items: center; padding: 6px 10px; gap: 8px; border-right: 2px solid #000; }
+  .area-input { flex: 1; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
   .status-cell { width: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
-  .status-label-sm { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
-  .status-input { width: 100%; font-size: 24px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 1.5pt solid #000; display: inline-block; min-height: 26px; padding: 0 4px; }
+  .status-label-sm { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+  .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
 </style></head><body>
 <div class="label">
   ${orderRow}

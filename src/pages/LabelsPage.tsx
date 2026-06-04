@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -29,15 +29,13 @@ const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).j
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
 const Req = () => <span className="text-destructive">*</span>;
 
-// --- Printing helpers ---
-async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+// --- Label HTML doc builders (shared by print window + live preview iframe) ---
+function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
   const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
   const labelW = size === "2x4" ? "2in" : "6in";
   const labelH = size === "2x4" ? "4in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
-  win.document.write(`<!doctype html><html><head><title>${title}</title>
+  return `<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>
   @page { size: ${pageSize}; margin: 0; }
   html, body { margin: 0; padding: 0; }
@@ -55,9 +53,17 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
-</style></head><body><div class="label">${bodyHtml}</div>
-<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); };</script>
-</body></html>`);
+</style></head><body><div class="label">${bodyHtml}</div></body></html>`;
+}
+
+async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x6") {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  const doc = buildGenericDoc(title, bodyHtml, size).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); };<\/script></body></html>`,
+  );
+  win.document.write(doc);
   win.document.close();
 }
 
@@ -69,6 +75,60 @@ async function qrDataUrl(text: string) {
     return "";
   }
 }
+
+// In-memory cache so the live preview doesn't regenerate the same QR repeatedly.
+const qrPreviewCache = new Map<string, string>();
+async function cachedQr(text: string): Promise<string> {
+  if (!text) return "";
+  const hit = qrPreviewCache.get(text);
+  if (hit !== undefined) return hit;
+  const url = await qrDataUrl(text);
+  qrPreviewCache.set(text, url);
+  return url;
+}
+
+// Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
+// then CSS-transformed to fit the side panel.
+const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
+  const isWide = size === "4x6";
+  const nativeW = isWide ? 576 : 192; // 6in / 2in @ 96dpi
+  const nativeH = isWide ? 384 : 384; // 4in @ 96dpi
+  const targetW = 320;
+  const scale = targetW / nativeW;
+  return (
+    <div
+      className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
+      style={{ width: nativeW * scale, height: nativeH * scale }}
+    >
+      <iframe
+        title="Label preview"
+        srcDoc={html}
+        sandbox="allow-same-origin"
+        style={{
+          width: nativeW,
+          height: nativeH,
+          border: 0,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          display: "block",
+          background: "#fff",
+        }}
+      />
+    </div>
+  );
+};
+
+const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
+  <div className="border-l border-border pl-4 flex flex-col items-start gap-2 overflow-y-auto">
+    <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+      Live preview
+    </div>
+    <LabelPreview html={html} size={size} />
+    <div className="text-[10px] text-muted-foreground">
+      {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
+    </div>
+  </div>
+);
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";

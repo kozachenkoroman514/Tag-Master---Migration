@@ -958,10 +958,21 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
-          {size === "2x4" && (
-            <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+          {size === "2x4" ? (
+            <>
+              <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+              <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="pack-so">SO Number</Label>
+              <Input
+                id="pack-so"
+                value={soNumbers[0] ?? ""}
+                onChange={(e) => setSoNumbers([e.target.value])}
+              />
+            </div>
           )}
-          <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />

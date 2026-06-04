@@ -1056,6 +1056,17 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label htmlFor="unit-status">Status</Label>
+              <Input
+                id="unit-status"
+                placeholder="TOP"
+                value={status}
+                onChange={(e) => setStatus(e.target.value.toUpperCase())}
+              />
+            </div>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} />
         </div>

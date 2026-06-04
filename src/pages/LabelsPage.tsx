@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -90,36 +90,67 @@ async function cachedQr(text: string): Promise<string> {
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
 // then CSS-transformed to fit the side panel.
 const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(() => {
+    const isWide = size === "4x6";
+    const nativeW = isWide ? 576 : 192;
+    const nativeH = 384;
+    const estAvailW = 640;
+    const estAvailH = 700;
+    return Math.min(estAvailW / nativeW, estAvailH / nativeH);
+  });
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const isWide = size === "4x6";
+    const nativeW = isWide ? 576 : 192;
+    const nativeH = 384;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      const s = Math.min(rect.width / nativeW, rect.height / nativeH);
+      setScale(s);
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [size]);
+
   const isWide = size === "4x6";
-  const nativeW = isWide ? 576 : 192; // 6in / 2in @ 96dpi
-  const nativeH = isWide ? 384 : 384; // 4in @ 96dpi
-  const targetW = 640;
-  const scale = targetW / nativeW;
+  const nativeW = isWide ? 576 : 192;
+  const nativeH = 384;
+
   return (
-    <div
-      className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
-      style={{ width: nativeW * scale, height: nativeH * scale }}
-    >
-      <iframe
-        title="Label preview"
-        srcDoc={html}
-        sandbox="allow-same-origin"
-        style={{
-          width: nativeW,
-          height: nativeH,
-          border: 0,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-          display: "block",
-          background: "#fff",
-        }}
-      />
+    <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
+      <div
+        className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
+        style={{ width: nativeW * scale, height: nativeH * scale }}
+      >
+        <iframe
+          title="Label preview"
+          srcDoc={html}
+          sandbox="allow-same-origin"
+          style={{
+            width: nativeW,
+            height: nativeH,
+            border: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            display: "block",
+            background: "#fff",
+          }}
+        />
+      </div>
     </div>
   );
 };
 
 const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
-  <div className="border-l border-border pl-4 flex flex-col items-start gap-2 overflow-y-auto">
+  <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
     <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
       Live preview
     </div>
@@ -527,7 +558,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
@@ -921,7 +952,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
@@ -1069,7 +1100,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
@@ -1136,7 +1167,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>

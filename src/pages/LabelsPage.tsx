@@ -225,6 +225,13 @@ const MiscIcon = () => (
 type LabelSize = "2x4" | "4x6";
 type LabelKind = "part" | "pack-unit" | "status-note" | "misc";
 
+const FOUR_BY_SIX_ICONS: Record<LabelKind, { url: string }> = {
+  "part": partLabelIcon,
+  "pack-unit": unitLabelIcon,
+  "status-note": statusLabelIcon,
+  "misc": sampleLabelIcon,
+};
+
 const LabelTileIcon = ({ size }: { size: LabelSize }) => {
   const gold = "hsl(43 90% 50%)";
   const SW = 2;

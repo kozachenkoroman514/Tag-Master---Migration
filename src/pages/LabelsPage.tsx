@@ -279,9 +279,10 @@ const LabelTileIcon = ({ size }: { size: LabelSize }) => {
 const LabelsPage = () => {
   const [size, setSize] = useState<LabelSize>("4x6");
   const [openKind, setOpenKind] = useState<LabelKind | null>(null);
+  const [wipOpen, setWipOpen] = useState(false);
 
-  const sizes: { value: LabelSize; label: string }[] = [
-    { value: "2x4", label: '2" × 4"' },
+  const sizes: { value: LabelSize; label: string; wip?: boolean }[] = [
+    { value: "2x4", label: '2" × 4"', wip: true },
     { value: "4x6", label: '4" × 6"' },
   ];
 
@@ -291,22 +292,34 @@ const LabelsPage = () => {
       <main className="flex-1 ml-[100px] p-6 space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight">Labels</h1>
-          <div className="inline-flex rounded-lg border border-border bg-card p-1">
+          <div className="inline-flex items-center rounded-lg border border-border bg-card p-1 gap-1">
             {sizes.map((s) => {
               const active = size === s.value;
               return (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => setSize(s.value)}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
-                    active
-                      ? "bg-ring text-accent"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {s.label}
-                </button>
+                <div key={s.value} className="relative flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (s.wip) {
+                        setWipOpen(true);
+                      } else {
+                        setSize(s.value);
+                      }
+                    }}
+                    className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                      active
+                        ? "bg-ring text-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    } ${s.wip ? "outline outline-2 outline-yellow-500/70" : ""}`}
+                  >
+                    {s.label}
+                  </button>
+                  {s.wip && (
+                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-yellow-500/20 text-yellow-400 border border-yellow-500/40">
+                      WIP
+                    </span>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -358,6 +371,22 @@ const LabelsPage = () => {
         <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+
+        <Dialog open={wipOpen} onOpenChange={setWipOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-yellow-400">Work in Progress</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground">
+              Work in Progress. Will be available soon!
+            </p>
+            <DialogFooter>
+              <Button onClick={() => setWipOpen(false)} className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/40">
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

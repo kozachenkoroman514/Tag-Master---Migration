@@ -730,6 +730,36 @@ async function printUnit4x6(opts: Unit4x6Opts) {
   win.document.close();
 }
 
+// 2x4 Pack Unit label body builder (used by print + preview).
+function buildPackUnit2x4Body(opts: {
+  sos: string[];
+  jobs: string[];
+  projectId: string;
+  unitX: string;
+  unitN: string;
+  date: string;
+  unitSel: string;
+  area: string;
+  jobQrs: string[];
+}): string {
+  const { sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs } = opts;
+  return `
+    <div class="row">
+      <div class="grow">
+        <div class="title">${escapeHtml(unitSel)}</div>
+        <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
+        ${sos.length ? `<div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>` : ""}
+        ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
+        ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
+        ${area ? `<div class="field"><b>Area:</b> ${escapeHtml(area)}</div>` : ""}
+        ${date ? `<div class="field"><b>Date:</b> ${escapeHtml(date)}</div>` : ""}
+      </div>
+      <div class="qrs">
+        ${jobQrs.map((q, i) => q ? `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>` : "").join("")}
+      </div>
+    </div>`;
+}
+
 const MultiInput = ({
   label,
   values,

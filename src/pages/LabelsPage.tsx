@@ -371,7 +371,6 @@ async function printPart4x6(parts: PartEntry[]) {
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [parts, setParts] = useState<PartEntry[]>([emptyPart()]);
   const [missing, setMissing] = useState<Set<string>>(new Set());
-  const [orderNumber, setOrderNumber] = useState("");
 
   const updatePart = (i: number, patch: Partial<PartEntry>) => {
     setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -387,9 +386,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     if (size === "4x6") {
       // 4x6: all fields optional — blank fields (and their labels) are omitted on print.
       setMissing(new Set());
-      await printPart4x6(parts, orderNumber);
+      await printPart4x6(parts);
       setParts([emptyPart()]);
-      setOrderNumber("");
       onOpenChange(false);
       return;
     }
@@ -520,17 +518,6 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             <Button type="button" variant="outline" size="sm" onClick={addPart}>
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
-          )}
-          {size === "4x6" && (
-            <div className="space-y-2 border-t border-border pt-4">
-              <Label>Order Number / Footer</Label>
-              <Input
-                value={orderNumber}
-                onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="455100 (Lines 1-2)"
-              />
-              <p className="text-xs text-muted-foreground">Optional. Appears in the footer of the label. Leave blank to omit.</p>
-            </div>
           )}
         </div>
           {size === "2x4" && (

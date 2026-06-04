@@ -260,7 +260,7 @@ const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", so
 
 // 4x6 Part label print — mirrors the Electric Mirror label spec.
 // Any field left blank (and its static label) is omitted from the print output.
-async function printPart4x6(parts: PartEntry[], orderNumber: string) {
+async function printPart4x6(parts: PartEntry[]) {
   const rows = await Promise.all(
     parts.map(async (p) => {
       const [partQr, jobQr] = await Promise.all([
@@ -318,9 +318,6 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
   );
 
   const partRows = rows.filter(Boolean).join("");
-  const footer = orderNumber.trim()
-    ? `<div class="footer-bar"><span class="sec-title">Sales Order</span><span class="footer-input">${escapeHtml(orderNumber)}</span></div>`
-    : "";
 
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -365,7 +362,6 @@ async function printPart4x6(parts: PartEntry[], orderNumber: string) {
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
   <div class="parts-area">${partRows}</div>
-  ${footer}
 </div>
 <script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script>
 </body></html>`);

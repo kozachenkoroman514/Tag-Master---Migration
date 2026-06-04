@@ -517,8 +517,16 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     onOpenChange(false);
   };
 
+  const handleClose = (val: boolean) => {
+    if (!val) {
+      setParts([emptyPart()]);
+      setMissing(new Set());
+    }
+    onOpenChange(val);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
@@ -616,7 +624,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
@@ -896,8 +904,23 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     onOpenChange(false);
   };
 
+  const handleClose = (val: boolean) => {
+    if (!val) {
+      setSoNumbers([""]);
+      setJobNumbers([""]);
+      setProjectId("");
+      setUnitX("");
+      setUnitN("");
+      setDate("");
+      setUnitSel("");
+      setArea("");
+      setMissing(new Set());
+    }
+    onOpenChange(val);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
@@ -1002,7 +1025,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
@@ -1035,8 +1058,17 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
     onOpenChange(false);
   };
 
+  const handleClose = (val: boolean) => {
+    if (!val) {
+      setStatus("");
+      setReason("");
+      setMissing(new Set());
+    }
+    onOpenChange(val);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
@@ -1064,7 +1096,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>
@@ -1094,8 +1126,16 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     onOpenChange(false);
   };
 
+  const handleClose = (val: boolean) => {
+    if (!val) {
+      setText("");
+      setMissing(new Set());
+    }
+    onOpenChange(val);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
@@ -1113,7 +1153,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           <PreviewPane html={previewHtml} size={size} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
         </DialogFooter>
       </DialogContent>

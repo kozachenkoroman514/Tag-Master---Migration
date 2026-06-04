@@ -562,7 +562,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
           {parts.map((p, i) => (
             <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
@@ -958,10 +958,21 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
-          {size === "2x4" && (
-            <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+          {size === "2x4" ? (
+            <>
+              <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
+              <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="pack-so">SO Number</Label>
+              <Input
+                id="pack-so"
+                value={soNumbers[0] ?? ""}
+                onChange={(e) => setSoNumbers([e.target.value])}
+              />
+            </div>
           )}
-          <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
@@ -1065,6 +1076,44 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 };
 
 // ----------------- Status Note Label -----------------
+// 4x6 Status Note label — matches attached status_label.html layout exactly.
+function buildStatusNote4x6Doc(status: string, reason: string): string {
+  return `<!doctype html><html><head><title>Status Note Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 6in 4in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+  .status-row { border-bottom: 3px solid #000; padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; }
+  .sec-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 0; }
+  .status-value { flex: 1; font-size: 96px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
+  .reason-row { padding: 4px 14px 8px 14px; display: flex; flex-direction: column; flex: 1; }
+  .reason-value { flex: 1; font-size: 26px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
+</style></head><body>
+<div class="label">
+  <div class="status-row">
+    <span class="sec-title">Status</span>
+    <div class="status-value">${escapeHtml(status)}</div>
+  </div>
+  <div class="reason-row">
+    <span class="sec-title">Reason</span>
+    <div class="reason-value">${escapeHtml(reason)}</div>
+  </div>
+</div>
+</body></html>`;
+}
+
+async function printStatusNote4x6(status: string, reason: string) {
+  const doc = buildStatusNote4x6Doc(status, reason).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
+}
+
 const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [status, setStatus] = useState("");
   const [reason, setReason] = useState("");
@@ -1075,14 +1124,21 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         <div class="title" style="font-size:48pt;">${escapeHtml(s)}</div>
         ${r.trim() ? `<div class="field wrap" style="font-size:18pt;margin-top:0.2in;">${escapeHtml(r)}</div>` : ""}
       </div>`;
-  const previewHtml = buildGenericDoc("Status Note Label", buildBody(status, reason), size);
+  const previewHtml =
+    size === "4x6"
+      ? buildStatusNote4x6Doc(status, reason)
+      : buildGenericDoc("Status Note Label", buildBody(status, reason), size);
 
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!status) m.add("status");
     setMissing(m);
     if (m.size) return;
-    await printLabel("Status Note Label", buildBody(status, reason), size);
+    if (size === "4x6") {
+      await printStatusNote4x6(status, reason);
+    } else {
+      await printLabel("Status Note Label", buildBody(status, reason), size);
+    }
     setStatus("");
     setReason("");
     setMissing(new Set());

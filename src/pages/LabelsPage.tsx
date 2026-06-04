@@ -763,7 +763,11 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
 }
 
 async function printUnit4x6(opts: Unit4x6Opts) {
-  const doc = buildUnit4x6Doc(opts).replace(
+  const [orderQr, projectQr] = await Promise.all([
+    opts.orderNumber.trim() ? cachedQr(opts.orderNumber.trim()) : Promise.resolve(""),
+    opts.project.trim() ? cachedQr(opts.project.trim()) : Promise.resolve(""),
+  ]);
+  const doc = buildUnit4x6Doc({ ...opts, orderQr, projectQr }).replace(
     "</body></html>",
     `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
   );

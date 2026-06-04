@@ -343,7 +343,7 @@ const LabelsPage = () => {
               <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
                 {tile.label}
               </div>
-              <div className={size === "2x4" ? "w-20 h-32" : "w-64 h-64"}>
+              <div className={size === "2x4" ? "w-32 h-48" : "w-80 h-80"}>
                 {size === "4x6" ? (
                   <img
                     src={FOUR_BY_SIX_ICONS[tile.kind].url}
@@ -353,9 +353,6 @@ const LabelsPage = () => {
                 ) : (
                   <tile.Icon />
                 )}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {size === "2x4" ? '2" × 4" label' : '4" × 6" label'}
               </div>
             </button>
           ))}

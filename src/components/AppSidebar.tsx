@@ -4,34 +4,20 @@ import {
   BugIcon,
   SettingsIcon,
 } from "./NexusMenuIcons";
+import tagMasterIcon from "@/assets/tag-master-icon.png.asset.json";
 
 const DISABLED_PAGES = {
   bugReport: true,
   settings: true,
 };
 
-const TagMasterIcon = ({ className }: { className?: string }) => {
-  const gold = "hsl(43 90% 50%)";
-  const white = "hsl(0 0% 100%)";
-  const SW = 2.2;
-  return (
-    <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round">
-      {/* Larger 4x6 label (back) */}
-      <rect x={20} y={10} width={36} height={28} rx={2} fill={white} stroke={gold} strokeWidth={SW} />
-      <line x1={26} y1={18} x2={50} y2={18} stroke={gold} strokeWidth={SW} />
-      <line x1={26} y1={24} x2={44} y2={24} stroke={gold} strokeWidth={SW} />
-      <line x1={26} y1={30} x2={40} y2={30} stroke={gold} strokeWidth={SW} />
-      {/* Smaller 2x4 label (front, overlapping) */}
-      <rect x={8} y={28} width={28} height={26} rx={2} fill={white} stroke={gold} strokeWidth={SW} />
-      <line x1={13} y1={36} x2={31} y2={36} stroke={gold} strokeWidth={SW} />
-      <line x1={13} y1={42} x2={27} y2={42} stroke={gold} strokeWidth={SW} />
-      <line x1={13} y1={48} x2={24} y2={48} stroke={gold} strokeWidth={SW} />
-      {/* Punch holes */}
-      <circle cx={26} cy={14} r={1.4} fill={gold} />
-      <circle cx={13} cy={32} r={1.2} fill={gold} />
-    </svg>
-  );
-};
+const TagMasterIcon = ({ className }: { className?: string }) => (
+  <img
+    src={tagMasterIcon.url}
+    alt="Tag Master"
+    className={`${className ?? ""} object-contain`}
+  />
+);
 
 const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
   const gold = "hsl(43 90% 50%)";

@@ -1079,6 +1079,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 <SelectItem value="MAINLINE">MAINLINE</SelectItem>
                 <SelectItem value="CHASSISLINE">CHASSISLINE</SelectItem>
                 <SelectItem value="MATERIALS">MATERIALS</SelectItem>
+                <SelectItem value="WILLCALL">WILLCALL</SelectItem>
                 <SelectItem value="OTHER">OTHER</SelectItem>
               </SelectContent>
             </Select>

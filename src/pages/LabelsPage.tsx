@@ -53,6 +53,7 @@ function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): stri
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
+  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
 </style></head><body><div class="label">${bodyHtml}</div></body></html>`;
 }
 
@@ -441,6 +442,7 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }
   .desc-inputs-row { display: flex; align-items: center; gap: 6px; flex: 1; }
   .desc-input { flex: 1; border: none; color: #222; font-size: 14px; font-weight: 600; padding: 0 2px; min-height: 16px; display: inline-block; }
+  @media print { .label { transform: scale(0.95); transform-origin: center center; border-color: #222; } }
 </style></head><body>
 <div class="label">
   <div class="label-header"><span class="logo-text">Electric Mirror<span class="logo-reg">&reg;</span></span></div>
@@ -752,6 +754,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .status-cell { width: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
   .status-label-sm { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
   .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
+  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
 </style></head><body>
 <div class="label">
   ${orderRow}
@@ -1106,6 +1109,7 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
   .status-value { flex: 1; font-size: 96px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 4px 14px 8px 14px; display: flex; flex-direction: column; flex: 1; }
   .reason-value { flex: 1; font-size: 26px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
+  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
 </style></head><body>
 <div class="label">
   <div class="status-row">

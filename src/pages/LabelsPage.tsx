@@ -558,7 +558,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
@@ -952,7 +952,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-7xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
@@ -1100,7 +1100,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
@@ -1167,7 +1167,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>

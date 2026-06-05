@@ -572,8 +572,15 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   const handlePrint = async () => {
     if (size === "4x6") {
-      // 4x6: all fields optional — blank fields (and their labels) are omitted on print.
-      setMissing(new Set());
+      // 4x6: Part Number, Qty, and Description are required. Other blank fields are omitted on print.
+      const m = new Set<string>();
+      parts.forEach((p, i) => {
+        if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
+        if (!p.qty.trim()) m.add(`qty-${i}`);
+        if (!p.description.trim()) m.add(`description-${i}`);
+      });
+      setMissing(m);
+      if (m.size) return;
       await printPart4x6(parts);
       setParts([emptyPart()]);
       onOpenChange(false);
@@ -629,7 +636,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
               </div>
               <div className="space-y-2">
-                <Label>Qty {size === "2x4" && <Req />}</Label>
+                <Label>Qty <Req /></Label>
                 <Input
                   type="number"
                   value={p.qty}
@@ -649,7 +656,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Part Number {size === "2x4" && <Req />}</Label>
+                <Label>Part Number <Req /></Label>
                 <Input
                   value={p.partNumber}
                   onChange={(e) => updatePart(i, { partNumber: e.target.value })}
@@ -658,14 +665,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               </div>
               {size === "4x6" && (
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>Description <Req /></Label>
                   <Textarea
                     value={p.description}
                     onChange={(e) => updatePart(i, { description: e.target.value })}
                     placeholder="Optional description for this part"
                     rows={2}
+                    className={cls(missing.has(`description-${i}`) && invalidCls)}
                   />
-                  <p className="text-xs text-muted-foreground">Optional. Appears on the printed label.</p>
                 </div>
               )}
               {size === "2x4" && (
@@ -950,8 +957,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   const handlePrint = async () => {
     if (size === "4x6") {
-      // 4x6 unit label: all fields optional — blank fields are omitted on print.
-      setMissing(new Set());
+      // 4x6 unit label: SO Number required. Other blank fields are omitted on print.
+      const m = new Set<string>();
+      if (!(soNumbers[0] ?? "").trim()) m.add("so");
+      setMissing(m);
+      if (m.size) return;
       await printUnit4x6({
         orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
         project: projectId,
@@ -1030,11 +1040,12 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             </>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="pack-so">SO Number</Label>
+              <Label htmlFor="pack-so">SO Number <Req /></Label>
               <Input
                 id="pack-so"
                 value={soNumbers[0] ?? ""}
                 onChange={(e) => setSoNumbers([e.target.value])}
+                className={cls(missing.has("so") && invalidCls)}
               />
             </div>
           )}

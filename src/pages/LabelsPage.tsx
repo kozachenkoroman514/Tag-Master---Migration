@@ -957,8 +957,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   const handlePrint = async () => {
     if (size === "4x6") {
-      // 4x6 unit label: all fields optional — blank fields are omitted on print.
-      setMissing(new Set());
+      // 4x6 unit label: SO Number required. Other blank fields are omitted on print.
+      const m = new Set<string>();
+      if (!(soNumbers[0] ?? "").trim()) m.add("so");
+      setMissing(m);
+      if (m.size) return;
       await printUnit4x6({
         orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
         project: projectId,
@@ -1037,11 +1040,12 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             </>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="pack-so">SO Number</Label>
+              <Label htmlFor="pack-so">SO Number <Req /></Label>
               <Input
                 id="pack-so"
                 value={soNumbers[0] ?? ""}
                 onChange={(e) => setSoNumbers([e.target.value])}
+                className={cls(missing.has("so") && invalidCls)}
               />
             </div>
           )}

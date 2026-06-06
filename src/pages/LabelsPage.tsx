@@ -281,8 +281,8 @@ const LabelsPage = () => {
   const [openKind, setOpenKind] = useState<LabelKind | null>(null);
   const [wipOpen, setWipOpen] = useState(false);
 
-  const sizes: { value: LabelSize; label: string; wip?: boolean }[] = [
-    { value: "2x4", label: '2" × 4"', wip: true },
+  const sizes: { value: LabelSize; label: string }[] = [
+    { value: "2x4", label: '2" × 4"' },
     { value: "4x6", label: '4" × 6"' },
   ];
 
@@ -299,26 +299,15 @@ const LabelsPage = () => {
                 <div key={s.value} className="relative flex items-center">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (s.wip) {
-                        setWipOpen(true);
-                      } else {
-                        setSize(s.value);
-                      }
-                    }}
+                    onClick={() => setSize(s.value)}
                     className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
                       active
                         ? "bg-ring text-accent"
                         : "text-muted-foreground hover:text-foreground"
-                    } ${s.wip ? "outline outline-2 outline-yellow-500/70" : ""}`}
+                    }`}
                   >
                     {s.label}
                   </button>
-                  {s.wip && (
-                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-yellow-500/20 text-yellow-400 border border-yellow-500/40">
-                      WIP
-                    </span>
-                  )}
                 </div>
               );
             })}

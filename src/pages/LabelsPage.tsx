@@ -279,7 +279,6 @@ const LabelTileIcon = ({ size }: { size: LabelSize }) => {
 const LabelsPage = () => {
   const [size, setSize] = useState<LabelSize>("4x6");
   const [openKind, setOpenKind] = useState<LabelKind | null>(null);
-  const [wipOpen, setWipOpen] = useState(false);
 
   const sizes: { value: LabelSize; label: string }[] = [
     { value: "2x4", label: '2" × 4"' },

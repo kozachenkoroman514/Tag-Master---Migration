@@ -357,21 +357,6 @@ const LabelsPage = () => {
         <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
 
-        <Dialog open={wipOpen} onOpenChange={setWipOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-yellow-400">Work in Progress</DialogTitle>
-            </DialogHeader>
-            <p className="text-muted-foreground">
-              Work in Progress. Will be available soon!
-            </p>
-            <DialogFooter>
-              <Button onClick={() => setWipOpen(false)} className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/40">
-                OK
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </main>
     </div>
   );

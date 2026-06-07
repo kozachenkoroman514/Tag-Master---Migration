@@ -621,7 +621,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .f-input.qty-input { font-size: 14px; width: 40px; text-align: right; }
   .qr-box { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; flex-shrink: 0; }
   .qr-box img { width: 100% !important; height: 100% !important; display: block; }
-  .qr-box.job-qr { width: 58px; height: 58px; }
+  .qr-box.job-qr { width: 58px; height: 58px; margin-top: auto; }
   .qr-box.part-qr { width: 58px; height: 58px; }
   .divider { border-top: 2px dashed #000; margin: 0; margin-top: auto; }
   .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }

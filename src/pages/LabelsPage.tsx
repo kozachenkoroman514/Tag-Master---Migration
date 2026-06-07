@@ -374,8 +374,8 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string; item: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "", item: "" });
 
 // 4x6 Part label — pure HTML doc builder shared by print + live preview.
 // Any field left blank (and its static label) is omitted from the output.

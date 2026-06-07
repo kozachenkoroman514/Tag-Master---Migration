@@ -25,6 +25,7 @@ import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
 import unitLabel2x4Icon from "@/assets/unit-label-2x4-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
+import statusLabel2x4Icon from "@/assets/status-label-2x4-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -371,6 +372,12 @@ const LabelsPage = () => {
                   <img
                     src={unitLabel2x4Icon.url}
                     alt="Pack Unit 2x4 label"
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "status-note" ? (
+                  <img
+                    src={statusLabel2x4Icon.url}
+                    alt="Status Note 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -1376,6 +1383,46 @@ async function printStatusNote4x6(status: string, reason: string) {
   win.document.close();
 }
 
+// 2x4 Status Note label — mirrors attached status_label_2x4.html. Reason
+// section is hidden when empty and Status row drops its divider so it fills.
+function buildStatusNote2x4Doc(status: string, reason: string): string {
+  const hasReason = reason.trim().length > 0;
+  return `<!doctype html><html><head><title>Status Note Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 4in 2in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 4in; height: 2in; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+  .sec-title { font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; margin-bottom: 0; }
+  .status-row { padding: 3px 10px 2px 10px; display: flex; flex-direction: column; flex: 1; ${hasReason ? 'border-bottom: 2px solid #000;' : ''} }
+  .status-value { flex: 1; font-size: 58px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
+  .reason-row { padding: 3px 10px 5px 10px; display: flex; flex-direction: column; flex: 1; }
+  .reason-value { flex: 1; font-size: 14px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
+</style></head><body>
+<div class="label">
+  <div class="status-row">
+    <span class="sec-title">Status</span>
+    <div class="status-value">${escapeHtml(status)}</div>
+  </div>
+  ${hasReason ? `<div class="reason-row">
+    <span class="sec-title">Reason</span>
+    <div class="reason-value">${escapeHtml(reason)}</div>
+  </div>` : ""}
+</div>
+</body></html>`;
+}
+
+async function printStatusNote2x4(status: string, reason: string) {
+  const doc = buildStatusNote2x4Doc(status, reason).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
+}
+
 const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [status, setStatus] = useState("");
   const [reason, setReason] = useState("");
@@ -1389,7 +1436,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
   const previewHtml =
     size === "4x6"
       ? buildStatusNote4x6Doc(status, reason)
-      : buildGenericDoc("Status Note Label", buildBody(status, reason), size);
+      : buildStatusNote2x4Doc(status, reason);
 
   const handlePrint = async () => {
     const m = new Set<string>();
@@ -1399,7 +1446,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
     if (size === "4x6") {
       await printStatusNote4x6(status, reason);
     } else {
-      await printLabel("Status Note Label", buildBody(status, reason), size);
+      await printStatusNote2x4(status, reason);
     }
     setStatus("");
     setReason("");

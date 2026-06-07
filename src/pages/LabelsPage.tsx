@@ -1226,35 +1226,28 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
-          {size === "2x4" ? (
-            <>
-              <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
-              <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
-            </>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="pack-so">SO Number <Req /></Label>
-              <Input
-                id="pack-so"
-                value={soNumbers[0] ?? ""}
-                onChange={(e) => setSoNumbers([e.target.value])}
-                className={cls(missing.has("so") && invalidCls)}
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="pack-so">SO Number <Req /></Label>
+            <Input
+              id="pack-so"
+              value={soNumbers[0] ?? ""}
+              onChange={(e) => setSoNumbers([e.target.value])}
+              className={cls(missing.has("so") && invalidCls)}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Unit Number <Req /></Label>
+            <Label>Unit Number</Label>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="X"
                 type="number"
                 value={unitX}
                 onChange={(e) => setUnitX(e.target.value)}
-                className={cls("w-24", missing.has("unitNum") && !unitX.trim() && invalidCls)}
+                className="w-24"
               />
               <span className="text-muted-foreground">out of</span>
               <Input
@@ -1262,51 +1255,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 type="number"
                 value={unitN}
                 onChange={(e) => setUnitN(e.target.value)}
-                className={cls("w-24", missing.has("unitNum") && !unitN.trim() && invalidCls)}
+                className="w-24"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-date">Date (mm/dd) <Req /></Label>
-            <div className="flex gap-2">
-              <Input
-                id="pack-date"
-                placeholder="mm/dd"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={cls(missing.has("date") && invalidCls)}
-              />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className={cls(missing.has("date") && invalidCls)}
-                    aria-label="Pick a date"
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={(() => {
-                      const d = parse(date, "MM/dd", new Date());
-                      return isValid(d) ? d : undefined;
-                    })()}
-                    onSelect={(d) => d && setDate(format(d, "MM/dd"))}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Unit <Req /></Label>
+            <Label>Unit</Label>
             <Select value={unitSel} onValueChange={setUnitSel}>
-              <SelectTrigger className={cls(missing.has("unitSel") && invalidCls)}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select unit" />
               </SelectTrigger>
               <SelectContent>
@@ -1317,22 +1273,56 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Area <Req /></Label>
-            <Select value={area} onValueChange={setArea}>
-              <SelectTrigger className={cls(missing.has("area") && invalidCls)}>
-                <SelectValue placeholder="Select area" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="SHIPPING">SHIPPING</SelectItem>
-                <SelectItem value="MAINLINE">MAINLINE</SelectItem>
-                <SelectItem value="CHASSISLINE">CHASSISLINE</SelectItem>
-                <SelectItem value="MATERIALS">MATERIALS</SelectItem>
-                <SelectItem value="WILLCALL">WILLCALL</SelectItem>
-                <SelectItem value="OTHER">OTHER</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label htmlFor="pack-date">Date (mm/dd)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="pack-date"
+                  placeholder="mm/dd"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="icon" aria-label="Pick a date">
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={(() => {
+                        const d = parse(date, "MM/dd", new Date());
+                        return isValid(d) ? d : undefined;
+                      })()}
+                      onSelect={(d) => d && setDate(format(d, "MM/dd"))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label>Area</Label>
+              <Select value={area} onValueChange={setArea}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select area" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SHIPPING">SHIPPING</SelectItem>
+                  <SelectItem value="MAINLINE">MAINLINE</SelectItem>
+                  <SelectItem value="CHASSISLINE">CHASSISLINE</SelectItem>
+                  <SelectItem value="MATERIALS">MATERIALS</SelectItem>
+                  <SelectItem value="WILLCALL">WILLCALL</SelectItem>
+                  <SelectItem value="OTHER">OTHER</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>

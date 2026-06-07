@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
+import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
@@ -36,9 +37,9 @@ const Req = () => <span className="text-destructive">*</span>;
 
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
-  const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
-  const labelW = size === "2x4" ? "2in" : "6in";
-  const labelH = size === "2x4" ? "4in" : "4in";
+  const pageSize = size === "2x4" ? "4in 2in" : "6in 4in";
+  const labelW = size === "2x4" ? "4in" : "6in";
+  const labelH = size === "2x4" ? "2in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
   return `<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>
@@ -343,9 +344,7 @@ const LabelsPage = () => {
               <div
                 className={
                   size === "2x4"
-                    ? tile.kind === "part"
-                      ? "w-72 h-36"
-                      : "w-32 h-48"
+                    ? "w-72 h-36"
                     : "w-80 h-80"
                 }
               >
@@ -359,6 +358,12 @@ const LabelsPage = () => {
                   <img
                     src={partLabel2x4Icon.url}
                     alt="Part 2x4 label"
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "misc" ? (
+                  <img
+                    src={miscLabel2x4Icon.url}
+                    alt="Misc 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -1280,7 +1285,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             </Select>
           </div>
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
@@ -1397,7 +1402,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
             <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
@@ -1454,7 +1459,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             className={cls(missing.has("text") && invalidCls)}
           />
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

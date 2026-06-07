@@ -1338,13 +1338,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 // ----------------- Status Note Label -----------------
 // 4x6 Status Note label — matches attached status_label.html layout exactly.
 function buildStatusNote4x6Doc(status: string, reason: string): string {
+  const hasReason = reason.trim().length > 0;
   return `<!doctype html><html><head><title>Status Note Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
-  .status-row { border-bottom: 3px solid #000; padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; }
+  .status-row { padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; ${hasReason ? 'border-bottom: 3px solid #000;' : ''} }
   .sec-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 0; }
   .status-value { flex: 1; font-size: 96px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 4px 14px 8px 14px; display: flex; flex-direction: column; flex: 1; }
@@ -1356,10 +1357,10 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
     <span class="sec-title">Status</span>
     <div class="status-value">${escapeHtml(status)}</div>
   </div>
-  <div class="reason-row">
+  ${hasReason ? `<div class="reason-row">
     <span class="sec-title">Reason</span>
     <div class="reason-value">${escapeHtml(reason)}</div>
-  </div>
+  </div>` : ""}
 </div>
 </body></html>`;
 }

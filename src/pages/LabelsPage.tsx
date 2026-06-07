@@ -95,12 +95,11 @@ async function cachedQr(text: string): Promise<string> {
 
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
 // then CSS-transformed to fit the side panel.
-const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
+const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(() => {
-    const isWide = size === "4x6";
-    const nativeW = isWide ? 576 : 192;
-    const nativeH = 384;
+    const nativeW = nativeWFor(size, landscape);
+    const nativeH = nativeHFor(size, landscape);
     const estAvailW = 640;
     const estAvailH = 700;
     return Math.min(estAvailW / nativeW, estAvailH / nativeH);
@@ -110,8 +109,8 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
     const el = wrapperRef.current;
     if (!el) return;
 
-    const nativeW = nativeWFor(size);
-    const nativeH = nativeHFor(size);
+    const nativeW = nativeWFor(size, landscape);
+    const nativeH = nativeHFor(size, landscape);
 
     const update = () => {
       const rect = el.getBoundingClientRect();
@@ -123,11 +122,10 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [size]);
+  }, [size, landscape]);
 
-  const isWide = size === "4x6";
-  const nativeW = nativeWFor(size);
-  const nativeH = nativeHFor(size);
+  const nativeW = nativeWFor(size, landscape);
+  const nativeH = nativeHFor(size, landscape);
 
   return (
     <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
@@ -154,21 +152,28 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
   );
 };
 
-const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
+const PreviewPane = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => (
   <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
     <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
       Live preview
     </div>
-    <LabelPreview html={html} size={size} />
+    <LabelPreview html={html} size={size} landscape={landscape} />
     <div className="text-[10px] text-muted-foreground">
       {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
     </div>
   </div>
 );
 
-// Native iframe dims (in CSS px at 96dpi). 4x6 + 2x4 are both rendered landscape.
-function nativeWFor(size: LabelSize) { return size === "4x6" ? 576 : 384; }
-function nativeHFor(size: LabelSize) { return size === "4x6" ? 384 : 192; }
+// Native iframe dims (in CSS px at 96dpi). 4x6 is always landscape (6w x 4h).
+// 2x4 defaults to portrait (2w x 4h); set landscape=true for 4w x 2h labels.
+function nativeWFor(size: LabelSize, landscape?: boolean) {
+  if (size === "4x6") return 576;
+  return landscape ? 384 : 192;
+}
+function nativeHFor(size: LabelSize, landscape?: boolean) {
+  if (size === "4x6") return 384;
+  return landscape ? 192 : 384;
+}
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";

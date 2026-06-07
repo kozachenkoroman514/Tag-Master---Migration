@@ -340,11 +340,25 @@ const LabelsPage = () => {
               <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
                 {tile.label}
               </div>
-              <div className={size === "2x4" ? "w-32 h-48" : "w-80 h-80"}>
+              <div
+                className={
+                  size === "2x4"
+                    ? tile.kind === "part"
+                      ? "w-72 h-36"
+                      : "w-32 h-48"
+                    : "w-80 h-80"
+                }
+              >
                 {size === "4x6" ? (
                   <img
                     src={FOUR_BY_SIX_ICONS[tile.kind].url}
                     alt={`${tile.label} 4x6 label`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "part" ? (
+                  <img
+                    src={partLabel2x4Icon.url}
+                    alt="Part 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (

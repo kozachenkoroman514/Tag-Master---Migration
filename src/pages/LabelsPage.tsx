@@ -36,9 +36,9 @@ const Req = () => <span className="text-destructive">*</span>;
 
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
-  const pageSize = size === "2x4" ? "2in 4in" : "6in 4in";
-  const labelW = size === "2x4" ? "2in" : "6in";
-  const labelH = size === "2x4" ? "4in" : "4in";
+  const pageSize = size === "2x4" ? "4in 2in" : "6in 4in";
+  const labelW = size === "2x4" ? "4in" : "6in";
+  const labelH = size === "2x4" ? "2in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
   return `<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>

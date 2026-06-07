@@ -23,6 +23,7 @@ import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
+import unitLabel2x4Icon from "@/assets/unit-label-2x4-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -364,6 +365,12 @@ const LabelsPage = () => {
                   <img
                     src={miscLabel2x4Icon.url}
                     alt="Misc 2x4 label"
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "pack-unit" ? (
+                  <img
+                    src={unitLabel2x4Icon.url}
+                    alt="Pack Unit 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -977,33 +984,89 @@ async function printUnit4x6(opts: Unit4x6Opts) {
 }
 
 // 2x4 Pack Unit label body builder (used by print + preview).
-function buildPackUnit2x4Body(opts: {
-  sos: string[];
-  jobs: string[];
-  projectId: string;
-  unitX: string;
-  unitN: string;
-  date: string;
-  unitSel: string;
-  area: string;
-  jobQrs: string[];
-}): string {
-  const { sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs } = opts;
-  return `
-    <div class="row">
-      <div class="grow">
-        <div class="title">${escapeHtml(unitSel)}</div>
-        <div class="huge">${escapeHtml(unitX)} / ${escapeHtml(unitN)}</div>
-        ${sos.length ? `<div class="field"><b>SO #:</b> ${sos.map(escapeHtml).join(", ")}</div>` : ""}
-        ${jobs.length ? `<div class="field"><b>Job #:</b> ${jobs.map(escapeHtml).join(", ")}</div>` : ""}
-        ${projectId.trim() ? `<div class="field"><b>Project:</b> ${escapeHtml(projectId)}</div>` : ""}
-        ${area ? `<div class="field"><b>Area:</b> ${escapeHtml(area)}</div>` : ""}
-        ${date ? `<div class="field"><b>Date:</b> ${escapeHtml(date)}</div>` : ""}
-      </div>
-      <div class="qrs">
-        ${jobQrs.map((q, i) => q ? `<div class="qr"><img src="${q}" alt="Job QR"/><div>JOB ${escapeHtml(jobs[i])}</div></div>` : "").join("")}
-      </div>
-    </div>`;
+// 2x4 Pack Unit label — mirrors the 4x6 unit label layout (SO Number, Project,
+// Unit type + N of M), scaled to a 4in × 2in landscape thermal label. Any
+// blank field (and its section title) is omitted from the output.
+type Unit2x4Opts = {
+  orderNumber: string;
+  project: string;
+  unitType: string;
+  unitNum: string;
+  unitTotal: string;
+  orderQr?: string;
+  projectQr?: string;
+};
+function buildUnit2x4Doc(opts: Unit2x4Opts): string {
+  const { orderNumber, project, unitType, unitNum, unitTotal, orderQr, projectQr } = opts;
+
+  const orderRow = orderNumber.trim()
+    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box qr-sm"><img src="${orderQr}" alt="Order QR"/></div>` : ""}</div></div>`
+    : "";
+  const projectRow = project.trim()
+    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box qr-med"><img src="${projectQr}" alt="Project QR"/></div>` : ""}</div></div>`
+    : "";
+
+  const unitCell = unitType.trim()
+    ? `<div class="meta-cell unit-cell"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`
+    : "";
+  const ofCell = (unitNum.trim() || unitTotal.trim())
+    ? `<div class="meta-cell of-cell">
+         <span class="meta-input num-input">${escapeHtml(unitNum)}</span>
+         <span class="of-word">of</span>
+         <span class="meta-input total-input">${escapeHtml(unitTotal)}</span>
+       </div>`
+    : "";
+  const metaRow = (unitCell || ofCell)
+    ? `<div class="meta-row">${unitCell}${ofCell}</div>`
+    : "";
+
+  return `<!doctype html><html><head><title>Unit Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 4in 2in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 4in; height: 2in; border: 2px solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .section-title { font-size: 8px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.6px; line-height: 1; margin-bottom: 1px; }
+  .order-row { border-bottom: 2px solid #000; padding: 3px 8px 2px 8px; display: flex; flex-direction: column; }
+  .order-input-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+  .order-input { flex: 1; min-width: 0; font-size: 42px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.0; color: #000; }
+  .project-row { border-bottom: 2px solid #000; padding: 4px 8px 5px 8px; display: flex; flex-direction: column; flex: 1; }
+  .project-input-row { display: flex; align-items: flex-start; gap: 6px; }
+  .project-input { flex: 1; min-width: 0; font-size: 24px; font-weight: 700; line-height: 1.15; word-break: break-word; }
+  .qr-box { flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; }
+  .qr-box img { width: 100% !important; height: 100% !important; }
+  .qr-box.qr-sm  { width: 42px; height: 42px; }
+  .qr-box.qr-med { width: 50px; height: 50px; }
+  .meta-row { display: flex; align-items: stretch; }
+  .meta-cell { display: flex; align-items: center; padding: 3px 6px; gap: 4px; }
+  .meta-cell.unit-cell { flex: 0 0 auto; }
+  .meta-cell.of-cell   { flex: 1; gap: 5px; }
+  .meta-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .unit-select { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; padding-right: 4px; }
+  .meta-input { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; text-align: center; display: inline-block; min-width: 28px; min-height: 14px; padding: 0 2px; }
+  .of-word { font-size: 12px; font-weight: 700; }
+</style></head><body>
+<div class="label">
+  ${orderRow}
+  ${projectRow}
+  ${metaRow}
+</div>
+</body></html>`;
+}
+
+async function printUnit2x4(opts: Unit2x4Opts) {
+  const [orderQr, projectQr] = await Promise.all([
+    opts.orderNumber.trim() ? cachedQr(opts.orderNumber.trim()) : Promise.resolve(""),
+    opts.project.trim() ? cachedQr(opts.project.trim()) : Promise.resolve(""),
+  ]);
+  const doc = buildUnit2x4Doc({ ...opts, orderQr, projectQr }).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
 }
 
 const MultiInput = ({
@@ -1067,14 +1130,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+      const [orderQr, projectQr] = await Promise.all([
+        firstSo ? cachedQr(firstSo) : Promise.resolve(""),
+        projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
+      ]);
+      if (cancelled) return;
       if (size === "4x6") {
-        const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
-        const [orderQr, projectQr] = await Promise.all([
-          firstSo ? cachedQr(firstSo) : Promise.resolve(""),
-          projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
-        ]);
-        if (cancelled) return;
-        const doc = buildUnit4x6Doc({
+        setPreviewHtml(buildUnit4x6Doc({
           orderNumber: firstSo,
           project: projectId,
           unitType: unitSel,
@@ -1085,29 +1148,32 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           status: "",
           orderQr,
           projectQr,
-        });
-        if (!cancelled) setPreviewHtml(doc);
+        }));
       } else {
-        const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
-        const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-        const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
-        if (cancelled) return;
-        const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
-        setPreviewHtml(buildGenericDoc("Pack Unit Label", body, size));
+        setPreviewHtml(buildUnit2x4Doc({
+          orderNumber: firstSo,
+          project: projectId,
+          unitType: unitSel,
+          unitNum: unitX,
+          unitTotal: unitN,
+          orderQr,
+          projectQr,
+        }));
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
+  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area]);
 
   const handlePrint = async () => {
+    // SO Number is the only required field. Other blank fields are omitted on print.
+    const m = new Set<string>();
+    if (!(soNumbers[0] ?? "").trim()) m.add("so");
+    setMissing(m);
+    if (m.size) return;
+    const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
     if (size === "4x6") {
-      // 4x6 unit label: SO Number required. Other blank fields are omitted on print.
-      const m = new Set<string>();
-      if (!(soNumbers[0] ?? "").trim()) m.add("so");
-      setMissing(m);
-      if (m.size) return;
       await printUnit4x6({
-        orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
+        orderNumber: firstSo,
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,
@@ -1116,32 +1182,15 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         area,
         status: "",
       });
-      setSoNumbers([""]);
-      setJobNumbers([""]);
-      setProjectId("");
-      setUnitX("");
-      setUnitN("");
-      setDate("");
-      setUnitSel("");
-      setArea("");
-      onOpenChange(false);
-      return;
+    } else {
+      await printUnit2x4({
+        orderNumber: firstSo,
+        project: projectId,
+        unitType: unitSel,
+        unitNum: unitX,
+        unitTotal: unitN,
+      });
     }
-
-    const m = new Set<string>();
-    if (!soNumbers.some((s) => s.trim())) m.add("so");
-    if (!unitX.trim() || !unitN.trim()) m.add("unitNum");
-    if (!date.trim()) m.add("date");
-    if (!unitSel) m.add("unitSel");
-    if (!area) m.add("area");
-    setMissing(m);
-    if (m.size) return;
-
-    const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
-    const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
-    await printLabel("Pack Unit Label", body, size);
     setSoNumbers([""]);
     setJobNumbers([""]);
     setProjectId("");
@@ -1177,35 +1226,28 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
-          {size === "2x4" ? (
-            <>
-              <MultiInput label="SO Number" values={soNumbers} setValues={setSoNumbers} required invalid={missing.has("so")} />
-              <MultiInput label="Job Number" values={jobNumbers} setValues={setJobNumbers} />
-            </>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="pack-so">SO Number <Req /></Label>
-              <Input
-                id="pack-so"
-                value={soNumbers[0] ?? ""}
-                onChange={(e) => setSoNumbers([e.target.value])}
-                className={cls(missing.has("so") && invalidCls)}
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="pack-so">SO Number <Req /></Label>
+            <Input
+              id="pack-so"
+              value={soNumbers[0] ?? ""}
+              onChange={(e) => setSoNumbers([e.target.value])}
+              className={cls(missing.has("so") && invalidCls)}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Unit Number <Req /></Label>
+            <Label>Unit Number</Label>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="X"
                 type="number"
                 value={unitX}
                 onChange={(e) => setUnitX(e.target.value)}
-                className={cls("w-24", missing.has("unitNum") && !unitX.trim() && invalidCls)}
+                className="w-24"
               />
               <span className="text-muted-foreground">out of</span>
               <Input
@@ -1213,51 +1255,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 type="number"
                 value={unitN}
                 onChange={(e) => setUnitN(e.target.value)}
-                className={cls("w-24", missing.has("unitNum") && !unitN.trim() && invalidCls)}
+                className="w-24"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-date">Date (mm/dd) <Req /></Label>
-            <div className="flex gap-2">
-              <Input
-                id="pack-date"
-                placeholder="mm/dd"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={cls(missing.has("date") && invalidCls)}
-              />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className={cls(missing.has("date") && invalidCls)}
-                    aria-label="Pick a date"
-                  >
-                    <CalendarIcon className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={(() => {
-                      const d = parse(date, "MM/dd", new Date());
-                      return isValid(d) ? d : undefined;
-                    })()}
-                    onSelect={(d) => d && setDate(format(d, "MM/dd"))}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Unit <Req /></Label>
+            <Label>Unit</Label>
             <Select value={unitSel} onValueChange={setUnitSel}>
-              <SelectTrigger className={cls(missing.has("unitSel") && invalidCls)}>
+              <SelectTrigger>
                 <SelectValue placeholder="Select unit" />
               </SelectTrigger>
               <SelectContent>
@@ -1268,22 +1273,56 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Area <Req /></Label>
-            <Select value={area} onValueChange={setArea}>
-              <SelectTrigger className={cls(missing.has("area") && invalidCls)}>
-                <SelectValue placeholder="Select area" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="SHIPPING">SHIPPING</SelectItem>
-                <SelectItem value="MAINLINE">MAINLINE</SelectItem>
-                <SelectItem value="CHASSISLINE">CHASSISLINE</SelectItem>
-                <SelectItem value="MATERIALS">MATERIALS</SelectItem>
-                <SelectItem value="WILLCALL">WILLCALL</SelectItem>
-                <SelectItem value="OTHER">OTHER</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label htmlFor="pack-date">Date (mm/dd)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="pack-date"
+                  placeholder="mm/dd"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="icon" aria-label="Pick a date">
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={(() => {
+                        const d = parse(date, "MM/dd", new Date());
+                        return isValid(d) ? d : undefined;
+                      })()}
+                      onSelect={(d) => d && setDate(format(d, "MM/dd"))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label>Area</Label>
+              <Select value={area} onValueChange={setArea}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select area" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SHIPPING">SHIPPING</SelectItem>
+                  <SelectItem value="MAINLINE">MAINLINE</SelectItem>
+                  <SelectItem value="CHASSISLINE">CHASSISLINE</SelectItem>
+                  <SelectItem value="MATERIALS">MATERIALS</SelectItem>
+                  <SelectItem value="WILLCALL">WILLCALL</SelectItem>
+                  <SelectItem value="OTHER">OTHER</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>

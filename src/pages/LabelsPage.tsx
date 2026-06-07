@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
+import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
@@ -94,12 +95,11 @@ async function cachedQr(text: string): Promise<string> {
 
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
 // then CSS-transformed to fit the side panel.
-const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
+const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(() => {
-    const isWide = size === "4x6";
-    const nativeW = isWide ? 576 : 192;
-    const nativeH = 384;
+    const nativeW = nativeWFor(size, landscape);
+    const nativeH = nativeHFor(size, landscape);
     const estAvailW = 640;
     const estAvailH = 700;
     return Math.min(estAvailW / nativeW, estAvailH / nativeH);
@@ -109,9 +109,8 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
     const el = wrapperRef.current;
     if (!el) return;
 
-    const isWide = size === "4x6";
-    const nativeW = isWide ? 576 : 192;
-    const nativeH = 384;
+    const nativeW = nativeWFor(size, landscape);
+    const nativeH = nativeHFor(size, landscape);
 
     const update = () => {
       const rect = el.getBoundingClientRect();
@@ -123,11 +122,10 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [size]);
+  }, [size, landscape]);
 
-  const isWide = size === "4x6";
-  const nativeW = isWide ? 576 : 192;
-  const nativeH = 384;
+  const nativeW = nativeWFor(size, landscape);
+  const nativeH = nativeHFor(size, landscape);
 
   return (
     <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
@@ -154,17 +152,28 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
   );
 };
 
-const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
+const PreviewPane = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => (
   <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
     <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
       Live preview
     </div>
-    <LabelPreview html={html} size={size} />
+    <LabelPreview html={html} size={size} landscape={landscape} />
     <div className="text-[10px] text-muted-foreground">
       {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
     </div>
   </div>
 );
+
+// Native iframe dims (in CSS px at 96dpi). 4x6 is always landscape (6w x 4h).
+// 2x4 defaults to portrait (2w x 4h); set landscape=true for 4w x 2h labels.
+function nativeWFor(size: LabelSize, landscape?: boolean) {
+  if (size === "4x6") return 576;
+  return landscape ? 384 : 192;
+}
+function nativeHFor(size: LabelSize, landscape?: boolean) {
+  if (size === "4x6") return 384;
+  return landscape ? 192 : 384;
+}
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";
@@ -331,11 +340,25 @@ const LabelsPage = () => {
               <div className="text-2xl font-extrabold uppercase tracking-widest text-ring group-hover:text-ring">
                 {tile.label}
               </div>
-              <div className={size === "2x4" ? "w-32 h-48" : "w-80 h-80"}>
+              <div
+                className={
+                  size === "2x4"
+                    ? tile.kind === "part"
+                      ? "w-72 h-36"
+                      : "w-32 h-48"
+                    : "w-80 h-80"
+                }
+              >
                 {size === "4x6" ? (
                   <img
                     src={FOUR_BY_SIX_ICONS[tile.kind].url}
                     alt={`${tile.label} 4x6 label`}
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "part" ? (
+                  <img
+                    src={partLabel2x4Icon.url}
+                    alt="Part 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -365,8 +388,8 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "" });
+type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string; item: string };
+const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "", item: "" });
 
 // 4x6 Part label — pure HTML doc builder shared by print + live preview.
 // Any field left blank (and its static label) is omitted from the output.
@@ -490,28 +513,139 @@ async function printPart4x6(parts: PartEntry[]) {
   win.document.close();
 }
 
-// 2x4 Part label body (used by both print + preview, via the generic doc wrapper).
-function buildPart2x4Body(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
-  const sections = parts.map((p, i) => {
+// 2x4 Part label — landscape 4in x 2in. Pure HTML doc builder shared by print + preview.
+// Optional fields (SO/Line/Rel, Rev, Item) are omitted when blank.
+function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const labels = parts.map((p, i) => {
     const partQr = qrs[i]?.part || "";
     const jobQr = qrs[i]?.job || "";
-    return `
-      <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
-        <div class="grow">
-          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
-          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
-          ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
-          ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-          ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-        </div>
-        <div class="qrs">
-          ${partQr ? `<div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>` : ""}
-          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
-        </div>
+
+    const jobQrHtml = jobQr
+      ? `<div class="qr-box job-qr"><img src="${jobQr}" alt="Job QR"/></div>`
+      : "";
+    const partQrHtml = partQr
+      ? `<div class="qr-box part-qr"><img src="${partQr}" alt="Part QR"/></div>`
+      : "";
+
+    const solBlock = p.soNumber.trim()
+      ? `<span class="f-title">SO / Line / Rel</span>
+         <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div>`
+      : "";
+    const itemBlock = p.item.trim()
+      ? `<span class="f-title" style="margin-top:3px;">Item</span>
+         <div class="f-input item-input">${escapeHtml(p.item)}</div>`
+      : "";
+    const infoCol = (solBlock || itemBlock)
+      ? `<div class="info-col">${solBlock}${itemBlock}</div>`
+      : "";
+
+    const revBlock = p.rev.trim()
+      ? `<span class="f-title" style="margin-top:4px;">Rev</span>
+         <div class="f-input rev-input">${escapeHtml(p.rev)}</div>`
+      : "";
+    const qtyCol = `<div class="qty-col">
+        <span class="f-title">QTY</span>
+        <div class="f-input qty-input">${escapeHtml(p.qty)}</div>
+        ${revBlock}
       </div>`;
+
+    return `
+    <div class="label">
+      <div class="top-section">
+        <div class="job-col">
+          <span class="f-title">Job</span>
+          <div class="f-input job-input">${escapeHtml(p.jobNumber)}</div>
+          ${jobQrHtml}
+        </div>
+        <div class="part-body">
+          <div class="part-header-bar">
+            <span class="f-title">Part</span>
+            <div class="f-input part-input" style="font-size:13px; width:100%; border-bottom:none;">${escapeHtml(p.partNumber)}</div>
+          </div>
+          <div class="part-lower">
+            <div class="part-qr-col">${partQrHtml}</div>
+            ${infoCol}
+            ${qtyCol}
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="bottom-section">
+        <div class="em-block">
+          <span class="em-name">Electric<br>Mirror<span class="em-reg">&reg;</span></span>
+        </div>
+        <div class="warning-block">
+          <span class="warn-title">&#9888; Warning:</span>
+          <span class="warn-text">This product can expose you to chemicals including phthalates, which are known to the State of California to cause cancer and birth defects or other reproductive harm.</span>
+          <div class="p65-row" style="margin-top:2px;">
+            <span class="p65-arrow">&#10148;</span>
+            <span class="p65-url">www.P65Warning.ca.gov</span>
+          </div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-text">Electric Mirror LLC<br>6101 Associated Blvd, Suite 101, Everett WA 98203<br>Toll Free +1-888-218-9238<br>Support +1-844-264-3217</div>
+          <div class="contact-url">www.electricmirror.com</div>
+          <div class="deut-text">DEUT 8:18 , 2 COR 3:18</div>
+        </div>
+      </div>
+    </div>`;
   }).join("");
-  const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
-  return `<div class="title">Part</div>${sections}${specNote}`;
+
+  return `<!doctype html><html><head><title>Part Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 4in 2in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
+  .label:last-child { page-break-after: auto; }
+  .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; }
+  .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
+  .part-qr-col { display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 4px 3px 4px; min-width: 70px; flex-shrink: 0; }
+  .info-col { flex: 1; display: flex; flex-direction: column; padding: 2px 6px 3px 6px; gap: 1px; border-left: 2px solid #000; border-top: 2px solid #000; }
+  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 52px; gap: 4px; }
+  .part-body { flex: 1; display: flex; flex-direction: column; border-left: 2px solid #000; min-width: 0; }
+  .part-header-bar { padding: 3px 6px 2px 6px; display: flex; flex-direction: column; gap: 0; }
+  .part-lower { flex: 1; display: flex; flex-direction: row; align-items: stretch; }
+  .f-title { font-size: 8px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.4px; line-height: 1; display: block; }
+  .f-input { border: none; border-bottom: 1.5px solid #000; font-family: Arial, sans-serif; background: transparent; color: #000; font-weight: 700; line-height: 1.1; width: 100%; display: block; min-height: 14px; }
+  .f-input.job-input { font-size: 16px; width: 62px; border-bottom: none; }
+  .f-input.part-input { font-size: 11px; }
+  .f-input.sol-input { font-size: 14px; font-weight: 900; }
+  .f-input.rev-input { font-size: 11px; width: 40px; text-align: right; }
+  .f-input.item-input { font-size: 11px; }
+  .f-input.qty-input { font-size: 14px; width: 40px; text-align: right; }
+  .qr-box { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; flex-shrink: 0; }
+  .qr-box img { width: 100% !important; height: 100% !important; display: block; }
+  .qr-box.job-qr { width: 58px; height: 58px; }
+  .qr-box.part-qr { width: 58px; height: 58px; }
+  .divider { border-top: 2px dashed #000; margin: 0; }
+  .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }
+  .em-block { background: #000; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; }
+  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
+  .em-reg { font-size: 7px; vertical-align: super; }
+  .warning-block { border-right: 2px solid #000; padding: 2px 4px; min-width: 110px; max-width: 110px; display: flex; flex-direction: column; }
+  .warn-title { font-size: 7.5px; font-weight: 900; color: #000; text-transform: uppercase; }
+  .warn-text { font-size: 5.5px; color: #000; line-height: 1.2; }
+  .contact-block { flex: 1; padding: 2px 4px; display: flex; flex-direction: column; justify-content: flex-start; }
+  .contact-text { font-size: 5.8px; color: #000; line-height: 1.25; }
+  .contact-url { font-size: 6.5px; font-weight: 700; color: #000; }
+  .p65-row { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
+  .p65-arrow { font-size: 7px; font-weight: 900; }
+  .p65-url { font-size: 6px; font-weight: 700; color: #000; }
+  .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+</style></head><body>${labels}</body></html>`;
+}
+
+async function printPart2x4(parts: PartEntry[]) {
+  const qrs = await computePartQrs(parts);
+  const doc = buildPart2x4Doc(parts, qrs).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
 }
 
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
@@ -527,7 +661,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       if (size === "4x6") {
         setPreviewHtml(buildPart4x6Doc(parts, qrs));
       } else {
-        setPreviewHtml(buildGenericDoc("Part Label", buildPart2x4Body(parts, qrs), size));
+        setPreviewHtml(buildPart2x4Doc(parts, qrs));
       }
     })();
     return () => { cancelled = true; };
@@ -564,13 +698,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     parts.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
+      if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
     });
     setMissing(m);
     if (m.size) return;
 
-    const qrs = await computePartQrs(parts);
-    const body = buildPart2x4Body(parts, qrs);
-    await printLabel("Part Label", body, size);
+    await printPart2x4(parts);
     setParts([emptyPart()]);
     onOpenChange(false);
   };
@@ -603,21 +736,22 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   </Button>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label>Job Number</Label>
-                <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Qty <Req /></Label>
-                <Input
-                  type="number"
-                  value={p.qty}
-                  onChange={(e) => updatePart(i, { qty: e.target.value })}
-                  className={cls(missing.has(`qty-${i}`) && invalidCls)}
-                />
-              </div>
               {size === "4x6" && (
+                <>
+                <div className="space-y-2">
+                  <Label>Job Number</Label>
+                  <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
+                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Qty <Req /></Label>
+                  <Input
+                    type="number"
+                    value={p.qty}
+                    onChange={(e) => updatePart(i, { qty: e.target.value })}
+                    className={cls(missing.has(`qty-${i}`) && invalidCls)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Rev</Label>
                   <Input
@@ -627,16 +761,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   />
                   <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label>Part Number <Req /></Label>
-                <Input
-                  value={p.partNumber}
-                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
-                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
-                />
-              </div>
-              {size === "4x6" && (
+                <div className="space-y-2">
+                  <Label>Part Number <Req /></Label>
+                  <Input
+                    value={p.partNumber}
+                    onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                    className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Description <Req /></Label>
                   <Textarea
@@ -647,24 +779,63 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     className={cls(missing.has(`description-${i}`) && invalidCls)}
                   />
                 </div>
+                </>
               )}
               {size === "2x4" && (
-                <div className="space-y-2">
-                  <Label>SO Number</Label>
-                  <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
-                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-                </div>
-              )}
-              {size === "2x4" && (
-                <div className="space-y-2">
-                  <Label>Goes With</Label>
-                  <Input
-                    value={p.goesWith}
-                    onChange={(e) => updatePart(i, { goesWith: e.target.value })}
-                    placeholder="Part number(s) this is set with"
-                  />
-                  <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label>Job Number <Req /></Label>
+                    <Input
+                      value={p.jobNumber}
+                      onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
+                      className={cls(missing.has(`jobNumber-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Part Number <Req /></Label>
+                    <Input
+                      value={p.partNumber}
+                      onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                      className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Qty <Req /></Label>
+                    <Input
+                      type="number"
+                      value={p.qty}
+                      onChange={(e) => updatePart(i, { qty: e.target.value })}
+                      className={cls(missing.has(`qty-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sales Order / Line / Release</Label>
+                    <Input
+                      value={p.soNumber}
+                      onChange={(e) => updatePart(i, { soNumber: e.target.value })}
+                      placeholder="455100/2/1"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rev</Label>
+                    <Input
+                      value={p.rev}
+                      onChange={(e) => updatePart(i, { rev: e.target.value })}
+                      placeholder="A"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Item</Label>
+                    <Input
+                      value={p.item}
+                      onChange={(e) => updatePart(i, { item: e.target.value })}
+                      placeholder="Mirror"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                </>
               )}
             </div>
           ))}
@@ -673,13 +844,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
           )}
-          {size === "2x4" && (
-            <p className="text-xs text-muted-foreground">
-              Specification icons (based on unit style) will be added to the printed label — definitions TBD.
-            </p>
-          )}
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

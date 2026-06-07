@@ -603,7 +603,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
   .label:last-child { page-break-after: auto; }
-  .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; }
+  .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; flex: 1; min-height: 0; }
   .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
   .part-qr-col { display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 4px 3px 4px; min-width: 70px; flex-shrink: 0; }
   .info-col { flex: 1; display: flex; flex-direction: column; padding: 2px 6px 3px 6px; gap: 1px; border-left: 2px solid #000; border-top: 2px solid #000; }

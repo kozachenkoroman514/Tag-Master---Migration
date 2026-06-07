@@ -722,21 +722,22 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   </Button>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label>Job Number</Label>
-                <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-              </div>
-              <div className="space-y-2">
-                <Label>Qty <Req /></Label>
-                <Input
-                  type="number"
-                  value={p.qty}
-                  onChange={(e) => updatePart(i, { qty: e.target.value })}
-                  className={cls(missing.has(`qty-${i}`) && invalidCls)}
-                />
-              </div>
               {size === "4x6" && (
+                <>
+                <div className="space-y-2">
+                  <Label>Job Number</Label>
+                  <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
+                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Qty <Req /></Label>
+                  <Input
+                    type="number"
+                    value={p.qty}
+                    onChange={(e) => updatePart(i, { qty: e.target.value })}
+                    className={cls(missing.has(`qty-${i}`) && invalidCls)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Rev</Label>
                   <Input
@@ -746,16 +747,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   />
                   <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label>Part Number <Req /></Label>
-                <Input
-                  value={p.partNumber}
-                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
-                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
-                />
-              </div>
-              {size === "4x6" && (
+                <div className="space-y-2">
+                  <Label>Part Number <Req /></Label>
+                  <Input
+                    value={p.partNumber}
+                    onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                    className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Description <Req /></Label>
                   <Textarea
@@ -766,24 +765,63 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     className={cls(missing.has(`description-${i}`) && invalidCls)}
                   />
                 </div>
+                </>
               )}
               {size === "2x4" && (
-                <div className="space-y-2">
-                  <Label>SO Number</Label>
-                  <Input value={p.soNumber} onChange={(e) => updatePart(i, { soNumber: e.target.value })} />
-                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-                </div>
-              )}
-              {size === "2x4" && (
-                <div className="space-y-2">
-                  <Label>Goes With</Label>
-                  <Input
-                    value={p.goesWith}
-                    onChange={(e) => updatePart(i, { goesWith: e.target.value })}
-                    placeholder="Part number(s) this is set with"
-                  />
-                  <p className="text-xs text-muted-foreground">Optional. List the part number(s) this default part ships as a set with.</p>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label>Job Number <Req /></Label>
+                    <Input
+                      value={p.jobNumber}
+                      onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
+                      className={cls(missing.has(`jobNumber-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Part Number <Req /></Label>
+                    <Input
+                      value={p.partNumber}
+                      onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                      className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Qty <Req /></Label>
+                    <Input
+                      type="number"
+                      value={p.qty}
+                      onChange={(e) => updatePart(i, { qty: e.target.value })}
+                      className={cls(missing.has(`qty-${i}`) && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sales Order / Line / Release</Label>
+                    <Input
+                      value={p.soNumber}
+                      onChange={(e) => updatePart(i, { soNumber: e.target.value })}
+                      placeholder="455100/2/1"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Rev</Label>
+                    <Input
+                      value={p.rev}
+                      onChange={(e) => updatePart(i, { rev: e.target.value })}
+                      placeholder="A"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Item</Label>
+                    <Input
+                      value={p.item}
+                      onChange={(e) => updatePart(i, { item: e.target.value })}
+                      placeholder="Mirror"
+                    />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                  </div>
+                </>
               )}
             </div>
           ))}
@@ -792,13 +830,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>
           )}
-          {size === "2x4" && (
-            <p className="text-xs text-muted-foreground">
-              Specification icons (based on unit style) will be added to the printed label — definitions TBD.
-            </p>
-          )}
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

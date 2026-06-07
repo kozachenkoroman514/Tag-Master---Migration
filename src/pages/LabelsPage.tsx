@@ -1130,14 +1130,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+      const [orderQr, projectQr] = await Promise.all([
+        firstSo ? cachedQr(firstSo) : Promise.resolve(""),
+        projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
+      ]);
+      if (cancelled) return;
       if (size === "4x6") {
-        const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
-        const [orderQr, projectQr] = await Promise.all([
-          firstSo ? cachedQr(firstSo) : Promise.resolve(""),
-          projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
-        ]);
-        if (cancelled) return;
-        const doc = buildUnit4x6Doc({
+        setPreviewHtml(buildUnit4x6Doc({
           orderNumber: firstSo,
           project: projectId,
           unitType: unitSel,
@@ -1148,29 +1148,32 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           status: "",
           orderQr,
           projectQr,
-        });
-        if (!cancelled) setPreviewHtml(doc);
+        }));
       } else {
-        const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
-        const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-        const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
-        if (cancelled) return;
-        const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
-        setPreviewHtml(buildGenericDoc("Pack Unit Label", body, size));
+        setPreviewHtml(buildUnit2x4Doc({
+          orderNumber: firstSo,
+          project: projectId,
+          unitType: unitSel,
+          unitNum: unitX,
+          unitTotal: unitN,
+          orderQr,
+          projectQr,
+        }));
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area]);
+  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area]);
 
   const handlePrint = async () => {
+    // SO Number is the only required field. Other blank fields are omitted on print.
+    const m = new Set<string>();
+    if (!(soNumbers[0] ?? "").trim()) m.add("so");
+    setMissing(m);
+    if (m.size) return;
+    const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
     if (size === "4x6") {
-      // 4x6 unit label: SO Number required. Other blank fields are omitted on print.
-      const m = new Set<string>();
-      if (!(soNumbers[0] ?? "").trim()) m.add("so");
-      setMissing(m);
-      if (m.size) return;
       await printUnit4x6({
-        orderNumber: soNumbers.map((s) => s.trim()).find(Boolean) ?? "",
+        orderNumber: firstSo,
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,
@@ -1179,32 +1182,15 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         area,
         status: "",
       });
-      setSoNumbers([""]);
-      setJobNumbers([""]);
-      setProjectId("");
-      setUnitX("");
-      setUnitN("");
-      setDate("");
-      setUnitSel("");
-      setArea("");
-      onOpenChange(false);
-      return;
+    } else {
+      await printUnit2x4({
+        orderNumber: firstSo,
+        project: projectId,
+        unitType: unitSel,
+        unitNum: unitX,
+        unitTotal: unitN,
+      });
     }
-
-    const m = new Set<string>();
-    if (!soNumbers.some((s) => s.trim())) m.add("so");
-    if (!unitX.trim() || !unitN.trim()) m.add("unitNum");
-    if (!date.trim()) m.add("date");
-    if (!unitSel) m.add("unitSel");
-    if (!area) m.add("area");
-    setMissing(m);
-    if (m.size) return;
-
-    const sos = soNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobs = jobNumbers.map((s) => s.trim()).filter(Boolean);
-    const jobQrs = await Promise.all(jobs.map((j) => cachedQr(j)));
-    const body = buildPackUnit2x4Body({ sos, jobs, projectId, unitX, unitN, date, unitSel, area, jobQrs });
-    await printLabel("Pack Unit Label", body, size);
     setSoNumbers([""]);
     setJobNumbers([""]);
     setProjectId("");

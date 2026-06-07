@@ -647,7 +647,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       if (size === "4x6") {
         setPreviewHtml(buildPart4x6Doc(parts, qrs));
       } else {
-        setPreviewHtml(buildGenericDoc("Part Label", buildPart2x4Body(parts, qrs), size));
+        setPreviewHtml(buildPart2x4Doc(parts, qrs));
       }
     })();
     return () => { cancelled = true; };
@@ -684,13 +684,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     parts.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
+      if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
     });
     setMissing(m);
     if (m.size) return;
 
-    const qrs = await computePartQrs(parts);
-    const body = buildPart2x4Body(parts, qrs);
-    await printLabel("Part Label", body, size);
+    await printPart2x4(parts);
     setParts([emptyPart()]);
     onOpenChange(false);
   };

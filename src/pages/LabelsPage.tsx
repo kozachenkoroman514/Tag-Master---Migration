@@ -623,7 +623,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .qr-box img { width: 100% !important; height: 100% !important; display: block; }
   .qr-box.job-qr { width: 58px; height: 58px; }
   .qr-box.part-qr { width: 58px; height: 58px; }
-  .divider { border-top: 2px dashed #000; margin: 0; }
+  .divider { border-top: 2px dashed #000; margin: 0; margin-top: auto; }
   .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }
   .em-block { background: #000; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; }
   .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }

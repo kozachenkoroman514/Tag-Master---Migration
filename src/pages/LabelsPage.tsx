@@ -839,7 +839,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               )}
             </div>
           ))}
-          {parts.length < 2 && (
+          {size === "4x6" && parts.length < 2 && (
             <Button type="button" variant="outline" size="sm" onClick={addPart}>
               <Plus className="h-4 w-4 mr-1" /> Add another part
             </Button>

@@ -499,28 +499,139 @@ async function printPart4x6(parts: PartEntry[]) {
   win.document.close();
 }
 
-// 2x4 Part label body (used by both print + preview, via the generic doc wrapper).
-function buildPart2x4Body(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
-  const sections = parts.map((p, i) => {
+// 2x4 Part label — landscape 4in x 2in. Pure HTML doc builder shared by print + preview.
+// Optional fields (SO/Line/Rel, Rev, Item) are omitted when blank.
+function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
+  const labels = parts.map((p, i) => {
     const partQr = qrs[i]?.part || "";
     const jobQr = qrs[i]?.job || "";
-    return `
-      <div class="row" style="border-top:1px solid #ddd;padding-top:6pt;margin-top:6pt;">
-        <div class="grow">
-          <div class="field"><b>Part #:</b> <span class="big">${escapeHtml(p.partNumber)}</span></div>
-          <div class="field"><b>Qty:</b> <span class="big">${escapeHtml(p.qty)}</span></div>
-          ${p.jobNumber.trim() ? `<div class="field"><b>Job #:</b> ${escapeHtml(p.jobNumber)}</div>` : ""}
-          ${p.soNumber.trim() ? `<div class="field"><b>SO #:</b> ${escapeHtml(p.soNumber)}</div>` : ""}
-          ${p.goesWith.trim() ? `<div class="field"><b>Goes With:</b> ${escapeHtml(p.goesWith)}</div>` : ""}
-        </div>
-        <div class="qrs">
-          ${partQr ? `<div class="qr"><img src="${partQr}" alt="Part QR"/><div>PART</div></div>` : ""}
-          ${jobQr ? `<div class="qr"><img src="${jobQr}" alt="Job QR"/><div>JOB</div></div>` : ""}
-        </div>
+
+    const jobQrHtml = jobQr
+      ? `<div class="qr-box job-qr"><img src="${jobQr}" alt="Job QR"/></div>`
+      : "";
+    const partQrHtml = partQr
+      ? `<div class="qr-box part-qr"><img src="${partQr}" alt="Part QR"/></div>`
+      : "";
+
+    const solBlock = p.soNumber.trim()
+      ? `<span class="f-title">SO / Line / Rel</span>
+         <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div>`
+      : "";
+    const itemBlock = p.item.trim()
+      ? `<span class="f-title" style="margin-top:3px;">Item</span>
+         <div class="f-input item-input">${escapeHtml(p.item)}</div>`
+      : "";
+    const infoCol = (solBlock || itemBlock)
+      ? `<div class="info-col">${solBlock}${itemBlock}</div>`
+      : "";
+
+    const revBlock = p.rev.trim()
+      ? `<span class="f-title" style="margin-top:4px;">Rev</span>
+         <div class="f-input rev-input">${escapeHtml(p.rev)}</div>`
+      : "";
+    const qtyCol = `<div class="qty-col">
+        <span class="f-title">QTY</span>
+        <div class="f-input qty-input">${escapeHtml(p.qty)}</div>
+        ${revBlock}
       </div>`;
+
+    return `
+    <div class="label">
+      <div class="top-section">
+        <div class="job-col">
+          <span class="f-title">Job</span>
+          <div class="f-input job-input">${escapeHtml(p.jobNumber)}</div>
+          ${jobQrHtml}
+        </div>
+        <div class="part-body">
+          <div class="part-header-bar">
+            <span class="f-title">Part</span>
+            <div class="f-input part-input" style="font-size:13px; width:100%; border-bottom:none;">${escapeHtml(p.partNumber)}</div>
+          </div>
+          <div class="part-lower">
+            <div class="part-qr-col">${partQrHtml}</div>
+            ${infoCol}
+            ${qtyCol}
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="bottom-section">
+        <div class="em-block">
+          <span class="em-name">Electric<br>Mirror<span class="em-reg">&reg;</span></span>
+        </div>
+        <div class="warning-block">
+          <span class="warn-title">&#9888; Warning:</span>
+          <span class="warn-text">This product can expose you to chemicals including phthalates, which are known to the State of California to cause cancer and birth defects or other reproductive harm.</span>
+          <div class="p65-row" style="margin-top:2px;">
+            <span class="p65-arrow">&#10148;</span>
+            <span class="p65-url">www.P65Warning.ca.gov</span>
+          </div>
+        </div>
+        <div class="contact-block">
+          <div class="contact-text">Electric Mirror LLC<br>6101 Associated Blvd, Suite 101, Everett WA 98203<br>Toll Free +1-888-218-9238<br>Support +1-844-264-3217</div>
+          <div class="contact-url">www.electricmirror.com</div>
+          <div class="deut-text">DEUT 8:18 , 2 COR 3:18</div>
+        </div>
+      </div>
+    </div>`;
   }).join("");
-  const specNote = `<div class="field" style="font-size:7pt;color:#777;margin-top:4pt;">[Spec icons: unit style — TBD]</div>`;
-  return `<div class="title">Part</div>${sections}${specNote}`;
+
+  return `<!doctype html><html><head><title>Part Label</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: 4in 2in landscape; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
+  .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
+  .label:last-child { page-break-after: auto; }
+  .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; }
+  .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
+  .part-qr-col { display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 4px 3px 4px; min-width: 70px; flex-shrink: 0; }
+  .info-col { flex: 1; display: flex; flex-direction: column; padding: 2px 6px 3px 6px; gap: 1px; border-left: 2px solid #000; border-top: 2px solid #000; }
+  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 52px; gap: 4px; }
+  .part-body { flex: 1; display: flex; flex-direction: column; border-left: 2px solid #000; min-width: 0; }
+  .part-header-bar { padding: 3px 6px 2px 6px; display: flex; flex-direction: column; gap: 0; }
+  .part-lower { flex: 1; display: flex; flex-direction: row; align-items: stretch; }
+  .f-title { font-size: 8px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: 0.4px; line-height: 1; display: block; }
+  .f-input { border: none; border-bottom: 1.5px solid #000; font-family: Arial, sans-serif; background: transparent; color: #000; font-weight: 700; line-height: 1.1; width: 100%; display: block; min-height: 14px; }
+  .f-input.job-input { font-size: 16px; width: 62px; border-bottom: none; }
+  .f-input.part-input { font-size: 11px; }
+  .f-input.sol-input { font-size: 14px; font-weight: 900; }
+  .f-input.rev-input { font-size: 11px; width: 40px; text-align: right; }
+  .f-input.item-input { font-size: 11px; }
+  .f-input.qty-input { font-size: 14px; width: 40px; text-align: right; }
+  .qr-box { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; flex-shrink: 0; }
+  .qr-box img { width: 100% !important; height: 100% !important; display: block; }
+  .qr-box.job-qr { width: 58px; height: 58px; }
+  .qr-box.part-qr { width: 58px; height: 58px; }
+  .divider { border-top: 2px dashed #000; margin: 0; }
+  .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }
+  .em-block { background: #000; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; }
+  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
+  .em-reg { font-size: 7px; vertical-align: super; }
+  .warning-block { border-right: 2px solid #000; padding: 2px 4px; min-width: 110px; max-width: 110px; display: flex; flex-direction: column; }
+  .warn-title { font-size: 7.5px; font-weight: 900; color: #000; text-transform: uppercase; }
+  .warn-text { font-size: 5.5px; color: #000; line-height: 1.2; }
+  .contact-block { flex: 1; padding: 2px 4px; display: flex; flex-direction: column; justify-content: flex-start; }
+  .contact-text { font-size: 5.8px; color: #000; line-height: 1.25; }
+  .contact-url { font-size: 6.5px; font-weight: 700; color: #000; }
+  .p65-row { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
+  .p65-arrow { font-size: 7px; font-weight: 900; }
+  .p65-url { font-size: 6px; font-weight: 700; color: #000; }
+  .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+</style></head><body>${labels}</body></html>`;
+}
+
+async function printPart2x4(parts: PartEntry[]) {
+  const qrs = await computePartQrs(parts);
+  const doc = buildPart2x4Doc(parts, qrs).replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+  );
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
 }
 
 const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {

@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
+import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
@@ -109,9 +110,8 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
     const el = wrapperRef.current;
     if (!el) return;
 
-    const isWide = size === "4x6";
-    const nativeW = isWide ? 576 : 192;
-    const nativeH = 384;
+    const nativeW = nativeWFor(size);
+    const nativeH = nativeHFor(size);
 
     const update = () => {
       const rect = el.getBoundingClientRect();
@@ -126,8 +126,8 @@ const LabelPreview = ({ html, size }: { html: string; size: LabelSize }) => {
   }, [size]);
 
   const isWide = size === "4x6";
-  const nativeW = isWide ? 576 : 192;
-  const nativeH = 384;
+  const nativeW = nativeWFor(size);
+  const nativeH = nativeHFor(size);
 
   return (
     <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
@@ -165,6 +165,10 @@ const PreviewPane = ({ html, size }: { html: string; size: LabelSize }) => (
     </div>
   </div>
 );
+
+// Native iframe dims (in CSS px at 96dpi). 4x6 + 2x4 are both rendered landscape.
+function nativeWFor(size: LabelSize) { return size === "4x6" ? 576 : 384; }
+function nativeHFor(size: LabelSize) { return size === "4x6" ? 384 : 192; }
 
 // --- Per-label tile icons ---
 const tileGold = "hsl(43 90% 50%)";

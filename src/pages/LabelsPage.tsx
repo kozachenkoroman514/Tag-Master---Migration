@@ -367,6 +367,12 @@ const LabelsPage = () => {
                     alt="Misc 2x4 label"
                     className="w-full h-full object-contain"
                   />
+                ) : tile.kind === "pack-unit" ? (
+                  <img
+                    src={unitLabel2x4Icon.url}
+                    alt="Pack Unit 2x4 label"
+                    className="w-full h-full object-contain"
+                  />
                 ) : (
                   <tile.Icon />
                 )}

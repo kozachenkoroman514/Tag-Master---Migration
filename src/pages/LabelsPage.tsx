@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
+import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
 import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
@@ -343,9 +344,7 @@ const LabelsPage = () => {
               <div
                 className={
                   size === "2x4"
-                    ? tile.kind === "part"
-                      ? "w-72 h-36"
-                      : "w-32 h-48"
+                    ? "w-72 h-36"
                     : "w-80 h-80"
                 }
               >
@@ -359,6 +358,12 @@ const LabelsPage = () => {
                   <img
                     src={partLabel2x4Icon.url}
                     alt="Part 2x4 label"
+                    className="w-full h-full object-contain"
+                  />
+                ) : tile.kind === "misc" ? (
+                  <img
+                    src={miscLabel2x4Icon.url}
+                    alt="Misc 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : (

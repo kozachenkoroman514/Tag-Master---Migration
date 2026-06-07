@@ -1285,7 +1285,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             </Select>
           </div>
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
@@ -1402,7 +1402,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
             <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
@@ -1459,7 +1459,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             className={cls(missing.has("text") && invalidCls)}
           />
           </div>
-          <PreviewPane html={previewHtml} size={size} />
+          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

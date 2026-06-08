@@ -1608,39 +1608,21 @@ type Unit4x6Opts = {
 function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status, orderQr, projectQr } = opts;
 
-  const orderRow = orderNumber.trim()
-    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box"><img src="${orderQr}" alt="Order QR"/></div>` : ""}</div></div>`
-    : "";
-  const projectRow = project.trim()
-    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box"><img src="${projectQr}" alt="Project QR"/></div>` : ""}</div></div>`
-    : "";
+  const orderRow = `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box"><img src="${orderQr}" alt="Order QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
+  const projectRow = `<div class="project-row"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box"><img src="${projectQr}" alt="Project QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
 
-  const unitCell = unitType.trim()
-    ? `<div class="meta-cell unit-cell"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`
-    : "";
-  const ofCell = (unitNum.trim() || unitTotal.trim())
-    ? `<div class="meta-cell of-cell">
-         ${unitNum.trim() ? `<span class="meta-input num-input">${escapeHtml(unitNum)}</span>` : `<span class="meta-input num-input"></span>`}
+  const unitCell = `<div class="meta-cell unit-cell"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`;
+  const ofCell = `<div class="meta-cell of-cell">
+         <span class="meta-input num-input">${escapeHtml(unitNum)}</span>
          <span class="of-word">of</span>
-         ${unitTotal.trim() ? `<span class="meta-input total-input">${escapeHtml(unitTotal)}</span>` : `<span class="meta-input total-input"></span>`}
-       </div>`
-    : "";
-  const dateCell = date.trim()
-    ? `<div class="meta-cell date-cell"><span class="meta-label">Date:</span><span class="meta-input date-input">${escapeHtml(date)}</span></div>`
-    : "";
-  const metaRow = (unitCell || ofCell || dateCell)
-    ? `<div class="meta-row">${unitCell}${ofCell}${dateCell}</div>`
-    : "";
+         <span class="meta-input total-input">${escapeHtml(unitTotal)}</span>
+       </div>`;
+  const dateCell = `<div class="meta-cell date-cell"><span class="meta-label">Date:</span><span class="meta-input date-input">${escapeHtml(date)}</span></div>`;
+  const metaRow = `<div class="meta-row">${unitCell}${ofCell}${dateCell}</div>`;
 
-  const areaCell = area.trim()
-    ? `<div class="area-cell"><span class="status-label-sm">Area</span><span class="area-input">${escapeHtml(area)}</span></div>`
-    : "";
-  const statusCell = status.trim()
-    ? `<div class="status-cell"><span class="status-label-sm">Status</span><span class="status-input">${escapeHtml(status)}</span></div>`
-    : "";
-  const bottomRow = (areaCell || statusCell)
-    ? `<div class="bottom-row">${areaCell}${statusCell}</div>`
-    : "";
+  const areaCell = `<div class="area-cell"><span class="status-label-sm">Area</span><span class="area-input">${escapeHtml(area)}</span></div>`;
+  const statusCell = `<div class="status-cell"><span class="status-label-sm">Status</span><span class="status-input">${escapeHtml(status)}</span></div>`;
+  const bottomRow = `<div class="bottom-row">${areaCell}${statusCell}</div>`;
 
   return `<!doctype html><html><head><title>Unit Label</title>
 <style>

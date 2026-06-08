@@ -1170,10 +1170,29 @@ const ScanPicklistDialog = ({
     try {
       if (size === "2x4") await printPart2x4(consolidated);
       else await printPart4x6Batched(consolidated, 2);
-      reset();
-      onOpenChange(false);
     } finally {
       setPrinting(false);
+    }
+  };
+
+  const handlePrintPackUnit = async () => {
+    if (!packUnit) return;
+    setPrintingUnit(true);
+    try {
+      const opts = {
+        orderNumber: packUnit.soNumber,
+        project: packUnit.project,
+        unitType: packUnit.unitType,
+        unitNum: packUnit.unitNum || "1",
+        unitTotal: packUnit.unitTotal || "1",
+        date: "",
+        area: "SHIPPING",
+        status: "",
+      };
+      if (size === "4x6") await printUnit4x6(opts);
+      else await printUnit2x4(opts);
+    } finally {
+      setPrintingUnit(false);
     }
   };
 

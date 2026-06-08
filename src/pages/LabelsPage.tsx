@@ -1352,7 +1352,7 @@ const ScanPicklistDialog = ({
                           <Input
                             value={p.jobNumber}
                             onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
-                            className={cls("h-8 text-xs", missing.has(`jobNumber-${i}`) && invalidCls)}
+                            className="h-8 text-xs"
                           />
                         </td>
                         <td className="p-1">

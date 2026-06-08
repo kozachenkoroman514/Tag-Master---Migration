@@ -631,7 +631,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   return `<!doctype html><html><head><title>Part Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: 4in 2in landscape; margin: 0; }
+  @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
   .label:last-child { page-break-after: auto; }
@@ -672,7 +672,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .label { transform: scale(0.95); transform-origin: center center; }
+    .label { transform: scale(0.90); transform-origin: center center; }
   }
 </style></head><body>${labels}</body></html>`;
 }
@@ -994,7 +994,25 @@ const ScanPicklistDialog = ({
 
   const handlePrint = async () => {
     const m = new Set<string>();
-    parts.forEach((p, i) => {
+    // Consolidate duplicates: same partNumber + jobNumber => sum qty into one listing.
+    const consolidated: PartEntry[] = [];
+    const idxByKey = new Map<string, number>();
+    parts.forEach((p) => {
+      const key = `${p.partNumber.trim().toLowerCase()}|${p.jobNumber.trim().toLowerCase()}`;
+      const hasKey = p.partNumber.trim() && p.jobNumber.trim();
+      const existing = hasKey ? idxByKey.get(key) : undefined;
+      if (existing !== undefined) {
+        const a = parseInt(consolidated[existing].qty, 10);
+        const b = parseInt(p.qty, 10);
+        if (!Number.isNaN(a) && !Number.isNaN(b)) {
+          consolidated[existing] = { ...consolidated[existing], qty: String(a + b) };
+        }
+      } else {
+        if (hasKey) idxByKey.set(key, consolidated.length);
+        consolidated.push({ ...p });
+      }
+    });
+    consolidated.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
       if (size === "2x4") {
@@ -1010,8 +1028,8 @@ const ScanPicklistDialog = ({
     }
     setPrinting(true);
     try {
-      if (size === "2x4") await printPart2x4(parts);
-      else await printPart4x6(parts);
+      if (size === "2x4") await printPart2x4(consolidated);
+      else await printPart4x6(consolidated);
       reset();
       onOpenChange(false);
     } finally {
@@ -1364,7 +1382,7 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   return `<!doctype html><html><head><title>Unit Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: 4in 2in landscape; margin: 0; }
+  @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; border: 2px solid #000; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 8px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.6px; line-height: 1; margin-bottom: 1px; }
@@ -1388,7 +1406,7 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   .of-word { font-size: 12px; font-weight: 700; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .label { transform: scale(0.95); transform-origin: center center; }
+    .label { transform: scale(0.90); transform-origin: center center; }
   }
 </style></head><body>
 <div class="label">

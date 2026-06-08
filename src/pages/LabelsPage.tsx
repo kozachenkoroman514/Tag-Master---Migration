@@ -1364,7 +1364,7 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   return `<!doctype html><html><head><title>Unit Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: 4in 2in landscape; margin: 0; }
+  @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; border: 2px solid #000; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 8px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.6px; line-height: 1; margin-bottom: 1px; }
@@ -1388,7 +1388,7 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   .of-word { font-size: 12px; font-weight: 700; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .label { transform: scale(0.95); transform-origin: center center; }
+    .label { transform: scale(0.90); transform-origin: center center; }
   }
 </style></head><body>
 <div class="label">

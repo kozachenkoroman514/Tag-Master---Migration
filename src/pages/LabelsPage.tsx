@@ -1233,13 +1233,52 @@ const ScanPicklistDialog = ({
               onChange={(e) => { setFile(e.target.files?.[0] ?? null); setParts([]); }}
             />
 
-            <div className="border border-border rounded-md bg-card aspect-[3/4] flex items-center justify-center overflow-hidden">
+            <div className="relative border border-border rounded-md bg-card aspect-[3/4] flex items-center justify-center overflow-hidden">
               {previewUrl ? (
                 <img src={previewUrl} alt="Picklist preview" className="max-w-full max-h-full object-contain" />
               ) : file ? (
-                <div className="text-xs text-muted-foreground p-4 text-center break-all">{file.name}</div>
+                <div className="flex flex-col items-center gap-2 p-4 text-center">
+                  <FileText className="h-16 w-16 text-ring" />
+                  <div className="text-xs text-muted-foreground break-all">{file.name}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Preview not available
+                  </div>
+                </div>
               ) : (
-                <div className="text-xs text-muted-foreground p-4 text-center">No file selected</div>
+                <div className="flex flex-col items-center gap-3 p-4 text-center">
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => cameraRef.current?.click()}
+                      className="flex flex-col items-center gap-1 text-muted-foreground hover:text-ring transition-colors"
+                      aria-label="Take photo"
+                    >
+                      <Camera className="h-10 w-10" />
+                      <span className="text-[10px] uppercase tracking-wide">Photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="flex flex-col items-center gap-1 text-muted-foreground hover:text-ring transition-colors"
+                      aria-label="Upload file"
+                    >
+                      <Upload className="h-10 w-10" />
+                      <span className="text-[10px] uppercase tracking-wide">Upload</span>
+                    </button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">No file selected</div>
+                </div>
+              )}
+              {file && (
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); setParts([]); setPackUnit(null); }}
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-background/90 border border-border flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Remove scanned file"
+                  title="Remove file"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
 

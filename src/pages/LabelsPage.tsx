@@ -1409,6 +1409,10 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
   .status-value { flex: 1; font-size: 58px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 3px 10px 5px 10px; display: flex; flex-direction: column; flex: 1; }
   .reason-value { flex: 1; font-size: 14px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>
 <div class="label">
   <div class="status-row">

@@ -54,8 +54,9 @@ Deno.serve(async (req) => {
                 salesOrder: { type: 'string' },
                 project: { type: 'string' },
                 unitIndicator: { type: 'string' },
+                needByDate: { type: 'string' },
               },
-              required: ['salesOrder', 'project', 'unitIndicator'],
+              required: ['salesOrder', 'project', 'unitIndicator', 'needByDate'],
               additionalProperties: false,
             },
           },
@@ -92,6 +93,7 @@ Deno.serve(async (req) => {
                 '- salesOrder: the SO number from the top-left of the document (same as the SO used on the part lines).',
                 '- project: the project / customer name printed on the SAME line as the SO, immediately to its RIGHT. Empty string if not present.',
                 '- unitIndicator: a short raw token used to decide the unit type. The F / C-Pallet notation is printed ONLY on the FIRST page of the picklist (top-right region) and applies to the entire picklist — do NOT require it to repeat on later pages, and do NOT return "" just because later pages omit it. Scan the first page\'s top-right quadrant first. If you see "C-Pallet" (case-insensitive) anywhere on the first page, return "C-Pallet". Otherwise, if a single letter "F" notation appears in the top-right of the first page (often preceding a unit/box marker), return "F". Otherwise return "".',
+                '- needByDate: the date printed on any line labeled "Ship-By Date" (case-insensitive, also accept "Ship By Date" / "Ship-By"). Return the date exactly as printed (e.g. "12/15/2026"). If multiple lines show a Ship-By Date, return the earliest. Empty string if not present.',
               ].join('\n'),
           },
           {
@@ -151,6 +153,7 @@ Deno.serve(async (req) => {
       salesOrder: String(pu?.salesOrder ?? ''),
       project: String(pu?.project ?? ''),
       unitIndicator: String(pu?.unitIndicator ?? ''),
+      needByDate: String(pu?.needByDate ?? ''),
     };
 
     return new Response(JSON.stringify({ parts: norm, packUnit }), {

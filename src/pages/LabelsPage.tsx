@@ -866,7 +866,6 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     parts.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
-      if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
     });
     setMissing(m);
     if (m.size) return;
@@ -952,12 +951,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               {size === "2x4" && (
                 <>
                   <div className="space-y-2">
-                    <Label>Job Number <Req /></Label>
+                    <Label>Job Number</Label>
                     <Input
                       value={p.jobNumber}
                       onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
-                      className={cls(missing.has(`jobNumber-${i}`) && invalidCls)}
                     />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Part Number <Req /></Label>
@@ -1048,7 +1047,9 @@ const ScanPicklistDialog = ({
     unitType: string;
     unitNum: string;
     unitTotal: string;
+    needByDate: string;
   } | null>(null);
+  const [packUnitMissing, setPackUnitMissing] = useState<Set<string>>(new Set());
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1075,6 +1076,7 @@ const ScanPicklistDialog = ({
     setParts([]);
     setMissing(new Set());
     setPackUnit(null);
+    setPackUnitMissing(new Set());
   };
 
   const handleClose = (val: boolean) => {
@@ -1099,31 +1101,71 @@ const ScanPicklistDialog = ({
     setScanning(true);
     try {
       const imageBase64 = await fileToBase64(file);
-      const { data, error } = await supabase.functions.invoke("scan-picklist", {
-        body: { imageBase64, mimeType: file.type || "image/jpeg" },
-      });
-      if (error) throw error;
-      const incoming = (data?.parts ?? []) as PartEntry[];
+      const invoke = () =>
+        supabase.functions.invoke("scan-picklist", {
+          body: { imageBase64, mimeType: file.type || "image/jpeg" },
+        });
+      const { data: data1, error: err1 } = await invoke();
+      if (err1) throw err1;
+      let incoming = (data1?.parts ?? []) as PartEntry[];
+      let pu = (data1?.packUnit ?? {}) as any;
+
+      // Determine if anything is missing -> do exactly one second pass and merge.
+      const partMissing = (p: PartEntry) =>
+        !p.partNumber.trim() || !p.qty.trim() || !p.description.trim() ||
+        !p.jobNumber.trim() || !p.soNumber.trim();
+      const puMissing = !pu?.salesOrder || !pu?.project || !pu?.unitIndicator || !pu?.needByDate;
+      const needsSecondPass = puMissing || incoming.some(partMissing);
+      if (needsSecondPass) {
+        const { data: data2 } = await invoke();
+        if (data2) {
+          const inc2 = (data2.parts ?? []) as PartEntry[];
+          // Merge by index: fill empty fields from the second pass.
+          incoming = incoming.map((p, i) => {
+            const q = inc2[i];
+            if (!q) return p;
+            const out: any = { ...p };
+            for (const k of Object.keys(p) as (keyof PartEntry)[]) {
+              if (!String(out[k] ?? "").trim() && String((q as any)[k] ?? "").trim()) {
+                out[k] = (q as any)[k];
+              }
+            }
+            return out;
+          });
+          // Append any extra rows the second pass found.
+          if (inc2.length > incoming.length) incoming = [...incoming, ...inc2.slice(incoming.length)];
+          const pu2 = (data2.packUnit ?? {}) as any;
+          pu = {
+            salesOrder: pu?.salesOrder || pu2?.salesOrder || "",
+            project: pu?.project || pu2?.project || "",
+            unitIndicator: pu?.unitIndicator || pu2?.unitIndicator || "",
+            needByDate: pu?.needByDate || pu2?.needByDate || "",
+          };
+        }
+      }
+
       if (!incoming.length) {
         toast.error("No parts detected. Try a clearer photo.");
         return;
       }
       setParts(incoming);
       setMissing(new Set());
-      const pu = data?.packUnit ?? {};
       const ind = String(pu?.unitIndicator ?? "").toLowerCase();
       const unitType = ind.includes("c-pallet")
         ? "C-PALLET"
         : /(^|[^a-z])f([^a-z]|$)/.test(ind)
         ? "CRATE"
         : "BOX";
-      setPackUnit({
-        soNumber: String(pu?.salesOrder ?? ""),
-        project: String(pu?.project ?? ""),
-        unitType,
-        unitNum: "1",
-        unitTotal: "1",
-      });
+      const soNumber = String(pu?.salesOrder ?? "");
+      const project = String(pu?.project ?? "");
+      const needByDate = String(pu?.needByDate ?? "");
+      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate });
+      const pm = new Set<string>();
+      if (!soNumber.trim()) pm.add("soNumber");
+      if (!project.trim()) pm.add("project");
+      if (!String(pu?.unitIndicator ?? "").trim()) pm.add("unitType");
+      if (!needByDate.trim()) pm.add("needByDate");
+      setPackUnitMissing(pm);
       toast.success(`Found ${incoming.length} part${incoming.length === 1 ? "" : "s"}.`);
     } catch (e: any) {
       const msg = e?.message || "Scan failed";
@@ -1155,9 +1197,7 @@ const ScanPicklistDialog = ({
     consolidated.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
-      if (size === "2x4") {
-        if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
-      } else {
+      if (size === "4x6") {
         if (!p.description.trim()) m.add(`description-${i}`);
       }
     });
@@ -1185,7 +1225,7 @@ const ScanPicklistDialog = ({
         unitType: packUnit.unitType,
         unitNum: packUnit.unitNum || "1",
         unitTotal: packUnit.unitTotal || "1",
-        date: "",
+        date: packUnit.needByDate,
         area: "SHIPPING",
         status: "",
       };
@@ -1326,7 +1366,7 @@ const ScanPicklistDialog = ({
                     <tr className="text-left">
                       <th className="p-2">Part # <Req /></th>
                       <th className="p-2 w-16">Qty <Req /></th>
-                      <th className="p-2 w-28">Job # {size === "2x4" && <Req />}</th>
+                      <th className="p-2 w-28">Job #</th>
                       <th className="p-2 w-28">SO/Line/Rel</th>
                       <th className="p-2">Description {size === "4x6" && <Req />}</th>
                       <th className="p-2 w-16">Rev</th>
@@ -1355,7 +1395,7 @@ const ScanPicklistDialog = ({
                           <Input
                             value={p.jobNumber}
                             onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
-                            className={cls("h-8 text-xs", missing.has(`jobNumber-${i}`) && invalidCls)}
+                            className="h-8 text-xs"
                           />
                         </td>
                         <td className="p-1">
@@ -1418,27 +1458,27 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-6 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
                       value={packUnit.soNumber}
-                      onChange={(e) => setPackUnit({ ...packUnit, soNumber: e.target.value })}
-                      className="h-8 text-xs"
+                      onChange={(e) => { setPackUnit({ ...packUnit, soNumber: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("soNumber"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("soNumber") && invalidCls)}
                     />
                   </div>
                   <div className="space-y-1 col-span-2">
                     <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
                     <Input
                       value={packUnit.project}
-                      onChange={(e) => setPackUnit({ ...packUnit, project: e.target.value })}
-                      className="h-8 text-xs"
+                      onChange={(e) => { setPackUnit({ ...packUnit, project: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("project"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("project") && invalidCls)}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Unit</Label>
-                    <Select value={packUnit.unitType} onValueChange={(v) => setPackUnit({ ...packUnit, unitType: v })}>
-                      <SelectTrigger className="h-8 text-xs">
+                    <Select value={packUnit.unitType} onValueChange={(v) => { setPackUnit({ ...packUnit, unitType: v }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("unitType"); return n; }); }}>
+                      <SelectTrigger className={cls("h-8 text-xs", packUnitMissing.has("unitType") && invalidCls)}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1465,6 +1505,15 @@ const ScanPicklistDialog = ({
                       />
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Need By</Label>
+                    <Input
+                      value={packUnit.needByDate}
+                      onChange={(e) => { setPackUnit({ ...packUnit, needByDate: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("needByDate"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("needByDate") && invalidCls)}
+                      placeholder="Ship-by date"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -1473,17 +1522,13 @@ const ScanPicklistDialog = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          {packUnit && (
-            <Button
-              variant="secondary"
-              onClick={handlePrintPackUnit}
-              disabled={printingUnit || !packUnit.soNumber.trim()}
-              className="gap-2"
-            >
-              <Package className="h-4 w-4" />
-              {printingUnit ? "Printing…" : "Print Pack Unit Label"}
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            onClick={handlePrintPackUnit}
+            disabled={printingUnit || !packUnit || !packUnit.soNumber.trim()}
+          >
+            {printingUnit ? "Printing…" : "Print Pack Unit Label"}
+          </Button>
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
             {printing ? "Printing…" : `Print ${labelCount} Part Label${labelCount === 1 ? "" : "s"}`}
           </Button>

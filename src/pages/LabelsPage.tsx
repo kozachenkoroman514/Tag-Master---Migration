@@ -39,7 +39,7 @@ const Req = () => <span className="text-destructive">*</span>;
 
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
-  const pageSize = size === "2x4" ? "4in 2in" : "6in 4in";
+  const pageSize = size === "2x4" ? "4in 2in landscape" : "6in 4in landscape";
   const labelW = size === "2x4" ? "4in" : "6in";
   const labelH = size === "2x4" ? "2in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
@@ -61,7 +61,10 @@ function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): stri
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
-  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body><div class="label">${bodyHtml}</div></body></html>`;
 }
 
@@ -652,6 +655,10 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .p65-arrow { font-size: 7px; font-weight: 900; }
   .p65-url { font-size: 6px; font-weight: 700; color: #000; }
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>${labels}</body></html>`;
 }
 
@@ -1052,6 +1059,10 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   .unit-select { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; padding-right: 4px; }
   .meta-input { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; text-align: center; display: inline-block; min-width: 28px; min-height: 14px; padding: 0 2px; }
   .of-word { font-size: 12px; font-weight: 700; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>
 <div class="label">
   ${orderRow}
@@ -1398,6 +1409,10 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
   .status-value { flex: 1; font-size: 58px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 3px 10px 5px 10px; display: flex; flex-direction: column; flex: 1; }
   .reason-value { flex: 1; font-size: 14px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>
 <div class="label">
   <div class="status-row">

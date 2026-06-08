@@ -39,7 +39,7 @@ const Req = () => <span className="text-destructive">*</span>;
 
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
-  const pageSize = size === "2x4" ? "4in 2in" : "6in 4in";
+  const pageSize = size === "2x4" ? "4in 2in landscape" : "6in 4in landscape";
   const labelW = size === "2x4" ? "4in" : "6in";
   const labelH = size === "2x4" ? "2in" : "4in";
   const pad = size === "2x4" ? "0.12in" : "0.25in";
@@ -61,7 +61,10 @@ function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): stri
   .grow { flex: 1; }
   .center { text-align: center; }
   .wrap { word-break: break-word; white-space: pre-wrap; }
-  @media print { .label { transform: scale(0.95); transform-origin: center center; } }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body><div class="label">${bodyHtml}</div></body></html>`;
 }
 

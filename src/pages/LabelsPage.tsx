@@ -296,6 +296,7 @@ const LabelTileIcon = ({ size }: { size: LabelSize }) => {
 const LabelsPage = () => {
   const [size, setSize] = useState<LabelSize>("4x6");
   const [openKind, setOpenKind] = useState<LabelKind | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const sizes: { value: LabelSize; label: string }[] = [
     { value: "2x4", label: '2" × 4"' },
@@ -308,6 +309,16 @@ const LabelsPage = () => {
       <main className="flex-1 ml-[100px] p-6 space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight">Labels</h1>
+          <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setScanOpen(true)}
+            className="gap-2"
+          >
+            <ScanLine className="h-4 w-4" />
+            Scan Picklist
+          </Button>
           <div className="inline-flex items-center rounded-lg border border-border bg-card p-1 gap-1">
             {sizes.map((s) => {
               const active = size === s.value;
@@ -327,6 +338,7 @@ const LabelsPage = () => {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
 
@@ -403,6 +415,7 @@ const LabelsPage = () => {
         <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <ScanPicklistDialog open={scanOpen} onOpenChange={setScanOpen} defaultSize={size} />
 
       </main>
     </div>

@@ -1225,7 +1225,7 @@ const ScanPicklistDialog = ({
         unitType: packUnit.unitType,
         unitNum: packUnit.unitNum || "1",
         unitTotal: packUnit.unitTotal || "1",
-        date: "",
+        date: packUnit.needByDate,
         area: "SHIPPING",
         status: "",
       };

@@ -1154,9 +1154,7 @@ const ScanPicklistDialog = ({
     consolidated.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
-      if (size === "2x4") {
-        if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
-      } else {
+      if (size === "4x6") {
         if (!p.description.trim()) m.add(`description-${i}`);
       }
     });
@@ -1325,7 +1323,7 @@ const ScanPicklistDialog = ({
                     <tr className="text-left">
                       <th className="p-2">Part # <Req /></th>
                       <th className="p-2 w-16">Qty <Req /></th>
-                      <th className="p-2 w-28">Job # {size === "2x4" && <Req />}</th>
+                      <th className="p-2 w-28">Job #</th>
                       <th className="p-2 w-28">SO/Line/Rel</th>
                       <th className="p-2">Description {size === "4x6" && <Req />}</th>
                       <th className="p-2 w-16">Rev</th>

@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, CalendarIcon } from "lucide-react";
+import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2 } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
@@ -32,6 +32,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import QRCode from "qrcode";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";

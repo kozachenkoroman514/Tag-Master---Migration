@@ -1047,7 +1047,9 @@ const ScanPicklistDialog = ({
     unitType: string;
     unitNum: string;
     unitTotal: string;
+    needByDate: string;
   } | null>(null);
+  const [packUnitMissing, setPackUnitMissing] = useState<Set<string>>(new Set());
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 

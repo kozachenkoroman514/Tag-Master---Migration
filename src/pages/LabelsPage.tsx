@@ -1458,27 +1458,27 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-6 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
                       value={packUnit.soNumber}
-                      onChange={(e) => setPackUnit({ ...packUnit, soNumber: e.target.value })}
-                      className="h-8 text-xs"
+                      onChange={(e) => { setPackUnit({ ...packUnit, soNumber: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("soNumber"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("soNumber") && invalidCls)}
                     />
                   </div>
                   <div className="space-y-1 col-span-2">
                     <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
                     <Input
                       value={packUnit.project}
-                      onChange={(e) => setPackUnit({ ...packUnit, project: e.target.value })}
-                      className="h-8 text-xs"
+                      onChange={(e) => { setPackUnit({ ...packUnit, project: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("project"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("project") && invalidCls)}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Unit</Label>
-                    <Select value={packUnit.unitType} onValueChange={(v) => setPackUnit({ ...packUnit, unitType: v })}>
-                      <SelectTrigger className="h-8 text-xs">
+                    <Select value={packUnit.unitType} onValueChange={(v) => { setPackUnit({ ...packUnit, unitType: v }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("unitType"); return n; }); }}>
+                      <SelectTrigger className={cls("h-8 text-xs", packUnitMissing.has("unitType") && invalidCls)}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1505,6 +1505,15 @@ const ScanPicklistDialog = ({
                       />
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Need By</Label>
+                    <Input
+                      value={packUnit.needByDate}
+                      onChange={(e) => { setPackUnit({ ...packUnit, needByDate: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("needByDate"); return n; }); }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("needByDate") && invalidCls)}
+                      placeholder="Ship-by date"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -1513,17 +1522,13 @@ const ScanPicklistDialog = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          {packUnit && (
-            <Button
-              variant="secondary"
-              onClick={handlePrintPackUnit}
-              disabled={printingUnit || !packUnit.soNumber.trim()}
-              className="gap-2"
-            >
-              <Package className="h-4 w-4" />
-              {printingUnit ? "Printing…" : "Print Pack Unit Label"}
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            onClick={handlePrintPackUnit}
+            disabled={printingUnit || !packUnit || !packUnit.soNumber.trim()}
+          >
+            {printingUnit ? "Printing…" : "Print Pack Unit Label"}
+          </Button>
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
             {printing ? "Printing…" : `Print ${labelCount} Part Label${labelCount === 1 ? "" : "s"}`}
           </Button>

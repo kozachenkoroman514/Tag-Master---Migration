@@ -1167,7 +1167,15 @@ const ScanPicklistDialog = ({
         : "BOX";
       const soNumber = String(pu?.salesOrder ?? "");
       const project = String(pu?.project ?? "");
-      const needByDate = String(pu?.needByDate ?? "");
+      const rawNeedBy = String(pu?.needByDate ?? "");
+      const needByDate = (() => {
+        if (!rawNeedBy.trim()) return "";
+        const d = parse(rawNeedBy, "MM/dd/yyyy", new Date());
+        if (isValid(d)) return format(d, "MM/dd");
+        const d2 = parse(rawNeedBy, "M/d/yyyy", new Date());
+        if (isValid(d2)) return format(d2, "MM/dd");
+        return rawNeedBy;
+      })();
       setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate });
       const pm = new Set<string>();
       if (!soNumber.trim()) pm.add("soNumber");

@@ -346,7 +346,7 @@ const LabelsPage = () => {
               <div
                 className={
                   size === "2x4"
-                    ? "w-72 h-36"
+                    ? "w-80 h-40 flex items-center justify-center mx-auto"
                     : "w-80 h-80"
                 }
               >

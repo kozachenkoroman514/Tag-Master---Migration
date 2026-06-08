@@ -1036,6 +1036,7 @@ const ScanPicklistDialog = ({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [scanning, setScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
   const [printing, setPrinting] = useState(false);
   const [printingUnit, setPrintingUnit] = useState(false);
   const [parts, setParts] = useState<PartEntry[]>([]);

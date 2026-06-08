@@ -554,10 +554,45 @@ async function printPart4x6(parts: PartEntry[]) {
 // each printed 4x6 label holds up to N listings. Multiple labels are stacked
 // into one print doc separated by page breaks.
 async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
+  // Pair "similar" parts on the same label by grouping on the part number
+  // with a trailing -M (mirror) or -C (chassis) suffix removed. e.g.
+  // INT3-DC-36.00X42.00-AK-LSE-M pairs with INT3-DC-36.00X42.00-AK-LSE-C.
+  // Unmatched parts get their own label (or fill leftover slots).
+  const stemOf = (pn: string) =>
+    pn.trim().toUpperCase().replace(/-(M|C)$/i, "");
+
+  const groups = new Map<string, PartEntry[]>();
+  const order: string[] = [];
+  for (const p of parts) {
+    const stem = stemOf(p.partNumber);
+    if (!groups.has(stem)) {
+      groups.set(stem, []);
+      order.push(stem);
+    }
+    groups.get(stem)!.push(p);
+  }
+
+  const sorted: PartEntry[] = [];
+  for (const stem of order) sorted.push(...groups.get(stem)!);
+
   const chunks: PartEntry[][] = [];
-  for (let i = 0; i < parts.length; i += perLabel) chunks.push(parts.slice(i, i + perLabel));
+  let i = 0;
+  while (i < sorted.length) {
+    const a = sorted[i];
+    const b = sorted[i + 1];
+    if (b && stemOf(a.partNumber) === stemOf(b.partNumber)) {
+      chunks.push(perLabel >= 2 ? [a, b] : [a]);
+      i += perLabel >= 2 ? 2 : 1;
+    } else {
+      chunks.push([a]);
+      i += 1;
+    }
+  }
   if (chunks.length === 0) return;
-  const qrs = await computePartQrs(parts);
+  // Recompute QRs in the new (sorted/chunked) order so each label gets the
+  // correct QR codes for its listings.
+  const flat = chunks.flat();
+  const qrs = await computePartQrs(flat);
 
   const labelHtmls: string[] = [];
   let cursor = 0;

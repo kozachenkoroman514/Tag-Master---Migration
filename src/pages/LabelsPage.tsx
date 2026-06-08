@@ -1100,6 +1100,12 @@ const ScanPicklistDialog = ({
   const handleScan = async () => {
     if (!file) return;
     setScanning(true);
+    setScanProgress(2);
+    // Smooth asymptotic ramp toward an evolving target so the bar always shows motion.
+    let target = 45;
+    const ramp = setInterval(() => {
+      setScanProgress((p) => (p < target ? p + Math.max(0.5, (target - p) * 0.08) : p));
+    }, 120);
     try {
       const imageBase64 = await fileToBase64(file);
       const invoke = () =>
@@ -1118,6 +1124,8 @@ const ScanPicklistDialog = ({
       const puMissing = !pu?.salesOrder || !pu?.project || !pu?.unitIndicator || !pu?.needByDate;
       const needsSecondPass = puMissing || incoming.some(partMissing);
       if (needsSecondPass) {
+        setScanProgress(55);
+        target = 92;
         const { data: data2 } = await invoke();
         if (data2) {
           const inc2 = (data2.parts ?? []) as PartEntry[];
@@ -1174,7 +1182,10 @@ const ScanPicklistDialog = ({
       else if (msg.includes("402")) toast.error("AI credits exhausted. Add credits in Workspace settings.");
       else toast.error(msg);
     } finally {
+      clearInterval(ramp);
+      setScanProgress(100);
       setScanning(false);
+      setTimeout(() => setScanProgress(0), 500);
     }
   };
 

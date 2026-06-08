@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -550,6 +550,62 @@ async function printPart4x6(parts: PartEntry[]) {
   win.document.close();
 }
 
+const stemOf = (pn: string) =>
+  pn.trim().toUpperCase().replace(/-(M|C)$/i, "");
+
+function consolidateParts(parts: PartEntry[]): PartEntry[] {
+  const consolidated: PartEntry[] = [];
+  const idxByKey = new Map<string, number>();
+  parts.forEach((p) => {
+    const key = `${p.partNumber.trim().toLowerCase()}|${p.jobNumber.trim().toLowerCase()}`;
+    const hasKey = p.partNumber.trim() && p.jobNumber.trim();
+    const existing = hasKey ? idxByKey.get(key) : undefined;
+    if (existing !== undefined) {
+      const a = parseInt(consolidated[existing].qty, 10);
+      const b = parseInt(p.qty, 10);
+      if (!Number.isNaN(a) && !Number.isNaN(b)) {
+        consolidated[existing] = { ...consolidated[existing], qty: String(a + b) };
+      }
+    } else {
+      if (hasKey) idxByKey.set(key, consolidated.length);
+      consolidated.push({ ...p });
+    }
+  });
+  return consolidated;
+}
+
+function computeLabelCount(consolidated: PartEntry[], size: LabelSize, perLabel = 2): number {
+  if (size === "2x4") return consolidated.length;
+
+  const groups = new Map<string, PartEntry[]>();
+  const order: string[] = [];
+  for (const p of consolidated) {
+    const stem = stemOf(p.partNumber);
+    if (!groups.has(stem)) {
+      groups.set(stem, []);
+      order.push(stem);
+    }
+    groups.get(stem)!.push(p);
+  }
+  const sorted: PartEntry[] = [];
+  for (const stem of order) sorted.push(...groups.get(stem)!);
+
+  let count = 0;
+  let i = 0;
+  while (i < sorted.length) {
+    const a = sorted[i];
+    const b = sorted[i + 1];
+    if (b && stemOf(a.partNumber) === stemOf(b.partNumber)) {
+      count += 1;
+      i += perLabel >= 2 ? 2 : 1;
+    } else {
+      count += 1;
+      i += 1;
+    }
+  }
+  return count;
+}
+
 // Batched 4x6 printing: chunks parts into groups of `perLabel` (default 2) so
 // each printed 4x6 label holds up to N listings. Multiple labels are stacked
 // into one print doc separated by page breaks.
@@ -558,9 +614,6 @@ async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
   // with a trailing -M (mirror) or -C (chassis) suffix removed. e.g.
   // INT3-DC-36.00X42.00-AK-LSE-M pairs with INT3-DC-36.00X42.00-AK-LSE-C.
   // Unmatched parts get their own label (or fill leftover slots).
-  const stemOf = (pn: string) =>
-    pn.trim().toUpperCase().replace(/-(M|C)$/i, "");
-
   const groups = new Map<string, PartEntry[]>();
   const order: string[] = [];
   for (const p of parts) {
@@ -1066,26 +1119,16 @@ const ScanPicklistDialog = ({
 
   const addPart = () => setParts((prev) => [...prev, emptyPart()]);
 
+  const labelCount = useMemo(() => {
+    if (!parts.length) return 0;
+    const consolidated = consolidateParts(parts);
+    return computeLabelCount(consolidated, size);
+  }, [parts, size]);
+
+
   const handlePrint = async () => {
     const m = new Set<string>();
-    // Consolidate duplicates: same partNumber + jobNumber => sum qty into one listing.
-    const consolidated: PartEntry[] = [];
-    const idxByKey = new Map<string, number>();
-    parts.forEach((p) => {
-      const key = `${p.partNumber.trim().toLowerCase()}|${p.jobNumber.trim().toLowerCase()}`;
-      const hasKey = p.partNumber.trim() && p.jobNumber.trim();
-      const existing = hasKey ? idxByKey.get(key) : undefined;
-      if (existing !== undefined) {
-        const a = parseInt(consolidated[existing].qty, 10);
-        const b = parseInt(p.qty, 10);
-        if (!Number.isNaN(a) && !Number.isNaN(b)) {
-          consolidated[existing] = { ...consolidated[existing], qty: String(a + b) };
-        }
-      } else {
-        if (hasKey) idxByKey.set(key, consolidated.length);
-        consolidated.push({ ...p });
-      }
-    });
+    const consolidated = consolidateParts(parts);
     consolidated.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
@@ -1293,7 +1336,7 @@ const ScanPicklistDialog = ({
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
-            {printing ? "Printing…" : `Print ${parts.length || ""} Label${parts.length === 1 ? "" : "s"}`}
+            {printing ? "Printing…" : `Print ${labelCount || ""} Label${labelCount === 1 ? "" : "s"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -614,9 +614,6 @@ async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
   // with a trailing -M (mirror) or -C (chassis) suffix removed. e.g.
   // INT3-DC-36.00X42.00-AK-LSE-M pairs with INT3-DC-36.00X42.00-AK-LSE-C.
   // Unmatched parts get their own label (or fill leftover slots).
-  const stemOf = (pn: string) =>
-    pn.trim().toUpperCase().replace(/-(M|C)$/i, "");
-
   const groups = new Map<string, PartEntry[]>();
   const order: string[] = [];
   for (const p of parts) {

@@ -1177,7 +1177,7 @@ const ScanPicklistDialog = ({
         if (isValid(d2)) return format(d2, "MM/dd");
         return rawNeedBy;
       })();
-      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate });
+      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate, priority: "" });
       const pm = new Set<string>();
       if (!soNumber.trim()) pm.add("soNumber");
       if (!project.trim()) pm.add("project");

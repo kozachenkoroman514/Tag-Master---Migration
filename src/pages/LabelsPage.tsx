@@ -1049,6 +1049,7 @@ const ScanPicklistDialog = ({
     unitNum: string;
     unitTotal: string;
     needByDate: string;
+    priority: string;
   } | null>(null);
   const [packUnitMissing, setPackUnitMissing] = useState<Set<string>>(new Set());
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -1176,7 +1177,7 @@ const ScanPicklistDialog = ({
         if (isValid(d2)) return format(d2, "MM/dd");
         return rawNeedBy;
       })();
-      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate });
+      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate, priority: "" });
       const pm = new Set<string>();
       if (!soNumber.trim()) pm.add("soNumber");
       if (!project.trim()) pm.add("project");
@@ -1247,7 +1248,7 @@ const ScanPicklistDialog = ({
         unitTotal: packUnit.unitTotal || "1",
         date: packUnit.needByDate,
         area: "SHIPPING",
-        status: "",
+        status: size === "4x6" ? (packUnit.priority || "") : "",
       };
       if (size === "4x6") await printUnit4x6(opts);
       else await printUnit2x4(opts);
@@ -1487,7 +1488,7 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className="grid grid-cols-6 gap-2">
+                <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-7" : "grid-cols-6")}>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
@@ -1543,6 +1544,24 @@ const ScanPicklistDialog = ({
                       placeholder="Ship-by date"
                     />
                   </div>
+                  {size === "4x6" && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Priority</Label>
+                      <Select
+                        value={packUnit.priority || "__none"}
+                        onValueChange={(v) => setPackUnit({ ...packUnit, priority: v === "__none" ? "" : v })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">None</SelectItem>
+                          <SelectItem value="TOP">TOP</SelectItem>
+                          <SelectItem value="HOT">HOT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1653,7 +1672,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .bottom-row { display: flex; align-items: stretch; min-height: 62px; flex: 1; }
   .area-cell { flex: 1; display: flex; align-items: center; padding: 6px 10px; gap: 8px; border-right: 2px solid #000; }
   .area-input { flex: 1; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
-  .status-cell { width: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
+  .status-cell { width: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
   .status-label-sm { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
   .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
   @media print { .label { transform: scale(0.95); transform-origin: center center; } }
@@ -1827,6 +1846,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [date, setDate] = useState("");
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
+  const [priority, setPriority] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const [previewHtml, setPreviewHtml] = useState("");
 
@@ -1848,7 +1868,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           unitTotal: unitN,
           date,
           area,
-          status: "",
+          status: priority,
           orderQr,
           projectQr,
         }));
@@ -1865,7 +1885,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area]);
+  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
 
   const handlePrint = async () => {
     // SO Number is the only required field. Other blank fields are omitted on print.
@@ -1883,7 +1903,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         unitTotal: unitN,
         date,
         area,
-        status: "",
+        status: priority,
       });
     } else {
       await printUnit2x4({
@@ -1902,6 +1922,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     setDate("");
     setUnitSel("");
     setArea("");
+    setPriority("");
     setMissing(new Set());
     onOpenChange(false);
   };
@@ -1916,6 +1937,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
+      setPriority("");
       setMissing(new Set());
     }
     onOpenChange(val);
@@ -2022,6 +2044,21 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                   <SelectItem value="MATERIALS">MATERIALS</SelectItem>
                   <SelectItem value="WILLCALL">WILLCALL</SelectItem>
                   <SelectItem value="OTHER">OTHER</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label>Priority (optional)</Label>
+              <Select value={priority || "__none"} onValueChange={(v) => setPriority(v === "__none" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">None</SelectItem>
+                  <SelectItem value="TOP">TOP</SelectItem>
+                  <SelectItem value="HOT">HOT</SelectItem>
                 </SelectContent>
               </Select>
             </div>

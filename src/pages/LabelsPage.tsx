@@ -655,6 +655,10 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .p65-arrow { font-size: 7px; font-weight: 900; }
   .p65-url { font-size: 6px; font-weight: 700; color: #000; }
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>${labels}</body></html>`;
 }
 

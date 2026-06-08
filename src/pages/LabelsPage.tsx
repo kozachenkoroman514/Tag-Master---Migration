@@ -631,7 +631,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   return `<!doctype html><html><head><title>Part Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: 4in 2in landscape; margin: 0; }
+  @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
   .label:last-child { page-break-after: auto; }
@@ -672,7 +672,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .label { transform: scale(0.95); transform-origin: center center; }
+    .label { transform: scale(0.90); transform-origin: center center; }
   }
 </style></head><body>${labels}</body></html>`;
 }

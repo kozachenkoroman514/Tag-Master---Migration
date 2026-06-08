@@ -1059,6 +1059,10 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   .unit-select { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; padding-right: 4px; }
   .meta-input { font-size: 12px; font-weight: 700; border-bottom: 1.5px solid #000; text-align: center; display: inline-block; min-width: 28px; min-height: 14px; padding: 0 2px; }
   .of-word { font-size: 12px; font-weight: 700; }
+  @media print {
+    html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .label { transform: scale(0.95); transform-origin: center center; }
+  }
 </style></head><body>
 <div class="label">
   ${orderRow}

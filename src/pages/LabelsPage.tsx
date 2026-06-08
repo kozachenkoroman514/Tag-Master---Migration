@@ -1068,7 +1068,7 @@ const ScanPicklistDialog = ({
     setPrinting(true);
     try {
       if (size === "2x4") await printPart2x4(consolidated);
-      else await printPart4x6(consolidated);
+      else await printPart4x6Batched(consolidated, 2);
       reset();
       onOpenChange(false);
     } finally {

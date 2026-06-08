@@ -146,7 +146,14 @@ Deno.serve(async (req) => {
       item: String(p?.item ?? ''),
     }));
 
-    return new Response(JSON.stringify({ parts: norm }), {
+    const pu = (parsed as any)?.packUnit ?? {};
+    const packUnit = {
+      salesOrder: String(pu?.salesOrder ?? ''),
+      project: String(pu?.project ?? ''),
+      unitIndicator: String(pu?.unitIndicator ?? ''),
+    };
+
+    return new Response(JSON.stringify({ parts: norm, packUnit }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -1336,12 +1336,21 @@ const ScanPicklistDialog = ({
 
             <Button
               type="button"
-              className="w-full gap-2"
+              className="w-full gap-2 relative overflow-hidden"
               disabled={!file || scanning}
               onClick={handleScan}
             >
-              {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
-              {scanning ? "Scanning…" : parts.length ? "Re-scan" : "Scan Picklist"}
+              {scanning && (
+                <span
+                  className="absolute inset-y-0 left-0 bg-ring/40 transition-[width] duration-150 ease-out pointer-events-none"
+                  style={{ width: `${Math.min(100, Math.max(0, scanProgress))}%` }}
+                  aria-hidden="true"
+                />
+              )}
+              <span className="relative z-10 inline-flex items-center gap-2">
+                {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
+                {scanning ? `Scanning… ${Math.round(scanProgress)}%` : parts.length ? "Re-scan" : "Scan Picklist"}
+              </span>
             </Button>
           </div>
 

@@ -67,7 +67,17 @@ Deno.serve(async (req) => {
           {
             role: 'system',
             content:
-              'You extract line items from manufacturing picklists. Return ONLY strings (empty string for missing fields). Do not invent values. Map columns intelligently: Part Number, Qty, Job Number, SO/Line/Rel, Goes With, Description, Rev, Item.',
+              [
+                'You extract line items from manufacturing picklists. Return ONLY strings (empty string for missing fields). Do not invent values.',
+                'Layout rules for these picklists:',
+                '- SO (Sales Order) number is printed in the TOP LEFT of the document and applies to every line on the page unless a line clearly overrides it.',
+                '- Each line item shows the Part Number as the main heading.',
+                '- The Part Description is printed on the line directly UNDERNEATH the Part Number.',
+                '- The Rev is printed to the RIGHT of the Part Description.',
+                '- Line and Release (Rel) values are printed directly UNDERNEATH the Part Number in their own titled sections/columns (labels like "Line" and "Rel" / "Release"). Combine them into the soNumber field as "SO-Line-Rel" when all are present, otherwise just include what is available.',
+                '- Qty, Job Number, Goes With, and Item come from their respective labeled columns.',
+                'Map fields exactly: partNumber, qty, jobNumber, soNumber (SO/Line/Rel), goesWith, description, rev, item. Return every line item on the page.',
+              ].join('\n'),
           },
           {
             role: 'user',

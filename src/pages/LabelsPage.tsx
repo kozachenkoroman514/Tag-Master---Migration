@@ -951,12 +951,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
               {size === "2x4" && (
                 <>
                   <div className="space-y-2">
-                    <Label>Job Number <Req /></Label>
+                    <Label>Job Number</Label>
                     <Input
                       value={p.jobNumber}
                       onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
-                      className={cls(missing.has(`jobNumber-${i}`) && invalidCls)}
                     />
+                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Part Number <Req /></Label>

@@ -866,7 +866,6 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     parts.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
-      if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
     });
     setMissing(m);
     if (m.size) return;

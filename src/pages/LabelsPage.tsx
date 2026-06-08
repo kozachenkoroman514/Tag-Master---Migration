@@ -1049,6 +1049,7 @@ const ScanPicklistDialog = ({
     unitNum: string;
     unitTotal: string;
     needByDate: string;
+    priority: string;
   } | null>(null);
   const [packUnitMissing, setPackUnitMissing] = useState<Set<string>>(new Set());
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -1247,7 +1248,7 @@ const ScanPicklistDialog = ({
         unitTotal: packUnit.unitTotal || "1",
         date: packUnit.needByDate,
         area: "SHIPPING",
-        status: "",
+        status: size === "4x6" ? (packUnit.priority || "") : "",
       };
       if (size === "4x6") await printUnit4x6(opts);
       else await printUnit2x4(opts);

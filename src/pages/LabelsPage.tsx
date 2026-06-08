@@ -1633,7 +1633,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
     : "";
 
   const areaCell = area.trim()
-    ? `<div class="area-cell"><span class="meta-label">Area:</span><span class="area-input">${escapeHtml(area)}</span></div>`
+    ? `<div class="area-cell"><span class="status-label-sm">Area</span><span class="area-input">${escapeHtml(area)}</span></div>`
     : "";
   const statusCell = status.trim()
     ? `<div class="status-cell"><span class="status-label-sm">Status</span><span class="status-input">${escapeHtml(status)}</span></div>`
@@ -1670,11 +1670,11 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .meta-input.date-input { min-width: 80px; letter-spacing: 1px; }
   .of-word { font-size: 22px; font-weight: 700; }
   .bottom-row { display: flex; align-items: stretch; min-height: 62px; flex: 1; }
-  .area-cell { flex: 1; display: flex; align-items: center; padding: 6px 10px; gap: 8px; border-right: 2px solid #000; }
-  .area-input { flex: 1; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
-  .status-cell { width: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
-  .status-label-sm { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
-  .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
+  .area-cell { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 3px 10px; border-right: 2px solid #000; }
+  .area-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; color: #000; }
+  .status-cell { width: 240px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 3px 8px; }
+  .status-label-sm { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.6px; text-transform: uppercase; line-height: 1; margin-bottom: 0; }
+  .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; color: #000; }
   @media print { .label { transform: scale(0.95); transform-origin: center center; } }
 </style></head><body>
 <div class="label">

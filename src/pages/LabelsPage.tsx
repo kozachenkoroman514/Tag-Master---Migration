@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, CalendarIcon } from "lucide-react";
+import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2 } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
@@ -32,6 +32,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import QRCode from "qrcode";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
@@ -294,6 +296,7 @@ const LabelTileIcon = ({ size }: { size: LabelSize }) => {
 const LabelsPage = () => {
   const [size, setSize] = useState<LabelSize>("4x6");
   const [openKind, setOpenKind] = useState<LabelKind | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
 
   const sizes: { value: LabelSize; label: string }[] = [
     { value: "2x4", label: '2" × 4"' },
@@ -306,6 +309,16 @@ const LabelsPage = () => {
       <main className="flex-1 ml-[100px] p-6 space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight">Labels</h1>
+          <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setScanOpen(true)}
+            className="gap-2"
+          >
+            <ScanLine className="h-4 w-4" />
+            Scan Picklist
+          </Button>
           <div className="inline-flex items-center rounded-lg border border-border bg-card p-1 gap-1">
             {sizes.map((s) => {
               const active = size === s.value;
@@ -325,6 +338,7 @@ const LabelsPage = () => {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
 
@@ -401,6 +415,7 @@ const LabelsPage = () => {
         <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <ScanPicklistDialog open={scanOpen} onOpenChange={setScanOpen} defaultSize={size} />
 
       </main>
     </div>
@@ -876,6 +891,318 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint}>Print</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ----------------- Scan Picklist -----------------
+const ScanPicklistDialog = ({
+  open,
+  onOpenChange,
+  defaultSize,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  defaultSize: LabelSize;
+}) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [scanning, setScanning] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const [parts, setParts] = useState<PartEntry[]>([]);
+  const [size, setSize] = useState<LabelSize>(defaultSize);
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) setSize(defaultSize);
+  }, [open, defaultSize]);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl("");
+      return;
+    }
+    if (file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl("");
+  }, [file]);
+
+  const reset = () => {
+    setFile(null);
+    setPreviewUrl("");
+    setParts([]);
+    setMissing(new Set());
+  };
+
+  const handleClose = (val: boolean) => {
+    if (!val) reset();
+    onOpenChange(val);
+  };
+
+  const fileToBase64 = (f: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const b64 = result.split(",")[1] ?? "";
+        resolve(b64);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(f);
+    });
+
+  const handleScan = async () => {
+    if (!file) return;
+    setScanning(true);
+    try {
+      const imageBase64 = await fileToBase64(file);
+      const { data, error } = await supabase.functions.invoke("scan-picklist", {
+        body: { imageBase64, mimeType: file.type || "image/jpeg" },
+      });
+      if (error) throw error;
+      const incoming = (data?.parts ?? []) as PartEntry[];
+      if (!incoming.length) {
+        toast.error("No parts detected. Try a clearer photo.");
+        return;
+      }
+      setParts(incoming);
+      setMissing(new Set());
+      toast.success(`Found ${incoming.length} part${incoming.length === 1 ? "" : "s"}.`);
+    } catch (e: any) {
+      const msg = e?.message || "Scan failed";
+      if (msg.includes("429")) toast.error("Rate limit hit. Try again in a moment.");
+      else if (msg.includes("402")) toast.error("AI credits exhausted. Add credits in Workspace settings.");
+      else toast.error(msg);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const updatePart = (i: number, patch: Partial<PartEntry>) =>
+    setParts((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+
+  const removePart = (i: number) => setParts((prev) => prev.filter((_, idx) => idx !== i));
+
+  const addPart = () => setParts((prev) => [...prev, emptyPart()]);
+
+  const handlePrint = async () => {
+    const m = new Set<string>();
+    parts.forEach((p, i) => {
+      if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
+      if (!p.qty.trim()) m.add(`qty-${i}`);
+      if (size === "2x4") {
+        if (!p.jobNumber.trim()) m.add(`jobNumber-${i}`);
+      } else {
+        if (!p.description.trim()) m.add(`description-${i}`);
+      }
+    });
+    setMissing(m);
+    if (m.size) {
+      toast.error("Fill in highlighted required fields.");
+      return;
+    }
+    setPrinting(true);
+    try {
+      if (size === "2x4") await printPart2x4(parts);
+      else await printPart4x6(parts);
+      reset();
+      onOpenChange(false);
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="w-[96vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ScanLine className="h-5 w-5" /> Scan Picklist
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-[360px_1fr] gap-6 flex-1 overflow-hidden">
+          {/* Capture / preview */}
+          <div className="space-y-3 overflow-y-auto px-1">
+            <div className="text-sm font-semibold text-ring uppercase tracking-wide">1. Capture</div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1 gap-2" onClick={() => cameraRef.current?.click()}>
+                <Camera className="h-4 w-4" /> Take Photo
+              </Button>
+              <Button variant="outline" className="flex-1 gap-2" onClick={() => fileRef.current?.click()}>
+                <Upload className="h-4 w-4" /> Upload
+              </Button>
+            </div>
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => { setFile(e.target.files?.[0] ?? null); setParts([]); }}
+            />
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,application/pdf"
+              hidden
+              onChange={(e) => { setFile(e.target.files?.[0] ?? null); setParts([]); }}
+            />
+
+            <div className="border border-border rounded-md bg-card aspect-[3/4] flex items-center justify-center overflow-hidden">
+              {previewUrl ? (
+                <img src={previewUrl} alt="Picklist preview" className="max-w-full max-h-full object-contain" />
+              ) : file ? (
+                <div className="text-xs text-muted-foreground p-4 text-center break-all">{file.name}</div>
+              ) : (
+                <div className="text-xs text-muted-foreground p-4 text-center">No file selected</div>
+              )}
+            </div>
+
+            <Button
+              type="button"
+              className="w-full gap-2"
+              disabled={!file || scanning}
+              onClick={handleScan}
+            >
+              {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
+              {scanning ? "Scanning…" : parts.length ? "Re-scan" : "Scan Picklist"}
+            </Button>
+          </div>
+
+          {/* Review */}
+          <div className="flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-semibold text-ring uppercase tracking-wide">
+                2. Review ({parts.length} {parts.length === 1 ? "part" : "parts"})
+              </div>
+              <div className="inline-flex items-center rounded-lg border border-border bg-card p-1 gap-1">
+                {(["2x4", "4x6"] as LabelSize[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSize(s)}
+                    className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                      size === s ? "bg-ring text-accent" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s === "2x4" ? '2" × 4"' : '4" × 6"'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto border border-border rounded-md">
+              {parts.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-muted-foreground p-8 text-center">
+                  Capture or upload a picklist, then click <span className="mx-1 font-semibold">Scan Picklist</span> to extract parts.
+                </div>
+              ) : (
+                <table className="w-full text-xs">
+                  <thead className="bg-muted sticky top-0">
+                    <tr className="text-left">
+                      <th className="p-2">Part # <Req /></th>
+                      <th className="p-2 w-16">Qty <Req /></th>
+                      <th className="p-2 w-28">Job # {size === "2x4" && <Req />}</th>
+                      <th className="p-2 w-28">SO/Line/Rel</th>
+                      <th className="p-2">Description {size === "4x6" && <Req />}</th>
+                      <th className="p-2 w-16">Rev</th>
+                      <th className="p-2 w-16">Item</th>
+                      <th className="p-2 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parts.map((p, i) => (
+                      <tr key={i} className="border-t border-border align-top">
+                        <td className="p-1">
+                          <Input
+                            value={p.partNumber}
+                            onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                            className={cls("h-8 text-xs", missing.has(`partNumber-${i}`) && invalidCls)}
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.qty}
+                            onChange={(e) => updatePart(i, { qty: e.target.value })}
+                            className={cls("h-8 text-xs", missing.has(`qty-${i}`) && invalidCls)}
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.jobNumber}
+                            onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
+                            className={cls("h-8 text-xs", missing.has(`jobNumber-${i}`) && invalidCls)}
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.soNumber}
+                            onChange={(e) => updatePart(i, { soNumber: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.description}
+                            onChange={(e) => updatePart(i, { description: e.target.value })}
+                            className={cls("h-8 text-xs", missing.has(`description-${i}`) && invalidCls)}
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.rev}
+                            onChange={(e) => updatePart(i, { rev: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Input
+                            value={p.item}
+                            onChange={(e) => updatePart(i, { item: e.target.value })}
+                            className="h-8 text-xs"
+                          />
+                        </td>
+                        <td className="p-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => removePart(i)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {parts.length > 0 && (
+              <div className="mt-2">
+                <Button type="button" variant="outline" size="sm" onClick={addPart} className="gap-2">
+                  <Plus className="h-3 w-3" /> Add Row
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
+            {printing ? "Printing…" : `Print ${parts.length || ""} Label${parts.length === 1 ? "" : "s"}`}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

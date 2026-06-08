@@ -1,77 +1,54 @@
-# ILD + Kiosk + Shared Acknowledge — Implementation Plan
+## Goal
 
-## Open questions (need confirmation before I build)
+Add a "Scan Picklist" workflow on the Labels page. The user takes a photo or uploads a picklist image/PDF; Lovable AI (Gemini vision) extracts the part lines; the user reviews/edits the results and the chosen label format (2x4 or 4x6) is printed in one batch.
 
-1. **Truncated sentence**: "Printed timestamps are generated whenever an Order ___". Combined with later rule "Printed times should only exist for orders in PICKING status", I'll assume: **`printedAt` is set the moment an order enters PICKING (and cleared otherwise)**. Confirm?
-2. **Save Filters scope**: filter presets stored in `localStorage` (per browser) for now, with the existing store hook ready to swap to a Cloud `user_filter_presets` table later. OK?
-3. **Bin "negative count"**: bins are currently strings like `P3A1`. To color RED on negative qty, I'll attach a `qty` number per bin (mock data). Display: `P3A1 (12)`, red when `< 0`. OK?
-4. **Part-number template**: keep existing `INT4-{W}x{H}-LHE-30k-{M|C}` shape, vary W/H per line, and emit mirror+chassis pairs on some orders (chassis = `M`, mirror = `C` sharing the same dims). OK?
-5. **Next Stage / Back a Stage on ILD**: same ERP-controlled-status warning as Kiosk (ORDERED/CUTTING/PENDING/IN-BUILD), or silent on ILD?
+## Entry point
 
-## Data model (store)
+- New tile/button on `src/pages/LabelsPage.tsx`: **Scan Picklist** (camera icon), placed next to the existing Part Label tiles.
+- Opens a new `ScanPicklistDialog` component (kept in `LabelsPage.tsx` alongside the other dialogs, to match the file's current pattern).
 
-- `MockOrder`:
-  - `printedAt`: set only when `status === "PICKING"`, cleared on transition out.
-  - `statusHistory: { status: OrderStatus; at: string }[]` — appended every `setStatus`, seeded for existing mocks.
-  - `holdReason?: { reason: "Sales Changes" | "Material Issues" | "Other"; note?: string; at: string }`
-  - `seeCommentsReason?: { note: string; at: string }`
-  - `acknowledgedHoldFallAt?: string | null` — set when user Acknowledges an ERP-hold fall.
-- `partsFor(id)` rewrite:
-  - `jobNo`: 250000–260000 range; Stock parts → no job number.
-  - `partNo`: `INT4-{W}x{H}-LHE-30k-{C|M}` with varied W/H; emit complementary mirror+chassis pairs on some orders.
-  - Bins by source/qty:
-    - WIP qty < 5 → `P1A1`–`P12A1`
-    - WIP qty ≥ 5 → `AN1A1`–`AN1D1`
-    - Stock qty < 20 → `G24A1`–`G40A1`
-    - Stock qty ≥ 20 → `SMZ8`
-  - Each bin gets a numeric `qty` (occasionally negative to demo the RED).
-- New store actions:
-  - `nextStage(id)`, `prevStage(id)` — walk `STATUSES` array (skipping HOLD / SEE COMMENTS).
-  - `setHold(id, reason, note?)`, `setSeeComments(id, note)`.
-  - `acknowledgeHoldFall(id)` — resets push/printed state to pre-IN-STASIS baseline.
-  - `setPrintedNow(id)` — manual print stamp (gated by status === PICKING).
-  - `saveFilterPreset(name, state)` / `deleteFilterPreset(name)` / `presets` map persisted to `localStorage`.
+## User flow
 
-## ILD changes (`Dashboard.tsx`)
+1. **Capture step**
+   - Two buttons: `Take Photo` (native `<input type="file" accept="image/*" capture="environment">`) and `Upload File` (accepts `image/*,application/pdf`).
+   - Show thumbnail preview after selection. PDFs: first page only (render via existing approach if available, otherwise send raw PDF to AI — Gemini accepts PDFs).
+2. **Parse step**
+   - "Scan Picklist" button → calls a new edge function `scan-picklist` (see below). Spinner + status text while waiting.
+   - On success, populate an editable table of rows.
+3. **Review step**
+   - Editable table columns matching `PartEntry`:
+     `Part # · Qty · Job # · SO # · Goes With · Description · Rev · Item`
+     (2x4 requires Part #, Qty, Job #; 4x6 requires Part #, Qty, Description — same validation as existing dialog.)
+   - Per-row delete; "Add Row" button; "Re-scan" to start over.
+   - Label-size selector: 2x4 (default) / 4x6 (radio, mirrors existing PartLabelDialog options).
+4. **Print step**
+   - "Print N Labels" button. Validates required fields per chosen size; missing cells highlight red (reuse existing `missing` pattern).
+   - Calls a new `printPartBatch(parts, size)` helper that loops in chunks (existing `printPart2x4` / `printPart4x6` are written for 1–2 parts per sheet — the new helper concatenates all parts into a single print doc by reusing `buildPart2x4Doc` / `buildPart4x6Doc` per page, joined with CSS page breaks). Existing single-window `afterprint → window.close()` handler is reused.
 
-- **Columns / details table** (expanded row):
-  - Column order: `Ln.Rel | Release | Ship By | Job # | Part # (+copy btn, +bin stack) | Qty | Source | …`
-  - Copy button (clipboard icon) next to each Part #.
-  - Bin stack under Part #: larger font (`text-sm`), each bin shows `qty`; RED when `qty < 0`.
-  - Stock rows: Job # column shows `—`.
-- **Action buttons in expanded row** (left → right):
-  `ORDER PACKAGING · ASSIGN · NEXT STAGE (gold) · BACK A STAGE` — Next/Back always visible; Packaging/Assign gated on selected lines.
-- **EDIT dialog**: tabs/sections for Comments, Set HOLD, Set SEE COMMENTS.
-  - HOLD: radio (Sales Changes / Material Issues / Other). "Other" requires note → appended to comments as `[HOLD — Other — {timestamp}] {note}`.
-  - SEE COMMENTS: required note → appended similarly.
-  - Save runs `setHold` / `setSeeComments` → flips status accordingly.
-- **Filters**: multi-select per column + Save preset (dropdown of saved presets, save / delete). Persist via `localStorage`.
-- **Times column**: collapsed by default. Expanded view shows Appeared / Printed + per-status timeline from `statusHistory`.
-- **Acknowledge**: small ✓ button on rows that are HOLD-flashing (either ERP-fall or manual). Pulses HOLD purple. Clicking on an ERP-fall removes the order from view; on manual-HOLD just stops the flash.
-  - For now I'll simulate "ERP-fall HOLD" via a flag on a couple of seed orders so the flow is demoable.
+## Edge function: `supabase/functions/scan-picklist/index.ts`
 
-## Kiosk changes (`KioskPage.tsx`)
-
-- Filter out `IN-STASIS` and anything past `IN-PROCESS` (i.e., `PROCESSED`).
-- Sortable column headers (Order / Project / Team / Ship By / Status).
-- Remove "Update Status" column.
-- Add three buttons per row:
-  - **Print Labels** → opens 4×6 landscape print sheet titled "Order Labels" (one per order; barcodes for Order # and Project ID; placeholder layout, refinable).
-  - **Print Paperwork** → toast `"Coming soon — will use ILD details + ERP API"`.
-  - **Next Stage** / **Back a Stage** → call store; if current (Next) or target (Back) status is in `{ORDERED, CUTTING, PENDING, IN-BUILD}`, show confirm dialog with the Woodshop Manager override warning.
-- Acknowledge ✓ button on HOLD rows (same behavior as ILD).
+- POST `{ imageBase64, mimeType }` → returns `{ parts: PartEntry[] }`.
+- Uses Lovable AI Gateway (`LOVABLE_API_KEY`, model `google/gemini-3-flash-preview`) with the AI SDK `Output.object` structured-output API.
+- Schema: array of `{ partNumber, qty, jobNumber, soNumber, goesWith, description, rev, item }` (all strings, empty when not present).
+- System prompt instructs the model: "Extract every line item on this picklist. Return strings only — no inference for missing fields."
+- Returns 400 on missing input; surfaces 429/402 from gateway to the client.
+- `verify_jwt = false` not needed — keep default (authed users only).
 
 ## Files touched
 
-- `src/store/dashboardStore.ts` — model + new actions + regenerated mock data.
-- `src/components/Dashboard.tsx` — details table reorg, EDIT dialog rewrite, filter presets glue, Next/Back buttons, Acknowledge, times timeline, copy buttons.
-- `src/components/DashboardFilters.tsx` — multi-value filters + Save Preset UI.
-- `src/pages/KioskPage.tsx` — filter/sort, new action buttons, ERP-status warning dialog, Acknowledge.
+- `src/pages/LabelsPage.tsx` — add tile, `ScanPicklistDialog`, `printPartBatch` helper.
+- `supabase/functions/scan-picklist/index.ts` — new edge function.
+- No DB/schema changes. No new dependencies (uses existing `npm:ai` pattern already present in the project, or `fetch` to gateway if AI SDK not yet wired — will pick whichever the project already uses; otherwise direct `fetch` to `https://ai.gateway.lovable.dev/v1/chat/completions` with vision message content).
 
-## Out of scope (will stub with toast)
+## Out of scope
 
-- Actual ERP / Woodshop Manager API.
-- Per-user persistence (presets are browser-local until Cloud migration).
-- Paperwork print layout.
+- Multi-page PDFs (first page only).
+- Saving scanned picklists to history.
+- Auto-print without review (always shows review step for safety).
 
-Please confirm the 5 questions above (or just say "go with your assumptions") and I'll build it in one pass.
+## Technical notes
+
+- `LOVABLE_API_KEY` is already provisioned (Lovable Cloud is on). No user secret prompt.
+- Image is sent as base64 data URL inside the chat-completions `image_url` content part — Gemini vision supports this via the gateway.
+- Existing 2-part cap in `PartLabelDialog` does not apply here; new dialog has no cap.
+- Print uses the existing hidden-iframe / `window.open` pattern with the `afterprint` auto-close handler already added.

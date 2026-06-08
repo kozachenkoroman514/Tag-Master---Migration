@@ -1488,7 +1488,7 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className="grid grid-cols-6 gap-2">
+                <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-7" : "grid-cols-6")}>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
@@ -1544,6 +1544,24 @@ const ScanPicklistDialog = ({
                       placeholder="Ship-by date"
                     />
                   </div>
+                  {size === "4x6" && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase text-muted-foreground">Priority</Label>
+                      <Select
+                        value={packUnit.priority || "__none"}
+                        onValueChange={(v) => setPackUnit({ ...packUnit, priority: v === "__none" ? "" : v })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="None" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">None</SelectItem>
+                          <SelectItem value="TOP">TOP</SelectItem>
+                          <SelectItem value="HOT">HOT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

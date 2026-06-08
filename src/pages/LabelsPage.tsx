@@ -1653,7 +1653,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   .bottom-row { display: flex; align-items: stretch; min-height: 62px; flex: 1; }
   .area-cell { flex: 1; display: flex; align-items: center; padding: 6px 10px; gap: 8px; border-right: 2px solid #000; }
   .area-input { flex: 1; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
-  .status-cell { width: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
+  .status-cell { width: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 8px; }
   .status-label-sm { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
   .status-input { width: 100%; font-size: 26px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; display: inline-block; min-height: 30px; padding: 0 4px; }
   @media print { .label { transform: scale(0.95); transform-origin: center center; } }

@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2 } from "lucide-react";
+import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2, FileText, Package } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";

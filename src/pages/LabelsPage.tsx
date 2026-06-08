@@ -550,6 +550,45 @@ async function printPart4x6(parts: PartEntry[]) {
   win.document.close();
 }
 
+// Batched 4x6 printing: chunks parts into groups of `perLabel` (default 2) so
+// each printed 4x6 label holds up to N listings. Multiple labels are stacked
+// into one print doc separated by page breaks.
+async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
+  const chunks: PartEntry[][] = [];
+  for (let i = 0; i < parts.length; i += perLabel) chunks.push(parts.slice(i, i + perLabel));
+  if (chunks.length === 0) return;
+  const qrs = await computePartQrs(parts);
+
+  const labelHtmls: string[] = [];
+  let cursor = 0;
+  for (const chunk of chunks) {
+    const chunkQrs = qrs.slice(cursor, cursor + chunk.length);
+    cursor += chunk.length;
+    const full = buildPart4x6Doc(chunk, chunkQrs);
+    const match = full.match(/<div class="label">[\s\S]*?<\/div>\s*<\/body>/);
+    const labelDiv = match ? match[0].replace(/\s*<\/body>$/, "") : "";
+    labelHtmls.push(labelDiv);
+  }
+
+  // Use the first chunk's full doc as a template for <head>/styles, then
+  // replace its body with all chunked labels separated by page breaks.
+  const template = buildPart4x6Doc(chunks[0], qrs.slice(0, chunks[0].length));
+  const bodyContent = labelHtmls
+    .map((html, i) => `<div class="page-wrap"${i < labelHtmls.length - 1 ? ' style="page-break-after: always;"' : ""}>${html}</div>`)
+    .join("");
+  const doc = template
+    .replace(/<body>[\s\S]*<\/body>/, `<body>${bodyContent}</body>`)
+    .replace(
+      "</body></html>",
+      `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    );
+
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(doc);
+  win.document.close();
+}
+
 // 2x4 Part label — landscape 4in x 2in. Pure HTML doc builder shared by print + preview.
 // Optional fields (SO/Line/Rel, Rev, Item) are omitted when blank.
 function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {

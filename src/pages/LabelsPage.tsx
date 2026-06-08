@@ -1336,7 +1336,7 @@ const ScanPicklistDialog = ({
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
-            {printing ? "Printing…" : `Print ${parts.length || ""} Label${parts.length === 1 ? "" : "s"}`}
+            {printing ? "Printing…" : `Print ${labelCount || ""} Label${labelCount === 1 ? "" : "s"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

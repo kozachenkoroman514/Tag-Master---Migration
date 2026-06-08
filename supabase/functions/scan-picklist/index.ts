@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
                 '- Line and Release (Rel) values are printed directly UNDERNEATH the Part Number in their own titled sections/columns (labels like "Line" and "Rel" / "Release"). Combine them into the soNumber field as "SO-Line-Rel" when all are present, otherwise just include what is available.',
                 '- Qty, Job Number, Goes With, and Item come from their respective labeled columns.',
                 'Map fields exactly: partNumber, qty, jobNumber, soNumber (SO/Line/Rel), goesWith, description, rev, item. Return every line item on the page.',
+                'CRITICAL — split lines across pages: A single Line item often gets cut by a page boundary. When that happens the SAME Line number appears in titled "Line" sections on TWO (or more) pages, each holding only PART of the data (e.g. page 1 shows the Part Number + Description, page 2 shows the Line/Rel/Qty/Job rows for that same Line number). You MUST detect this and MERGE those partial fragments into ONE single output row, keyed by the Line number (the value in the "Line" titled column, e.g. 1,2,3,4,5). Do not emit duplicate rows for the same Line. After merging, the output should have exactly one row per unique Line number found across all pages, with fields combined from wherever they appear. Never invent missing values — only combine what is actually printed somewhere on the document.',
               ].join('\n'),
           },
           {

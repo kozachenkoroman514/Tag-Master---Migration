@@ -1036,6 +1036,7 @@ const ScanPicklistDialog = ({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [scanning, setScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
   const [printing, setPrinting] = useState(false);
   const [printingUnit, setPrintingUnit] = useState(false);
   const [parts, setParts] = useState<PartEntry[]>([]);
@@ -1099,6 +1100,12 @@ const ScanPicklistDialog = ({
   const handleScan = async () => {
     if (!file) return;
     setScanning(true);
+    setScanProgress(2);
+    // Smooth asymptotic ramp toward an evolving target so the bar always shows motion.
+    let target = 45;
+    const ramp = setInterval(() => {
+      setScanProgress((p) => (p < target ? p + Math.max(0.5, (target - p) * 0.08) : p));
+    }, 120);
     try {
       const imageBase64 = await fileToBase64(file);
       const invoke = () =>
@@ -1117,6 +1124,8 @@ const ScanPicklistDialog = ({
       const puMissing = !pu?.salesOrder || !pu?.project || !pu?.unitIndicator || !pu?.needByDate;
       const needsSecondPass = puMissing || incoming.some(partMissing);
       if (needsSecondPass) {
+        setScanProgress(55);
+        target = 92;
         const { data: data2 } = await invoke();
         if (data2) {
           const inc2 = (data2.parts ?? []) as PartEntry[];
@@ -1173,7 +1182,10 @@ const ScanPicklistDialog = ({
       else if (msg.includes("402")) toast.error("AI credits exhausted. Add credits in Workspace settings.");
       else toast.error(msg);
     } finally {
+      clearInterval(ramp);
+      setScanProgress(100);
       setScanning(false);
+      setTimeout(() => setScanProgress(0), 500);
     }
   };
 
@@ -1324,12 +1336,21 @@ const ScanPicklistDialog = ({
 
             <Button
               type="button"
-              className="w-full gap-2"
+              className="w-full gap-2 relative overflow-hidden"
               disabled={!file || scanning}
               onClick={handleScan}
             >
-              {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
-              {scanning ? "Scanning…" : parts.length ? "Re-scan" : "Scan Picklist"}
+              {scanning && (
+                <span
+                  className="absolute inset-y-0 left-0 bg-ring/40 transition-[width] duration-150 ease-out pointer-events-none"
+                  style={{ width: `${Math.min(100, Math.max(0, scanProgress))}%` }}
+                  aria-hidden="true"
+                />
+              )}
+              <span className="relative z-10 inline-flex items-center gap-2">
+                {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
+                {scanning ? `Scanning… ${Math.round(scanProgress)}%` : parts.length ? "Re-scan" : "Scan Picklist"}
+              </span>
             </Button>
           </div>
 

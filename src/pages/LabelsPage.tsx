@@ -527,7 +527,7 @@ async function printPart4x6(parts: PartEntry[]) {
   const qrs = await computePartQrs(parts);
   const doc = buildPart4x6Doc(parts, qrs).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -666,7 +666,7 @@ async function printPart2x4(parts: PartEntry[]) {
   const qrs = await computePartQrs(parts);
   const doc = buildPart2x4Doc(parts, qrs).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -989,7 +989,7 @@ async function printUnit4x6(opts: Unit4x6Opts) {
   ]);
   const doc = buildUnit4x6Doc({ ...opts, orderQr, projectQr }).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1079,7 +1079,7 @@ async function printUnit2x4(opts: Unit2x4Opts) {
   ]);
   const doc = buildUnit2x4Doc({ ...opts, orderQr, projectQr }).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1386,7 +1386,7 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
 async function printStatusNote4x6(status: string, reason: string) {
   const doc = buildStatusNote4x6Doc(status, reason).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1430,7 +1430,7 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
 async function printStatusNote2x4(status: string, reason: string) {
   const doc = buildStatusNote2x4Doc(status, reason).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); };<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;

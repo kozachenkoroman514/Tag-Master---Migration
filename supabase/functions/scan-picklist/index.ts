@@ -1,0 +1,134 @@
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    const key = Deno.env.get('LOVABLE_API_KEY');
+    if (!key) {
+      return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await req.json().catch(() => null) as { imageBase64?: string; mimeType?: string } | null;
+    if (!body?.imageBase64 || !body?.mimeType) {
+      return new Response(JSON.stringify({ error: 'imageBase64 and mimeType are required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const dataUrl = `data:${body.mimeType};base64,${body.imageBase64}`;
+
+    const tool = {
+      type: 'function',
+      function: {
+        name: 'return_picklist_parts',
+        description: 'Return every line item parsed from the picklist image.',
+        parameters: {
+          type: 'object',
+          properties: {
+            parts: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  partNumber: { type: 'string' },
+                  qty: { type: 'string' },
+                  jobNumber: { type: 'string' },
+                  soNumber: { type: 'string' },
+                  goesWith: { type: 'string' },
+                  description: { type: 'string' },
+                  rev: { type: 'string' },
+                  item: { type: 'string' },
+                },
+                required: ['partNumber', 'qty', 'jobNumber', 'soNumber', 'goesWith', 'description', 'rev', 'item'],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ['parts'],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You extract line items from manufacturing picklists. Return ONLY strings (empty string for missing fields). Do not invent values. Map columns intelligently: Part Number, Qty, Job Number, SO/Line/Rel, Goes With, Description, Rev, Item.',
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Extract every part line from this picklist. Return all rows.' },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        tools: [tool],
+        tool_choice: { type: 'function', function: { name: 'return_picklist_parts' } },
+      }),
+    });
+
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      return new Response(JSON.stringify({ error: errText || 'AI gateway error' }), {
+        status: aiRes.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const data = await aiRes.json();
+    const call = data?.choices?.[0]?.message?.tool_calls?.[0];
+    const argsStr = call?.function?.arguments;
+    if (!argsStr) {
+      return new Response(JSON.stringify({ error: 'No tool call returned', raw: data }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    let parsed: { parts: unknown[] };
+    try {
+      parsed = JSON.parse(argsStr);
+    } catch {
+      return new Response(JSON.stringify({ error: 'Failed to parse tool arguments' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const norm = (Array.isArray(parsed.parts) ? parsed.parts : []).map((p: any) => ({
+      partNumber: String(p?.partNumber ?? ''),
+      qty: String(p?.qty ?? ''),
+      jobNumber: String(p?.jobNumber ?? ''),
+      soNumber: String(p?.soNumber ?? ''),
+      goesWith: String(p?.goesWith ?? ''),
+      description: String(p?.description ?? ''),
+      rev: String(p?.rev ?? ''),
+      item: String(p?.item ?? ''),
+    }));
+
+    return new Response(JSON.stringify({ parts: norm }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

@@ -48,8 +48,18 @@ Deno.serve(async (req) => {
                 additionalProperties: false,
               },
             },
+            packUnit: {
+              type: 'object',
+              properties: {
+                salesOrder: { type: 'string' },
+                project: { type: 'string' },
+                unitIndicator: { type: 'string' },
+              },
+              required: ['salesOrder', 'project', 'unitIndicator'],
+              additionalProperties: false,
+            },
           },
-          required: ['parts'],
+          required: ['parts', 'packUnit'],
           additionalProperties: false,
         },
       },
@@ -78,6 +88,10 @@ Deno.serve(async (req) => {
                 '- Qty, Job Number, Goes With, and Item come from their respective labeled columns.',
                 'Map fields exactly: partNumber, qty, jobNumber, soNumber (SO/Line/Rel), goesWith, description, rev, item. Return every line item on the page.',
                 'CRITICAL — split lines across pages: A single Line item often gets cut by a page boundary. When that happens the SAME Line number appears in titled "Line" sections on TWO (or more) pages, each holding only PART of the data (e.g. page 1 shows the Part Number + Description, page 2 shows the Line/Rel/Qty/Job rows for that same Line number). You MUST detect this and MERGE those partial fragments into ONE single output row, keyed by the Line number (the value in the "Line" titled column, e.g. 1,2,3,4,5). Do not emit duplicate rows for the same Line. After merging, the output should have exactly one row per unique Line number found across all pages, with fields combined from wherever they appear. Never invent missing values — only combine what is actually printed somewhere on the document.',
+                'ALSO return a single "packUnit" object describing the shipment unit for this picklist:',
+                '- salesOrder: the SO number from the top-left of the document (same as the SO used on the part lines).',
+                '- project: the project / customer name printed on the SAME line as the SO, immediately to its RIGHT. Empty string if not present.',
+                '- unitIndicator: a short raw token used to decide the unit type. Look in the TOP-RIGHT region of the picklist. If you see the text "C-Pallet" (case-insensitive, anywhere on the picklist, but typically top-right quadrant), return "C-Pallet". Otherwise, if there is a single letter "F" notation in the top-right (often preceding a unit/box marker), return "F". Otherwise return "".',
               ].join('\n'),
           },
           {
@@ -132,7 +146,14 @@ Deno.serve(async (req) => {
       item: String(p?.item ?? ''),
     }));
 
-    return new Response(JSON.stringify({ parts: norm }), {
+    const pu = (parsed as any)?.packUnit ?? {};
+    const packUnit = {
+      salesOrder: String(pu?.salesOrder ?? ''),
+      project: String(pu?.project ?? ''),
+      unitIndicator: String(pu?.unitIndicator ?? ''),
+    };
+
+    return new Response(JSON.stringify({ parts: norm, packUnit }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

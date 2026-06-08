@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2 } from "lucide-react";
+import { Plus, X, CalendarIcon, ScanLine, Camera, Upload, Loader2, Trash2, FileText, Package } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
@@ -1038,9 +1038,17 @@ const ScanPicklistDialog = ({
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [scanning, setScanning] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [printingUnit, setPrintingUnit] = useState(false);
   const [parts, setParts] = useState<PartEntry[]>([]);
   const [size, setSize] = useState<LabelSize>(defaultSize);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [packUnit, setPackUnit] = useState<{
+    soNumber: string;
+    project: string;
+    unitType: string;
+    unitNum: string;
+    unitTotal: string;
+  } | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1066,6 +1074,7 @@ const ScanPicklistDialog = ({
     setPreviewUrl("");
     setParts([]);
     setMissing(new Set());
+    setPackUnit(null);
   };
 
   const handleClose = (val: boolean) => {
@@ -1101,6 +1110,20 @@ const ScanPicklistDialog = ({
       }
       setParts(incoming);
       setMissing(new Set());
+      const pu = data?.packUnit ?? {};
+      const ind = String(pu?.unitIndicator ?? "").toLowerCase();
+      const unitType = ind.includes("c-pallet")
+        ? "C-PALLET"
+        : /(^|[^a-z])f([^a-z]|$)/.test(ind)
+        ? "CRATE"
+        : "BOX";
+      setPackUnit({
+        soNumber: String(pu?.salesOrder ?? ""),
+        project: String(pu?.project ?? ""),
+        unitType,
+        unitNum: "1",
+        unitTotal: "1",
+      });
       toast.success(`Found ${incoming.length} part${incoming.length === 1 ? "" : "s"}.`);
     } catch (e: any) {
       const msg = e?.message || "Scan failed";
@@ -1147,10 +1170,29 @@ const ScanPicklistDialog = ({
     try {
       if (size === "2x4") await printPart2x4(consolidated);
       else await printPart4x6Batched(consolidated, 2);
-      reset();
-      onOpenChange(false);
     } finally {
       setPrinting(false);
+    }
+  };
+
+  const handlePrintPackUnit = async () => {
+    if (!packUnit) return;
+    setPrintingUnit(true);
+    try {
+      const opts = {
+        orderNumber: packUnit.soNumber,
+        project: packUnit.project,
+        unitType: packUnit.unitType,
+        unitNum: packUnit.unitNum || "1",
+        unitTotal: packUnit.unitTotal || "1",
+        date: "",
+        area: "SHIPPING",
+        status: "",
+      };
+      if (size === "4x6") await printUnit4x6(opts);
+      else await printUnit2x4(opts);
+    } finally {
+      setPrintingUnit(false);
     }
   };
 
@@ -1191,13 +1233,52 @@ const ScanPicklistDialog = ({
               onChange={(e) => { setFile(e.target.files?.[0] ?? null); setParts([]); }}
             />
 
-            <div className="border border-border rounded-md bg-card aspect-[3/4] flex items-center justify-center overflow-hidden">
+            <div className="relative border border-border rounded-md bg-card aspect-[3/4] flex items-center justify-center overflow-hidden">
               {previewUrl ? (
                 <img src={previewUrl} alt="Picklist preview" className="max-w-full max-h-full object-contain" />
               ) : file ? (
-                <div className="text-xs text-muted-foreground p-4 text-center break-all">{file.name}</div>
+                <div className="flex flex-col items-center gap-2 p-4 text-center">
+                  <FileText className="h-16 w-16 text-ring" />
+                  <div className="text-xs text-muted-foreground break-all">{file.name}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Preview not available
+                  </div>
+                </div>
               ) : (
-                <div className="text-xs text-muted-foreground p-4 text-center">No file selected</div>
+                <div className="flex flex-col items-center gap-3 p-4 text-center">
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => cameraRef.current?.click()}
+                      className="flex flex-col items-center gap-1 text-muted-foreground hover:text-ring transition-colors"
+                      aria-label="Take photo"
+                    >
+                      <Camera className="h-10 w-10" />
+                      <span className="text-[10px] uppercase tracking-wide">Photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="flex flex-col items-center gap-1 text-muted-foreground hover:text-ring transition-colors"
+                      aria-label="Upload file"
+                    >
+                      <Upload className="h-10 w-10" />
+                      <span className="text-[10px] uppercase tracking-wide">Upload</span>
+                    </button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">No file selected</div>
+                </div>
+              )}
+              {file && (
+                <button
+                  type="button"
+                  onClick={() => { setFile(null); setParts([]); setPackUnit(null); }}
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-background/90 border border-border flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+                  aria-label="Remove scanned file"
+                  title="Remove file"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               )}
             </div>
 
@@ -1330,13 +1411,81 @@ const ScanPicklistDialog = ({
                 </Button>
               </div>
             )}
+
+            {packUnit && (
+              <div className="mt-3 border border-border rounded-md p-3 bg-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="h-4 w-4 text-ring" />
+                  <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
+                    <Input
+                      value={packUnit.soNumber}
+                      onChange={(e) => setPackUnit({ ...packUnit, soNumber: e.target.value })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
+                    <Input
+                      value={packUnit.project}
+                      onChange={(e) => setPackUnit({ ...packUnit, project: e.target.value })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Unit</Label>
+                    <Select value={packUnit.unitType} onValueChange={(v) => setPackUnit({ ...packUnit, unitType: v })}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BOX">BOX</SelectItem>
+                        <SelectItem value="CRATE">CRATE</SelectItem>
+                        <SelectItem value="PALLET">PALLET</SelectItem>
+                        <SelectItem value="C-PALLET">C-PALLET</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">N of M</Label>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={packUnit.unitNum}
+                        onChange={(e) => setPackUnit({ ...packUnit, unitNum: e.target.value })}
+                        className="h-8 text-xs w-12 px-2"
+                      />
+                      <span className="text-xs text-muted-foreground">/</span>
+                      <Input
+                        value={packUnit.unitTotal}
+                        onChange={(e) => setPackUnit({ ...packUnit, unitTotal: e.target.value })}
+                        className="h-8 text-xs w-12 px-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          {packUnit && (
+            <Button
+              variant="secondary"
+              onClick={handlePrintPackUnit}
+              disabled={printingUnit || !packUnit.soNumber.trim()}
+              className="gap-2"
+            >
+              <Package className="h-4 w-4" />
+              {printingUnit ? "Printing…" : "Print Pack Unit Label"}
+            </Button>
+          )}
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
-            {printing ? "Printing…" : `Print ${labelCount || ""} Label${labelCount === 1 ? "" : "s"}`}
+            {printing ? "Printing…" : `Print ${labelCount} Part Label${labelCount === 1 ? "" : "s"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1038,9 +1038,17 @@ const ScanPicklistDialog = ({
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [scanning, setScanning] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [printingUnit, setPrintingUnit] = useState(false);
   const [parts, setParts] = useState<PartEntry[]>([]);
   const [size, setSize] = useState<LabelSize>(defaultSize);
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  const [packUnit, setPackUnit] = useState<{
+    soNumber: string;
+    project: string;
+    unitType: string;
+    unitNum: string;
+    unitTotal: string;
+  } | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1066,6 +1074,7 @@ const ScanPicklistDialog = ({
     setPreviewUrl("");
     setParts([]);
     setMissing(new Set());
+    setPackUnit(null);
   };
 
   const handleClose = (val: boolean) => {
@@ -1101,6 +1110,20 @@ const ScanPicklistDialog = ({
       }
       setParts(incoming);
       setMissing(new Set());
+      const pu = data?.packUnit ?? {};
+      const ind = String(pu?.unitIndicator ?? "").toLowerCase();
+      const unitType = ind.includes("c-pallet")
+        ? "C-PALLET"
+        : /(^|[^a-z])f([^a-z]|$)/.test(ind)
+        ? "CRATE"
+        : "BOX";
+      setPackUnit({
+        soNumber: String(pu?.salesOrder ?? ""),
+        project: String(pu?.project ?? ""),
+        unitType,
+        unitNum: "1",
+        unitTotal: "1",
+      });
       toast.success(`Found ${incoming.length} part${incoming.length === 1 ? "" : "s"}.`);
     } catch (e: any) {
       const msg = e?.message || "Scan failed";

@@ -1827,6 +1827,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   const [date, setDate] = useState("");
   const [unitSel, setUnitSel] = useState("");
   const [area, setArea] = useState("");
+  const [priority, setPriority] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const [previewHtml, setPreviewHtml] = useState("");
 
@@ -1848,7 +1849,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           unitTotal: unitN,
           date,
           area,
-          status: "",
+          status: priority,
           orderQr,
           projectQr,
         }));
@@ -1865,7 +1866,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area]);
+  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
 
   const handlePrint = async () => {
     // SO Number is the only required field. Other blank fields are omitted on print.
@@ -1883,7 +1884,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         unitTotal: unitN,
         date,
         area,
-        status: "",
+        status: priority,
       });
     } else {
       await printUnit2x4({
@@ -1902,6 +1903,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     setDate("");
     setUnitSel("");
     setArea("");
+    setPriority("");
     setMissing(new Set());
     onOpenChange(false);
   };
@@ -1916,6 +1918,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       setDate("");
       setUnitSel("");
       setArea("");
+      setPriority("");
       setMissing(new Set());
     }
     onOpenChange(val);

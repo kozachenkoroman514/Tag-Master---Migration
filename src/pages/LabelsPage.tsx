@@ -1119,6 +1119,13 @@ const ScanPicklistDialog = ({
 
   const addPart = () => setParts((prev) => [...prev, emptyPart()]);
 
+  const labelCount = useMemo(() => {
+    if (!parts.length) return 0;
+    const consolidated = consolidateParts(parts);
+    return computeLabelCount(consolidated, size);
+  }, [parts, size]);
+
+
   const handlePrint = async () => {
     const m = new Set<string>();
     // Consolidate duplicates: same partNumber + jobNumber => sum qty into one listing.

@@ -1076,6 +1076,7 @@ const ScanPicklistDialog = ({
     setParts([]);
     setMissing(new Set());
     setPackUnit(null);
+    setPackUnitMissing(new Set());
   };
 
   const handleClose = (val: boolean) => {
@@ -1100,31 +1101,71 @@ const ScanPicklistDialog = ({
     setScanning(true);
     try {
       const imageBase64 = await fileToBase64(file);
-      const { data, error } = await supabase.functions.invoke("scan-picklist", {
-        body: { imageBase64, mimeType: file.type || "image/jpeg" },
-      });
-      if (error) throw error;
-      const incoming = (data?.parts ?? []) as PartEntry[];
+      const invoke = () =>
+        supabase.functions.invoke("scan-picklist", {
+          body: { imageBase64, mimeType: file.type || "image/jpeg" },
+        });
+      const { data: data1, error: err1 } = await invoke();
+      if (err1) throw err1;
+      let incoming = (data1?.parts ?? []) as PartEntry[];
+      let pu = (data1?.packUnit ?? {}) as any;
+
+      // Determine if anything is missing -> do exactly one second pass and merge.
+      const partMissing = (p: PartEntry) =>
+        !p.partNumber.trim() || !p.qty.trim() || !p.description.trim() ||
+        !p.jobNumber.trim() || !p.soNumber.trim();
+      const puMissing = !pu?.salesOrder || !pu?.project || !pu?.unitIndicator || !pu?.needByDate;
+      const needsSecondPass = puMissing || incoming.some(partMissing);
+      if (needsSecondPass) {
+        const { data: data2 } = await invoke();
+        if (data2) {
+          const inc2 = (data2.parts ?? []) as PartEntry[];
+          // Merge by index: fill empty fields from the second pass.
+          incoming = incoming.map((p, i) => {
+            const q = inc2[i];
+            if (!q) return p;
+            const out: any = { ...p };
+            for (const k of Object.keys(p) as (keyof PartEntry)[]) {
+              if (!String(out[k] ?? "").trim() && String((q as any)[k] ?? "").trim()) {
+                out[k] = (q as any)[k];
+              }
+            }
+            return out;
+          });
+          // Append any extra rows the second pass found.
+          if (inc2.length > incoming.length) incoming = [...incoming, ...inc2.slice(incoming.length)];
+          const pu2 = (data2.packUnit ?? {}) as any;
+          pu = {
+            salesOrder: pu?.salesOrder || pu2?.salesOrder || "",
+            project: pu?.project || pu2?.project || "",
+            unitIndicator: pu?.unitIndicator || pu2?.unitIndicator || "",
+            needByDate: pu?.needByDate || pu2?.needByDate || "",
+          };
+        }
+      }
+
       if (!incoming.length) {
         toast.error("No parts detected. Try a clearer photo.");
         return;
       }
       setParts(incoming);
       setMissing(new Set());
-      const pu = data?.packUnit ?? {};
       const ind = String(pu?.unitIndicator ?? "").toLowerCase();
       const unitType = ind.includes("c-pallet")
         ? "C-PALLET"
         : /(^|[^a-z])f([^a-z]|$)/.test(ind)
         ? "CRATE"
         : "BOX";
-      setPackUnit({
-        soNumber: String(pu?.salesOrder ?? ""),
-        project: String(pu?.project ?? ""),
-        unitType,
-        unitNum: "1",
-        unitTotal: "1",
-      });
+      const soNumber = String(pu?.salesOrder ?? "");
+      const project = String(pu?.project ?? "");
+      const needByDate = String(pu?.needByDate ?? "");
+      setPackUnit({ soNumber, project, unitType, unitNum: "1", unitTotal: "1", needByDate });
+      const pm = new Set<string>();
+      if (!soNumber.trim()) pm.add("soNumber");
+      if (!project.trim()) pm.add("project");
+      if (!String(pu?.unitIndicator ?? "").trim()) pm.add("unitType");
+      if (!needByDate.trim()) pm.add("needByDate");
+      setPackUnitMissing(pm);
       toast.success(`Found ${incoming.length} part${incoming.length === 1 ? "" : "s"}.`);
     } catch (e: any) {
       const msg = e?.message || "Scan failed";

@@ -45,7 +45,7 @@ function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): stri
   const pad = size === "2x4" ? "0.12in" : "0.25in";
   return `<!doctype html><html><head><title>${escapeHtml(title)}</title>
 <style>
-  @page { size: ${pageSize}; margin: 0; }
+  @page { size: ${pageSize} landscape; margin: 0; }
   html, body { margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #000; background: #fff; }
   .label { width: ${labelW}; height: ${labelH}; padding: ${pad}; box-sizing: border-box; display: flex; flex-direction: column; }

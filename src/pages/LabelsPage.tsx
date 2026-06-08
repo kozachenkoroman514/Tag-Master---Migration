@@ -1411,13 +1411,81 @@ const ScanPicklistDialog = ({
                 </Button>
               </div>
             )}
+
+            {packUnit && (
+              <div className="mt-3 border border-border rounded-md p-3 bg-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="h-4 w-4 text-ring" />
+                  <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
+                    <Input
+                      value={packUnit.soNumber}
+                      onChange={(e) => setPackUnit({ ...packUnit, soNumber: e.target.value })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
+                    <Input
+                      value={packUnit.project}
+                      onChange={(e) => setPackUnit({ ...packUnit, project: e.target.value })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Unit</Label>
+                    <Select value={packUnit.unitType} onValueChange={(v) => setPackUnit({ ...packUnit, unitType: v })}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BOX">BOX</SelectItem>
+                        <SelectItem value="CRATE">CRATE</SelectItem>
+                        <SelectItem value="PALLET">PALLET</SelectItem>
+                        <SelectItem value="C-PALLET">C-PALLET</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">N of M</Label>
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={packUnit.unitNum}
+                        onChange={(e) => setPackUnit({ ...packUnit, unitNum: e.target.value })}
+                        className="h-8 text-xs w-12 px-2"
+                      />
+                      <span className="text-xs text-muted-foreground">/</span>
+                      <Input
+                        value={packUnit.unitTotal}
+                        onChange={(e) => setPackUnit({ ...packUnit, unitTotal: e.target.value })}
+                        className="h-8 text-xs w-12 px-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          {packUnit && (
+            <Button
+              variant="secondary"
+              onClick={handlePrintPackUnit}
+              disabled={printingUnit || !packUnit.soNumber.trim()}
+              className="gap-2"
+            >
+              <Package className="h-4 w-4" />
+              {printingUnit ? "Printing…" : "Print Pack Unit Label"}
+            </Button>
+          )}
           <Button onClick={handlePrint} disabled={parts.length === 0 || printing}>
-            {printing ? "Printing…" : `Print ${labelCount || ""} Label${labelCount === 1 ? "" : "s"}`}
+            {printing ? "Printing…" : `Print ${labelCount} Part Label${labelCount === 1 ? "" : "s"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

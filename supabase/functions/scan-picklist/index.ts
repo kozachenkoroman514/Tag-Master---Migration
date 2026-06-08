@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
                 'ALSO return a single "packUnit" object describing the shipment unit for this picklist:',
                 '- salesOrder: the SO number from the top-left of the document (same as the SO used on the part lines).',
                 '- project: the project / customer name printed on the SAME line as the SO, immediately to its RIGHT. Empty string if not present.',
-                '- unitIndicator: a short raw token used to decide the unit type. Look in the TOP-RIGHT region of the picklist. If you see the text "C-Pallet" (case-insensitive, anywhere on the picklist, but typically top-right quadrant), return "C-Pallet". Otherwise, if there is a single letter "F" notation in the top-right (often preceding a unit/box marker), return "F". Otherwise return "".',
+                '- unitIndicator: a short raw token used to decide the unit type. The F / C-Pallet notation is printed ONLY on the FIRST page of the picklist (top-right region) and applies to the entire picklist — do NOT require it to repeat on later pages, and do NOT return "" just because later pages omit it. Scan the first page\'s top-right quadrant first. If you see "C-Pallet" (case-insensitive) anywhere on the first page, return "C-Pallet". Otherwise, if a single letter "F" notation appears in the top-right of the first page (often preceding a unit/box marker), return "F". Otherwise return "".',
               ].join('\n'),
           },
           {

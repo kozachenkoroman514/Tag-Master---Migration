@@ -994,7 +994,25 @@ const ScanPicklistDialog = ({
 
   const handlePrint = async () => {
     const m = new Set<string>();
-    parts.forEach((p, i) => {
+    // Consolidate duplicates: same partNumber + jobNumber => sum qty into one listing.
+    const consolidated: PartEntry[] = [];
+    const idxByKey = new Map<string, number>();
+    parts.forEach((p) => {
+      const key = `${p.partNumber.trim().toLowerCase()}|${p.jobNumber.trim().toLowerCase()}`;
+      const hasKey = p.partNumber.trim() && p.jobNumber.trim();
+      const existing = hasKey ? idxByKey.get(key) : undefined;
+      if (existing !== undefined) {
+        const a = parseInt(consolidated[existing].qty, 10);
+        const b = parseInt(p.qty, 10);
+        if (!Number.isNaN(a) && !Number.isNaN(b)) {
+          consolidated[existing] = { ...consolidated[existing], qty: String(a + b) };
+        }
+      } else {
+        if (hasKey) idxByKey.set(key, consolidated.length);
+        consolidated.push({ ...p });
+      }
+    });
+    consolidated.forEach((p, i) => {
       if (!p.partNumber.trim()) m.add(`partNumber-${i}`);
       if (!p.qty.trim()) m.add(`qty-${i}`);
       if (size === "2x4") {
@@ -1010,8 +1028,8 @@ const ScanPicklistDialog = ({
     }
     setPrinting(true);
     try {
-      if (size === "2x4") await printPart2x4(parts);
-      else await printPart4x6(parts);
+      if (size === "2x4") await printPart2x4(consolidated);
+      else await printPart4x6(consolidated);
       reset();
       onOpenChange(false);
     } finally {

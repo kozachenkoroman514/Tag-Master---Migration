@@ -153,6 +153,7 @@ Deno.serve(async (req) => {
       salesOrder: String(pu?.salesOrder ?? ''),
       project: String(pu?.project ?? ''),
       unitIndicator: String(pu?.unitIndicator ?? ''),
+      needByDate: String(pu?.needByDate ?? ''),
     };
 
     return new Response(JSON.stringify({ parts: norm, packUnit }), {

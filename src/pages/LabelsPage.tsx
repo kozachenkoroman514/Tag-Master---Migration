@@ -2029,6 +2029,21 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </Select>
             </div>
           )}
+          {size === "4x6" && (
+            <div className="space-y-2">
+              <Label>Priority (optional)</Label>
+              <Select value={priority || "__none"} onValueChange={(v) => setPriority(v === "__none" ? "" : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">None</SelectItem>
+                  <SelectItem value="TOP">TOP</SelectItem>
+                  <SelectItem value="HOT">HOT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>

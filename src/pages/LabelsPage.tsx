@@ -435,52 +435,45 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
       const partQr = qrs[i]?.part || "";
       const jobQr = qrs[i]?.job || "";
 
-      const jobBlock = p.jobNumber.trim()
-        ? `<div class="jqr-pair jqr-col">
+      const hasAny = p.jobNumber.trim() || p.qty.trim() || p.rev.trim() || p.partNumber.trim() || p.description.trim();
+
+      const jobVis = p.jobNumber.trim() ? "" : "visibility:hidden;";
+      const qtyVis = p.qty.trim() ? "" : "visibility:hidden;";
+      const revVis = p.rev.trim() ? "" : "visibility:hidden;";
+      const partVis = p.partNumber.trim() ? "" : "visibility:hidden;";
+      const descVis = p.description.trim() ? "" : "visibility:hidden;";
+
+      const jobBlock = `<div class="jqr-pair jqr-col" style="${jobVis}">
              <span class="sec-title">Job</span>
              <div class="jqr-row">
                <span class="red-input job-num">${escapeHtml(p.jobNumber)}</span>
-               ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : ""}
+               ${jobQr ? `<div class="qr-mini"><img src="${jobQr}" alt="Job QR"/></div>` : `<div class="qr-mini"></div>`}
              </div>
-           </div>`
-        : `<div class="jqr-pair"></div>`;
+           </div>`;
 
-      const qtyItem = p.qty.trim()
-        ? `<div class="qty-rev-item"><span class="sec-title">QTY</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`
-        : "";
-      const revItem = p.rev.trim()
-        ? `<div class="qty-rev-item"><span class="sec-title">Rev</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`
-        : "";
-      const qtyRevGroup = (qtyItem || revItem)
-        ? `<div class="qty-rev-group">${qtyItem}${revItem}</div>`
-        : "";
+      const qtyItem = `<div class="qty-rev-item" style="${qtyVis}"><span class="sec-title">QTY</span><span class="red-input qty-num">${escapeHtml(p.qty)}</span></div>`;
+      const revItem = `<div class="qty-rev-item" style="${revVis}"><span class="sec-title">Rev</span><span class="red-input rev-val">${escapeHtml(p.rev)}</span></div>`;
+      const qtyRevGroup = `<div class="qty-rev-group">${qtyItem}${revItem}</div>`;
 
-      const jobLine = (p.jobNumber.trim() || qtyItem || revItem)
-        ? `<div class="job-line"><div class="job-inputs-row">${jobBlock}${qtyRevGroup}</div></div>`
-        : "";
+      const jobLine = `<div class="job-line"><div class="job-inputs-row">${jobBlock}${qtyRevGroup}</div></div>`;
 
-      const partLine = p.partNumber.trim()
-        ? `<div class="part-line">
+      const partLine = `<div class="part-line" style="${partVis}">
              <span class="sec-title">Part</span>
              <div class="part-inputs-row">
                <span class="part-number-input">${escapeHtml(p.partNumber)}</span>
-               ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : ""}
+               ${partQr ? `<div class="qr-part"><img src="${partQr}" alt="Part QR"/></div>` : `<div class="qr-part"></div>`}
              </div>
-           </div>`
-        : "";
+           </div>`;
 
-      const descLine = p.description.trim()
-        ? `<div class="desc-line">
+      const descLine = `<div class="desc-line" style="${descVis}">
              <span class="sec-title-inline">Description</span>
              <div class="desc-inputs-row">
                <span class="desc-input">${escapeHtml(p.description)}</span>
              </div>
-           </div>`
-        : "";
+           </div>`;
 
-      const inner = `${jobLine}${partLine}${descLine}`;
-      if (!inner) return "";
-      return `<div class="part-row">${inner}</div>`;
+      if (!hasAny) return "";
+      return `<div class="part-row">${jobLine}${partLine}${descLine}</div>`;
     });
 
   const partRows = rows.filter(Boolean).join("");
@@ -684,32 +677,31 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
     const partQr = qrs[i]?.part || "";
     const jobQr = qrs[i]?.job || "";
 
+    const jobVis  = p.jobNumber.trim() ? "" : "visibility:hidden;";
+    const partVis = p.partNumber.trim() ? "" : "visibility:hidden;";
+    const solVis  = p.soNumber.trim() ? "" : "visibility:hidden;";
+    const itemVis = p.item.trim() ? "" : "visibility:hidden;";
+    const revVis  = p.rev.trim() ? "" : "visibility:hidden;";
+    const qtyVis  = p.qty.trim() ? "" : "visibility:hidden;";
+
     const jobQrHtml = jobQr
       ? `<div class="qr-box job-qr"><img src="${jobQr}" alt="Job QR"/></div>`
-      : "";
+      : `<div class="qr-box job-qr"></div>`;
     const partQrHtml = partQr
       ? `<div class="qr-box part-qr"><img src="${partQr}" alt="Part QR"/></div>`
-      : "";
+      : `<div class="qr-box part-qr"></div>`;
 
-    const solBlock = p.soNumber.trim()
-      ? `<span class="f-title">SO / Line / Rel</span>
-         <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div>`
-      : "";
-    const itemBlock = p.item.trim()
-      ? `<span class="f-title" style="margin-top:3px;">Item</span>
-         <div class="f-input item-input">${escapeHtml(p.item)}</div>`
-      : "";
-    const infoCol = (solBlock || itemBlock)
-      ? `<div class="info-col">${solBlock}${itemBlock}</div>`
-      : "";
+    const solBlock = `<div style="${solVis}"><span class="f-title">SO / Line / Rel</span>
+         <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div></div>`;
+    const itemBlock = `<div style="${itemVis}"><span class="f-title" style="margin-top:3px;">Item</span>
+         <div class="f-input item-input">${escapeHtml(p.item)}</div></div>`;
+    const infoCol = `<div class="info-col">${solBlock}${itemBlock}</div>`;
 
-    const revBlock = p.rev.trim()
-      ? `<span class="f-title" style="margin-top:4px;">Rev</span>
-         <div class="f-input rev-input">${escapeHtml(p.rev)}</div>`
-      : "";
+    const revBlock = `<div style="${revVis}"><span class="f-title" style="margin-top:4px;">Rev</span>
+         <div class="f-input rev-input">${escapeHtml(p.rev)}</div></div>`;
     const qtyCol = `<div class="qty-col">
-        <span class="f-title">QTY</span>
-        <div class="f-input qty-input">${escapeHtml(p.qty)}</div>
+        <div style="${qtyVis}"><span class="f-title">QTY</span>
+        <div class="f-input qty-input">${escapeHtml(p.qty)}</div></div>
         ${revBlock}
       </div>`;
 
@@ -717,14 +709,14 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
     <div class="label">
       <div class="top-section">
         <div class="job-col">
-          <span class="f-title">Job</span>
-          <div class="f-input job-input">${escapeHtml(p.jobNumber)}</div>
+          <span class="f-title" style="${jobVis}">Job</span>
+          <div class="f-input job-input" style="${jobVis}">${escapeHtml(p.jobNumber)}</div>
           ${jobQrHtml}
         </div>
         <div class="part-body">
           <div class="part-header-bar">
-            <span class="f-title">Part</span>
-            <div class="f-input part-input" style="font-size:13px; width:100%; border-bottom:none;">${escapeHtml(p.partNumber)}</div>
+            <span class="f-title" style="${partVis}">Part</span>
+            <div class="f-input part-input" style="font-size:13px; width:100%; border-bottom:none;${partVis}">${escapeHtml(p.partNumber)}</div>
           </div>
           <div class="part-lower">
             <div class="part-qr-col">${partQrHtml}</div>
@@ -1699,26 +1691,21 @@ type Unit2x4Opts = {
 function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   const { orderNumber, project, unitType, unitNum, unitTotal, orderQr, projectQr } = opts;
 
-  const orderRow = orderNumber.trim()
-    ? `<div class="order-row"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box qr-sm"><img src="${orderQr}" alt="Order QR"/></div>` : ""}</div></div>`
-    : "";
-  const projectRow = project.trim()
-    ? `<div class="project-row"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box qr-med"><img src="${projectQr}" alt="Project QR"/></div>` : ""}</div></div>`
-    : "";
+  const orderVis   = orderNumber.trim() ? "" : "visibility:hidden;";
+  const projectVis = project.trim() ? "" : "visibility:hidden;";
+  const unitVis    = unitType.trim() ? "" : "visibility:hidden;";
+  const ofVis      = (unitNum.trim() || unitTotal.trim()) ? "" : "visibility:hidden;";
 
-  const unitCell = unitType.trim()
-    ? `<div class="meta-cell unit-cell"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`
-    : "";
-  const ofCell = (unitNum.trim() || unitTotal.trim())
-    ? `<div class="meta-cell of-cell">
+  const orderRow = `<div class="order-row" style="${orderVis}"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box qr-sm"><img src="${orderQr}" alt="Order QR"/></div>` : `<div class="qr-box qr-sm"></div>`}</div></div>`;
+  const projectRow = `<div class="project-row" style="${projectVis}"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box qr-med"><img src="${projectQr}" alt="Project QR"/></div>` : `<div class="qr-box qr-med"></div>`}</div></div>`;
+
+  const unitCell = `<div class="meta-cell unit-cell" style="${unitVis}"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`;
+  const ofCell = `<div class="meta-cell of-cell" style="${ofVis}">
          <span class="meta-input num-input">${escapeHtml(unitNum)}</span>
          <span class="of-word">of</span>
          <span class="meta-input total-input">${escapeHtml(unitTotal)}</span>
-       </div>`
-    : "";
-  const metaRow = (unitCell || ofCell)
-    ? `<div class="meta-row">${unitCell}${ofCell}</div>`
-    : "";
+       </div>`;
+  const metaRow = `<div class="meta-row">${unitCell}${ofCell}</div>`;
 
   return `<!doctype html><html><head><title>Unit Label</title>
 <style>
@@ -2061,13 +2048,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 // 4x6 Status Note label — matches attached status_label.html layout exactly.
 function buildStatusNote4x6Doc(status: string, reason: string): string {
   const hasReason = reason.trim().length > 0;
+  const reasonVis = hasReason ? "" : "visibility:hidden;";
   return `<!doctype html><html><head><title>Status Note Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
-  .status-row { padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; ${hasReason ? 'border-bottom: 3px solid #000;' : ''} }
+  .status-row { padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; border-bottom: 3px solid #000; }
   .sec-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 0; }
   .status-value { flex: 1; font-size: 96px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 4px 14px 8px 14px; display: flex; flex-direction: column; flex: 1; }
@@ -2079,10 +2067,10 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
     <span class="sec-title">Status</span>
     <div class="status-value">${escapeHtml(status)}</div>
   </div>
-  ${hasReason ? `<div class="reason-row">
+  <div class="reason-row" style="${reasonVis}">
     <span class="sec-title">Reason</span>
     <div class="reason-value">${escapeHtml(reason)}</div>
-  </div>` : ""}
+  </div>
 </div>
 </body></html>`;
 }
@@ -2102,6 +2090,7 @@ async function printStatusNote4x6(status: string, reason: string) {
 // section is hidden when empty and Status row drops its divider so it fills.
 function buildStatusNote2x4Doc(status: string, reason: string): string {
   const hasReason = reason.trim().length > 0;
+  const reasonVis = hasReason ? "" : "visibility:hidden;";
   return `<!doctype html><html><head><title>Status Note Label</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2109,7 +2098,7 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 4in; height: 2in; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
   .sec-title { font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; margin-bottom: 0; }
-  .status-row { padding: 3px 10px 2px 10px; display: flex; flex-direction: column; flex: 1; ${hasReason ? 'border-bottom: 2px solid #000;' : ''} }
+  .status-row { padding: 3px 10px 2px 10px; display: flex; flex-direction: column; flex: 1; border-bottom: 2px solid #000; }
   .status-value { flex: 1; font-size: 58px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
   .reason-row { padding: 3px 10px 5px 10px; display: flex; flex-direction: column; flex: 1; }
   .reason-value { flex: 1; font-size: 14px; font-weight: 400; font-family: Arial, sans-serif; color: #000; line-height: 1.3; width: 100%; white-space: pre-wrap; word-break: break-word; }
@@ -2123,10 +2112,10 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
     <span class="sec-title">Status</span>
     <div class="status-value">${escapeHtml(status)}</div>
   </div>
-  ${hasReason ? `<div class="reason-row">
+  <div class="reason-row" style="${reasonVis}">
     <span class="sec-title">Reason</span>
     <div class="reason-value">${escapeHtml(reason)}</div>
-  </div>` : ""}
+  </div>
 </div>
 </body></html>`;
 }

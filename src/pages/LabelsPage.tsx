@@ -483,7 +483,7 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 6in; height: 4in; border: 2.5px solid #222; display: flex; flex-direction: column; overflow: hidden; }
+  .label { width: 6in; height: 4in; display: flex; flex-direction: column; overflow: hidden; }
   .label-header { border-bottom: 2.5px solid #222; padding: 0px 14px 1px 14px; }
   .logo-text { font-size: 22px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1; }
   .logo-reg { font-size: 15px; vertical-align: super; }
@@ -752,7 +752,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 4in; height: 2in; background: #fff; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
+  .label { width: 4in; height: 2in; background: #fff; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
   .label:last-child { page-break-after: auto; }
   .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; flex: 1; min-height: 0; }
   .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
@@ -1671,7 +1671,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .label { width: 6in; height: 4in; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
   .order-row { border-bottom: 3px solid #000; padding: 4px 14px 3px 14px; display: flex; flex-direction: column; }
   .order-input-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
@@ -1767,7 +1767,7 @@ function buildUnit2x4Doc(opts: Unit2x4Opts): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 4in 2in; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 4in; height: 2in; border: 2px solid #000; display: flex; flex-direction: column; overflow: hidden; }
+  .label { width: 4in; height: 2in; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 8px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.6px; line-height: 1; margin-bottom: 1px; }
   .order-row { border-bottom: 2px solid #000; padding: 3px 8px 2px 8px; display: flex; flex-direction: column; }
   .order-input-row { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
@@ -2129,7 +2129,7 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 6in 4in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+  .label { width: 6in; height: 4in; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
   .status-row { padding: 4px 14px 6px 14px; display: flex; flex-direction: column; flex: 1; border-bottom: 3px solid #000; }
   .sec-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 0; }
   .status-value { flex: 1; font-size: 96px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }
@@ -2171,7 +2171,7 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 4in 2in landscape; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 4in; height: 2in; border: 2.5px solid #000; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+  .label { width: 4in; height: 2in; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
   .sec-title { font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; margin-bottom: 0; }
   .status-row { padding: 3px 10px 2px 10px; display: flex; flex-direction: column; flex: 1; border-bottom: 2px solid #000; }
   .status-value { flex: 1; font-size: 58px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; color: #000; text-transform: uppercase; line-height: 1.0; width: 100%; display: flex; align-items: center; }

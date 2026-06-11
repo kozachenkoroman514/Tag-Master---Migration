@@ -949,12 +949,15 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const qrs = await computePartQrs(parts);
-      if (cancelled) return;
       if (size === "4x6") {
+        const qrs = await computePartQrs(parts);
+        if (cancelled) return;
         setPreviewHtml(buildPart4x6Doc(parts, qrs));
       } else {
-        setPreviewHtml(buildPart2x4Doc(parts, qrs));
+        const rows = expandParts2x4(parts);
+        const qrs = await computePart2x4Qrs(rows);
+        if (cancelled) return;
+        setPreviewHtml(buildPart2x4Doc(rows, qrs));
       }
     })();
     return () => { cancelled = true; };

@@ -2352,7 +2352,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   // Character budgets calibrated to each label's printable area + .huge font,
   // with a safety margin to prevent overlap into the next page when wrapping
   // hits long words near the bottom edge.
-  const maxChars = size === "2x4" ? 80 : 110;
+  const maxChars = size === "2x4" ? 70 : 95;
   const chunks = chunkMiscText(text, maxChars);
   const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c), size));
 

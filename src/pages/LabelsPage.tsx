@@ -1159,9 +1159,9 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   {(() => {
                     const totalN = Math.max(0, parseInt(p.unitTotal || "0", 10) || 0);
                     if (totalN <= 1) return null;
-                    const selected = p.selectedUnits && p.selectedUnits.length > 0
-                      ? p.selectedUnits
-                      : Array.from({ length: totalN }, (_, k) => k + 1);
+                    const selected = p.selectedUnits === undefined
+                      ? Array.from({ length: totalN }, (_, k) => k + 1)
+                      : p.selectedUnits;
                     const allChecked = selected.length === totalN;
                     const toggle = (n: number) => {
                       const cur = new Set(selected);

@@ -1482,13 +1482,21 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-7" : "grid-cols-6")}>
+                <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-8" : "grid-cols-7")}>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
                       value={packUnit.soNumber}
                       onChange={(e) => { setPackUnit({ ...packUnit, soNumber: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("soNumber"); return n; }); }}
                       className={cls("h-8 text-xs", packUnitMissing.has("soNumber") && invalidCls)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Job #</Label>
+                    <Input
+                      value={packUnit.jobNumber}
+                      onChange={(e) => setPackUnit({ ...packUnit, jobNumber: e.target.value })}
+                      className="h-8 text-xs"
                     />
                   </div>
                   <div className="space-y-1 col-span-2">
@@ -1509,6 +1517,7 @@ const ScanPicklistDialog = ({
                         <SelectItem value="BOX">BOX</SelectItem>
                         <SelectItem value="CRATE">CRATE</SelectItem>
                         <SelectItem value="PALLET">PALLET</SelectItem>
+                        <SelectItem value="S-PALLET">S-PALLET</SelectItem>
                         <SelectItem value="C-PALLET">C-PALLET</SelectItem>
                       </SelectContent>
                     </Select>

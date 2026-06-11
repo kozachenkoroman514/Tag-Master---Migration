@@ -482,8 +482,45 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string; item: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "", item: "" });
+type PartEntry = {
+  partNumber: string;
+  qty: string;
+  jobNumber: string;
+  soNumber: string;
+  goesWith: string;
+  description: string;
+  rev: string;
+  item: string;
+  // 2x4-only optional fields
+  unitNum?: string;
+  unitTotal?: string;
+  selectedUnits?: number[];
+};
+const emptyPart = (): PartEntry => ({
+  partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "",
+  description: "", rev: "", item: "",
+  unitNum: "", unitTotal: "", selectedUnits: undefined,
+});
+
+// Expand a part list into per-unit labels for the 2x4 Part label.
+// If unitTotal > 1, emits one label per selected unit number (defaults to all units).
+type Part2x4Row = { part: PartEntry; unitNum: string; unitTotal: string };
+function expandParts2x4(parts: PartEntry[]): Part2x4Row[] {
+  const out: Part2x4Row[] = [];
+  for (const p of parts) {
+    const totalN = Math.max(1, parseInt(p.unitTotal || "1", 10) || 1);
+    const total = String(totalN);
+    if (totalN <= 1) {
+      out.push({ part: p, unitNum: (p.unitNum || "").trim(), unitTotal: (p.unitTotal || "").trim() });
+      continue;
+    }
+    const sel = (p.selectedUnits && p.selectedUnits.length > 0)
+      ? [...p.selectedUnits].filter((n) => n >= 1 && n <= totalN).sort((a, b) => a - b)
+      : Array.from({ length: totalN }, (_, i) => i + 1);
+    for (const n of sel) out.push({ part: p, unitNum: String(n), unitTotal: total });
+  }
+  return out;
+}
 
 // 4x6 Part label — pure HTML doc builder shared by print + live preview.
 // Any field left blank (and its static label) is omitted from the output.

@@ -2412,7 +2412,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                       Label {i + 1} of {previewDocs.length}
                     </div>
                   )}
-                  <LabelPreview html={html} size={size} landscape={size === "2x4"} />
+                  <LabelPreview html={html} size={size} landscape={size === "2x4"} fixedDisplayW={600} />
                 </div>
               ))}
             </div>

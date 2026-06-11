@@ -1965,6 +1965,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="pack-job">Job Number</Label>
+            <Input
+              id="pack-job"
+              value={jobNumbers[0] ?? ""}
+              onChange={(e) => setJobNumbers([e.target.value])}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
@@ -1998,6 +2006,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 <SelectItem value="BOX">BOX</SelectItem>
                 <SelectItem value="CRATE">CRATE</SelectItem>
                 <SelectItem value="PALLET">PALLET</SelectItem>
+                <SelectItem value="S-PALLET">S-PALLET</SelectItem>
                 <SelectItem value="C-PALLET">C-PALLET</SelectItem>
               </SelectContent>
             </Select>

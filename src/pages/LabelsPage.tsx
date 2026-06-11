@@ -1916,9 +1916,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
 
   const handlePrint = async () => {
-    // SO Number is the only required field. Other blank fields are omitted on print.
+    // Either SO Number or Job Number is required. Other blank fields are omitted on print.
     const m = new Set<string>();
-    if (!(soNumbers[0] ?? "").trim()) m.add("so");
+    const hasSo = (soNumbers[0] ?? "").trim();
+    const hasJob = (jobNumbers[0] ?? "").trim();
+    if (!hasSo && !hasJob) { m.add("so"); m.add("job"); }
     setMissing(m);
     if (m.size) return;
     const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";

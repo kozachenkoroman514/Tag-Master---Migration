@@ -1130,6 +1130,84 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     />
                     <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Unit #</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={p.unitNum || ""}
+                        onChange={(e) => updatePart(i, { unitNum: e.target.value })}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Total Units</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={p.unitTotal || ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          // Reset selection when total changes.
+                          updatePart(i, { unitTotal: v, selectedUnits: undefined });
+                        }}
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  {(() => {
+                    const totalN = Math.max(0, parseInt(p.unitTotal || "0", 10) || 0);
+                    if (totalN <= 1) return null;
+                    const selected = p.selectedUnits && p.selectedUnits.length > 0
+                      ? p.selectedUnits
+                      : Array.from({ length: totalN }, (_, k) => k + 1);
+                    const allChecked = selected.length === totalN;
+                    const toggle = (n: number) => {
+                      const cur = new Set(selected);
+                      if (cur.has(n)) cur.delete(n); else cur.add(n);
+                      const arr = [...cur].sort((a, b) => a - b);
+                      updatePart(i, { selectedUnits: arr.length === totalN ? undefined : arr });
+                    };
+                    return (
+                      <div className="space-y-2 rounded-md border border-border p-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs uppercase tracking-wide">Select units to print</Label>
+                          <button
+                            type="button"
+                            className="text-xs text-ring underline"
+                            onClick={() => updatePart(i, { selectedUnits: allChecked ? [] : undefined })}
+                          >
+                            {allChecked ? "Deselect all" : "Select all"}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from({ length: totalN }, (_, k) => k + 1).map((n) => {
+                            const checked = selected.includes(n);
+                            return (
+                              <label
+                                key={n}
+                                className={cls(
+                                  "flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs",
+                                  checked ? "border-ring bg-ring/10" : "border-border",
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggle(n)}
+                                />
+                                <span>#{n}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Printing {selected.length} of {totalN} labels.
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </>
               )}
             </div>

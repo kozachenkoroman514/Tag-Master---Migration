@@ -492,11 +492,11 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .part-row:last-of-type { border-bottom: none; }
   .sec-title { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; display: block; margin-bottom: -2px; white-space: nowrap; }
   .sec-title-inline { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; white-space: nowrap; flex-shrink: 0; margin-bottom: -2px; }
-  .job-line { display: flex; flex-direction: column; padding: 0px 12px 0px 12px; border-bottom: 1px solid #ccc; }
+  .job-line { display: flex; flex-direction: column; justify-content: center; padding: 4px 12px; border-bottom: 1px solid #ccc; }
   .job-inputs-row { display: flex; align-items: center; width: 100%; }
   .jqr-pair { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .jqr-col { flex-direction: column; align-items: center; gap: 0; }
-  .jqr-row { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+  .jqr-col { flex-direction: column; align-items: flex-start; gap: 0; }
+  .jqr-row { display: flex; align-items: center; gap: 8px; }
   .red-input { border: none; border-bottom: 2.5px solid #222; font-size: 18px; font-weight: 700; color: #000; padding: 0 2px; min-height: 20px; display: inline-block; }
   .red-input.job-num { min-width: 108px; }
   .red-input.qty-num { min-width: 56px; }
@@ -505,9 +505,9 @@ function buildPart4x6Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .qty-rev-item { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
   .qr-mini { width: 58px; height: 58px; flex-shrink: 0; }
   .qr-mini img { width: 100%; height: 100%; }
-  .part-line { display: flex; flex-direction: column; padding: 0px 12px 0px 12px; border-bottom: 1px solid #ccc; }
-  .part-inputs-row { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
-  .part-number-input { border: none; border-bottom: 2.5px solid #222; font-size: 18px; font-weight: 700; color: #000; padding: 0 2px; min-height: 20px; display: inline-block; }
+  .part-line { display: flex; flex-direction: column; justify-content: center; padding: 4px 12px; border-bottom: 1px solid #ccc; }
+  .part-inputs-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .part-number-input { flex: 1; border: none; border-bottom: 2.5px solid #222; font-size: 18px; font-weight: 700; color: #000; padding: 0 2px; min-height: 20px; display: inline-block; }
   .qr-part { width: 64px; height: 64px; flex-shrink: 0; }
   .qr-part img { width: 100%; height: 100%; }
   .desc-line { display: flex; flex-direction: row; align-items: baseline; padding: 0px 12px 1px 12px; gap: 6px; }

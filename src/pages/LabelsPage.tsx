@@ -1852,14 +1852,17 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     let cancelled = false;
     (async () => {
       const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
-      const [orderQr, projectQr] = await Promise.all([
+      const firstJob = jobNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+      const [orderQr, jobQr, projectQr] = await Promise.all([
         firstSo ? cachedQr(firstSo) : Promise.resolve(""),
+        firstJob ? cachedQr(firstJob) : Promise.resolve(""),
         projectId.trim() ? cachedQr(projectId.trim()) : Promise.resolve(""),
       ]);
       if (cancelled) return;
       if (size === "4x6") {
         setPreviewHtml(buildUnit4x6Doc({
           orderNumber: firstSo,
+          jobNumber: firstJob,
           project: projectId,
           unitType: unitSel,
           unitNum: unitX,
@@ -1868,6 +1871,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           area,
           status: priority,
           orderQr,
+          jobQr,
           projectQr,
         }));
       } else {
@@ -1883,7 +1887,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
       }
     })();
     return () => { cancelled = true; };
-  }, [size, soNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
+  }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
 
   const handlePrint = async () => {
     // SO Number is the only required field. Other blank fields are omitted on print.
@@ -1892,9 +1896,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
     setMissing(m);
     if (m.size) return;
     const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
+    const firstJob = jobNumbers.map((s) => s.trim()).find(Boolean) ?? "";
     if (size === "4x6") {
       await printUnit4x6({
         orderNumber: firstSo,
+        jobNumber: firstJob,
         project: projectId,
         unitType: unitSel,
         unitNum: unitX,

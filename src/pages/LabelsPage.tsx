@@ -482,8 +482,45 @@ const LabelsPage = () => {
 export default LabelsPage;
 
 // ----------------- Part Label -----------------
-type PartEntry = { partNumber: string; qty: string; jobNumber: string; soNumber: string; goesWith: string; description: string; rev: string; item: string };
-const emptyPart = (): PartEntry => ({ partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "", description: "", rev: "", item: "" });
+type PartEntry = {
+  partNumber: string;
+  qty: string;
+  jobNumber: string;
+  soNumber: string;
+  goesWith: string;
+  description: string;
+  rev: string;
+  item: string;
+  // 2x4-only optional fields
+  unitNum?: string;
+  unitTotal?: string;
+  selectedUnits?: number[];
+};
+const emptyPart = (): PartEntry => ({
+  partNumber: "", qty: "", jobNumber: "", soNumber: "", goesWith: "",
+  description: "", rev: "", item: "",
+  unitNum: "", unitTotal: "", selectedUnits: undefined,
+});
+
+// Expand a part list into per-unit labels for the 2x4 Part label.
+// If unitTotal > 1, emits one label per selected unit number (defaults to all units).
+type Part2x4Row = { part: PartEntry; unitNum: string; unitTotal: string };
+function expandParts2x4(parts: PartEntry[]): Part2x4Row[] {
+  const out: Part2x4Row[] = [];
+  for (const p of parts) {
+    const totalN = Math.max(1, parseInt(p.unitTotal || "1", 10) || 1);
+    const total = String(totalN);
+    if (totalN <= 1) {
+      out.push({ part: p, unitNum: (p.unitNum || "").trim(), unitTotal: (p.unitTotal || "").trim() });
+      continue;
+    }
+    const sel = p.selectedUnits === undefined
+      ? Array.from({ length: totalN }, (_, i) => i + 1)
+      : [...p.selectedUnits].filter((n) => n >= 1 && n <= totalN).sort((a, b) => a - b);
+    for (const n of sel) out.push({ part: p, unitNum: String(n), unitTotal: total });
+  }
+  return out;
+}
 
 // 4x6 Part label — pure HTML doc builder shared by print + live preview.
 // Any field left blank (and its static label) is omitted from the output.
@@ -729,10 +766,17 @@ async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
 
 // 2x4 Part label — landscape 4in x 2in. Pure HTML doc builder shared by print + preview.
 // Optional fields (SO/Line/Rel, Rev, Item) are omitted when blank.
-function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
-  const labels = parts.map((p, i) => {
+// Accepts pre-expanded rows so a part with unitTotal > 1 prints one label per selected unit.
+function buildPart2x4Doc(
+  rows: Part2x4Row[],
+  qrs: Array<{ part: string; job: string; unit: string }>,
+): string {
+  const labels = rows.map((row, i) => {
+    const p = row.part;
     const partQr = qrs[i]?.part || "";
     const jobQr = qrs[i]?.job || "";
+    const unitQr = qrs[i]?.unit || "";
+    const hasUnitCounter = !!(row.unitTotal && parseInt(row.unitTotal, 10) > 0 && row.unitNum);
 
     const jobVis  = p.jobNumber.trim() ? "" : "visibility:hidden;";
     const partVis = p.partNumber.trim() ? "" : "visibility:hidden;";
@@ -747,12 +791,19 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
     const partQrHtml = partQr
       ? `<div class="qr-box part-qr"><img src="${partQr}" alt="Part QR"/></div>`
       : `<div class="qr-box part-qr"></div>`;
+    const unitQrHtml = unitQr
+      ? `<div class="qr-box unit-qr"><img src="${unitQr}" alt="Unit QR"/></div>`
+      : "";
 
     const solBlock = `<div style="${solVis}"><span class="f-title">SO / Line / Rel</span>
          <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div></div>`;
     const itemBlock = `<div style="${itemVis}"><span class="f-title" style="margin-top:3px;">Item</span>
          <div class="f-input item-input">${escapeHtml(p.item)}</div></div>`;
-    const infoCol = `<div class="info-col">${solBlock}${itemBlock}</div>`;
+    const unitCounterBlock = hasUnitCounter
+      ? `<div><span class="f-title" style="margin-top:3px;">Unit</span>
+           <div class="f-input unit-input">${escapeHtml(row.unitNum)} of ${escapeHtml(row.unitTotal)}</div></div>`
+      : "";
+    const infoCol = `<div class="info-col">${solBlock}${itemBlock}${unitCounterBlock}</div>`;
 
     const revBlock = `<div style="${revVis}"><span class="f-title" style="margin-top:4px;">Rev</span>
          <div class="f-input rev-input">${escapeHtml(p.rev)}</div></div>`;
@@ -760,6 +811,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
         <div style="${qtyVis}"><span class="f-title">QTY</span>
         <div class="f-input qty-input">${escapeHtml(p.qty)}</div></div>
         ${revBlock}
+        ${unitQrHtml}
       </div>`;
 
     return `
@@ -799,6 +851,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
           <div class="contact-text">Electric Mirror LLC<br>6101 Associated Blvd, Suite 101, Everett WA 98203<br>Toll Free +1-888-218-9238<br>Support +1-844-264-3217</div>
           <div class="contact-url">www.electricmirror.com</div>
           <div class="deut-text">DEUT 8:18 , 2 COR 3:18</div>
+          <div class="made-text">Made in America with U.S. and Global Components</div>
         </div>
       </div>
     </div>`;
@@ -808,14 +861,14 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 4in 2in; margin: 0; }
-  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 4in; height: 2in; background: #fff; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .label { width: 4in; height: 2in; background: #fff; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
   .label:last-child { page-break-after: auto; }
   .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; flex: 1; min-height: 0; }
   .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
   .part-qr-col { display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 4px 3px 4px; min-width: 70px; flex-shrink: 0; }
   .info-col { flex: 1; display: flex; flex-direction: column; padding: 2px 6px 3px 6px; gap: 1px; border-left: 2px solid #000; border-top: 2px solid #000; }
-  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 52px; gap: 4px; margin-left: auto; }
+  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 56px; gap: 3px; margin-left: auto; }
   .part-body { flex: 1; display: flex; flex-direction: column; border-left: 2px solid #000; min-width: 0; }
   .part-header-bar { padding: 3px 6px 2px 6px; display: flex; flex-direction: column; gap: 0; }
   .part-lower { flex: 1; display: flex; flex-direction: row; align-items: stretch; }
@@ -826,15 +879,17 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .f-input.sol-input { font-size: 14px; font-weight: 900; }
   .f-input.rev-input { font-size: 11px; width: 40px; text-align: right; }
   .f-input.item-input { font-size: 11px; }
+  .f-input.unit-input { font-size: 11px; font-weight: 900; }
   .f-input.qty-input { font-size: 14px; width: 40px; text-align: right; }
   .qr-box { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; flex-shrink: 0; }
   .qr-box img { width: 100% !important; height: 100% !important; display: block; }
   .qr-box.job-qr { width: 58px; height: 58px; margin-top: auto; margin-bottom: 6px; }
   .qr-box.part-qr { width: 58px; height: 58px; margin-bottom: 6px; }
+  .qr-box.unit-qr { width: 36px; height: 36px; margin-top: 2px; }
   .divider { border-top: 2px dashed #000; margin: 0; margin-top: auto; }
   .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }
-  .em-block { background: #000; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; }
-  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
+  .em-block { background: #000 !important; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff !important; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
   .em-reg { font-size: 7px; vertical-align: super; }
   .warning-block { border-right: 2px solid #000; padding: 2px 4px; min-width: 110px; max-width: 110px; display: flex; flex-direction: column; }
   .warn-title { font-size: 7.5px; font-weight: 900; color: #000; text-transform: uppercase; }
@@ -846,16 +901,37 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .p65-arrow { font-size: 7px; font-weight: 900; }
   .p65-url { font-size: 6px; font-weight: 700; color: #000; }
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+  .made-text { font-size: 5.5px; color: #000; font-weight: 700; margin-top: 1px; line-height: 1.15; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
     .label { transform: scale(0.90); transform-origin: center center; }
+    .em-block { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    .em-name { color: #fff !important; }
   }
 </style></head><body>${labels}</body></html>`;
 }
 
+async function computePart2x4Qrs(rows: Part2x4Row[]): Promise<Array<{ part: string; job: string; unit: string }>> {
+  return Promise.all(
+    rows.map(async (r) => {
+      const p = r.part;
+      const job = p.jobNumber.trim();
+      const unitPayload = job
+        ? (r.unitNum ? `${job}-${r.unitNum}` : "")
+        : (r.unitNum || "");
+      return {
+        part: p.partNumber.trim() ? await cachedQr(p.partNumber.trim()) : "",
+        job: job ? await cachedQr(job) : "",
+        unit: unitPayload ? await cachedQr(unitPayload) : "",
+      };
+    }),
+  );
+}
+
 async function printPart2x4(parts: PartEntry[]) {
-  const qrs = await computePartQrs(parts);
-  const doc = buildPart2x4Doc(parts, qrs).replace(
+  const rows = expandParts2x4(parts);
+  const qrs = await computePart2x4Qrs(rows);
+  const doc = buildPart2x4Doc(rows, qrs).replace(
     "</body></html>",
     `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );
@@ -873,12 +949,15 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const qrs = await computePartQrs(parts);
-      if (cancelled) return;
       if (size === "4x6") {
+        const qrs = await computePartQrs(parts);
+        if (cancelled) return;
         setPreviewHtml(buildPart4x6Doc(parts, qrs));
       } else {
-        setPreviewHtml(buildPart2x4Doc(parts, qrs));
+        const rows = expandParts2x4(parts);
+        const qrs = await computePart2x4Qrs(rows);
+        if (cancelled) return;
+        setPreviewHtml(buildPart2x4Doc(rows, qrs));
       }
     })();
     return () => { cancelled = true; };
@@ -1051,6 +1130,84 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     />
                     <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Unit #</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={p.unitNum || ""}
+                        onChange={(e) => updatePart(i, { unitNum: e.target.value })}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Total Units</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={p.unitTotal || ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          // Reset selection when total changes.
+                          updatePart(i, { unitTotal: v, selectedUnits: undefined });
+                        }}
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  {(() => {
+                    const totalN = Math.max(0, parseInt(p.unitTotal || "0", 10) || 0);
+                    if (totalN <= 1) return null;
+                    const selected = p.selectedUnits === undefined
+                      ? Array.from({ length: totalN }, (_, k) => k + 1)
+                      : p.selectedUnits;
+                    const allChecked = selected.length === totalN;
+                    const toggle = (n: number) => {
+                      const cur = new Set(selected);
+                      if (cur.has(n)) cur.delete(n); else cur.add(n);
+                      const arr = [...cur].sort((a, b) => a - b);
+                      updatePart(i, { selectedUnits: arr.length === totalN ? undefined : arr });
+                    };
+                    return (
+                      <div className="space-y-2 rounded-md border border-border p-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs uppercase tracking-wide">Select units to print</Label>
+                          <button
+                            type="button"
+                            className="text-xs text-ring underline"
+                            onClick={() => updatePart(i, { selectedUnits: allChecked ? [] : undefined })}
+                          >
+                            {allChecked ? "Deselect all" : "Select all"}
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from({ length: totalN }, (_, k) => k + 1).map((n) => {
+                            const checked = selected.includes(n);
+                            return (
+                              <label
+                                key={n}
+                                className={cls(
+                                  "flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs",
+                                  checked ? "border-ring bg-ring/10" : "border-border",
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggle(n)}
+                                />
+                                <span>#{n}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Printing {selected.length} of {totalN} labels.
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </>
               )}
             </div>

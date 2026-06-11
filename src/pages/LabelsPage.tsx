@@ -81,6 +81,51 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   win.document.close();
 }
 
+// Split text into label-sized chunks at word boundaries; breaks oversize single words.
+function chunkMiscText(text: string, max: number): string[] {
+  const t = text ?? "";
+  if (!t.trim()) return [""];
+  const out: string[] = [];
+  const tokens = t.split(/(\s+)/);
+  let cur = "";
+  const pushCur = () => { if (cur.trim()) out.push(cur.replace(/\s+$/, "")); cur = ""; };
+  for (const tok of tokens) {
+    if (!tok) continue;
+    if ((cur + tok).length <= max) {
+      cur += tok;
+      continue;
+    }
+    if (/^\s+$/.test(tok)) { pushCur(); continue; }
+    pushCur();
+    let rest = tok;
+    while (rest.length > max) { out.push(rest.slice(0, max)); rest = rest.slice(max); }
+    cur = rest;
+  }
+  pushCur();
+  return out.length ? out : [""];
+}
+
+// Print multiple misc labels in a single print job, one per page.
+async function printMiscMultiPage(title: string, bodies: string[], size: LabelSize) {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  const single = buildGenericDoc(title, bodies[0] ?? "", size);
+  const labelsHtml = bodies
+    .map(
+      (b, i) =>
+        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"};">${b}</div>`,
+    )
+    .join("");
+  const doc = single
+    .replace(/<div class="label">[\s\S]*?<\/div><\/body>/, `${labelsHtml}</body>`)
+    .replace(
+      "</body></html>",
+      `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    );
+  win.document.write(doc);
+  win.document.close();
+}
+
 async function qrDataUrl(text: string) {
   if (!text) return "";
   try {

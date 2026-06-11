@@ -2292,14 +2292,21 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(t)}</div>
       </div>`;
-  const previewHtml = buildGenericDoc("Misc Label", buildBody(text), size);
+  // Conservative per-label character budgets that match the .huge font on each size.
+  const maxChars = size === "2x4" ? 110 : 160;
+  const chunks = chunkMiscText(text, maxChars);
+  const previewHtml = buildGenericDoc("Misc Label", buildBody(chunks[0] ?? ""), size);
 
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!text.trim()) m.add("text");
     setMissing(m);
     if (m.size) return;
-    await printLabel("Misc Label", buildBody(text), size);
+    if (chunks.length <= 1) {
+      await printLabel("Misc Label", buildBody(chunks[0] ?? ""), size);
+    } else {
+      await printMiscMultiPage("Misc Label", chunks.map(buildBody), size);
+    }
     setText("");
     setMissing(new Set());
     onOpenChange(false);
@@ -2328,6 +2335,11 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
           />
+          {chunks.length > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Text exceeds one label — will print {chunks.length} labels. Preview shows label 1 of {chunks.length}.
+            </p>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>

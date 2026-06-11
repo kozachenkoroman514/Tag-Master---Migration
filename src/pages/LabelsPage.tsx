@@ -1172,6 +1172,7 @@ const ScanPicklistDialog = ({
       })();
       setPackUnit({ soNumber, jobNumber: "", project, unitType, unitNum: "1", unitTotal: "1", needByDate, priority: "" });
       const pm = new Set<string>();
+      // SO is required only if Job is not provided (and vice versa). Initially job is empty, so flag SO if missing.
       if (!soNumber.trim()) pm.add("soNumber");
       if (!project.trim()) pm.add("project");
       if (!String(pu?.unitIndicator ?? "").trim()) pm.add("unitType");
@@ -1482,12 +1483,20 @@ const ScanPicklistDialog = ({
                   <Package className="h-4 w-4 text-ring" />
                   <div className="text-xs font-semibold uppercase tracking-wide text-ring">Pack Unit</div>
                 </div>
-                <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-8" : "grid-cols-7")}>
+                 <div className={cls("grid gap-2", size === "4x6" ? "grid-cols-8" : "grid-cols-7")}>
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
                       value={packUnit.soNumber}
-                      onChange={(e) => { setPackUnit({ ...packUnit, soNumber: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("soNumber"); return n; }); }}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPackUnit({ ...packUnit, soNumber: v });
+                        setPackUnitMissing((s) => {
+                          const n = new Set(s);
+                          if (v.trim() || packUnit.jobNumber.trim()) { n.delete("soNumber"); n.delete("jobNumber"); }
+                          return n;
+                        });
+                      }}
                       className={cls("h-8 text-xs", packUnitMissing.has("soNumber") && invalidCls)}
                     />
                   </div>
@@ -1495,8 +1504,16 @@ const ScanPicklistDialog = ({
                     <Label className="text-[10px] uppercase text-muted-foreground">Job #</Label>
                     <Input
                       value={packUnit.jobNumber}
-                      onChange={(e) => setPackUnit({ ...packUnit, jobNumber: e.target.value })}
-                      className="h-8 text-xs"
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPackUnit({ ...packUnit, jobNumber: v });
+                        setPackUnitMissing((s) => {
+                          const n = new Set(s);
+                          if (v.trim() || packUnit.soNumber.trim()) { n.delete("soNumber"); n.delete("jobNumber"); }
+                          return n;
+                        });
+                      }}
+                      className={cls("h-8 text-xs", packUnitMissing.has("jobNumber") && invalidCls)}
                     />
                   </div>
                   <div className="space-y-1 col-span-2">
@@ -1576,7 +1593,7 @@ const ScanPicklistDialog = ({
           <Button
             variant="secondary"
             onClick={handlePrintPackUnit}
-            disabled={printingUnit || !packUnit || !packUnit.soNumber.trim()}
+            disabled={printingUnit || !packUnit || (!packUnit.soNumber.trim() && !packUnit.jobNumber.trim())}
           >
             {printingUnit ? "Printing…" : "Print Pack Unit Label"}
           </Button>
@@ -1899,9 +1916,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
   }, [size, soNumbers, jobNumbers, projectId, unitX, unitN, date, unitSel, area, priority]);
 
   const handlePrint = async () => {
-    // SO Number is the only required field. Other blank fields are omitted on print.
+    // Either SO Number or Job Number is required. Other blank fields are omitted on print.
     const m = new Set<string>();
-    if (!(soNumbers[0] ?? "").trim()) m.add("so");
+    const hasSo = (soNumbers[0] ?? "").trim();
+    const hasJob = (jobNumbers[0] ?? "").trim();
+    if (!hasSo && !hasJob) { m.add("so"); m.add("job"); }
     setMissing(m);
     if (m.size) return;
     const firstSo = soNumbers.map((s) => s.trim()).find(Boolean) ?? "";
@@ -1965,21 +1984,24 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
-            <Label htmlFor="pack-so">SO Number <Req /></Label>
+            <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-so"
               value={soNumbers[0] ?? ""}
-              onChange={(e) => setSoNumbers([e.target.value])}
+              onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("so") && invalidCls)}
             />
+            <div className="text-[10px] text-muted-foreground">Required unless Job Number is provided.</div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-job">Job Number</Label>
+            <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-job"
               value={jobNumbers[0] ?? ""}
-              onChange={(e) => setJobNumbers([e.target.value])}
+              onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
+              className={cls(missing.has("job") && invalidCls)}
             />
+            <div className="text-[10px] text-muted-foreground">Required unless SO Number is provided.</div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>

@@ -113,7 +113,7 @@ async function printMiscMultiPage(title: string, bodies: string[], size: LabelSi
   const labelsHtml = bodies
     .map(
       (b, i) =>
-        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"}; margin:0 auto;">${b}</div>`,
+        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"}; break-after:${i === bodies.length - 1 ? "auto" : "page"}; page-break-inside:avoid; break-inside:avoid; overflow:hidden; margin:0 auto;">${b}</div>`,
     )
     .join("");
   const doc = single
@@ -126,7 +126,7 @@ async function printMiscMultiPage(title: string, bodies: string[], size: LabelSi
       "@media print {",
       `@media print {
     html, body { display: block !important; width: auto !important; height: auto !important; }
-    .label { transform: none !important; }`,
+    .label { transform: none !important; overflow: hidden !important; page-break-inside: avoid; break-inside: avoid; }`,
     )
     .replace(
       "</body></html>",

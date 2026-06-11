@@ -514,9 +514,9 @@ function expandParts2x4(parts: PartEntry[]): Part2x4Row[] {
       out.push({ part: p, unitNum: (p.unitNum || "").trim(), unitTotal: (p.unitTotal || "").trim() });
       continue;
     }
-    const sel = (p.selectedUnits && p.selectedUnits.length > 0)
-      ? [...p.selectedUnits].filter((n) => n >= 1 && n <= totalN).sort((a, b) => a - b)
-      : Array.from({ length: totalN }, (_, i) => i + 1);
+    const sel = p.selectedUnits === undefined
+      ? Array.from({ length: totalN }, (_, i) => i + 1)
+      : [...p.selectedUnits].filter((n) => n >= 1 && n <= totalN).sort((a, b) => a - b);
     for (const n of sel) out.push({ part: p, unitNum: String(n), unitTotal: total });
   }
   return out;

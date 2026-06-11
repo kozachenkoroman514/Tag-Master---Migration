@@ -113,11 +113,21 @@ async function printMiscMultiPage(title: string, bodies: string[], size: LabelSi
   const labelsHtml = bodies
     .map(
       (b, i) =>
-        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"};">${b}</div>`,
+        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"}; margin:0 auto;">${b}</div>`,
     )
     .join("");
   const doc = single
     .replace(/<div class="label">[\s\S]*?<\/div><\/body>/, `${labelsHtml}</body>`)
+    // Override the single-label print centering: with multiple labels, the
+    // flex body would squeeze all labels into one row, collapsing each
+    // label's width and forcing the text into narrow columns. Use block
+    // layout so each label fills its own @page.
+    .replace(
+      "@media print {",
+      `@media print {
+    html, body { display: block !important; width: auto !important; height: auto !important; }
+    .label { transform: none !important; }`,
+    )
     .replace(
       "</body></html>",
       `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,

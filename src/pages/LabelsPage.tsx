@@ -81,6 +81,51 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   win.document.close();
 }
 
+// Split text into label-sized chunks at word boundaries; breaks oversize single words.
+function chunkMiscText(text: string, max: number): string[] {
+  const t = text ?? "";
+  if (!t.trim()) return [""];
+  const out: string[] = [];
+  const tokens = t.split(/(\s+)/);
+  let cur = "";
+  const pushCur = () => { if (cur.trim()) out.push(cur.replace(/\s+$/, "")); cur = ""; };
+  for (const tok of tokens) {
+    if (!tok) continue;
+    if ((cur + tok).length <= max) {
+      cur += tok;
+      continue;
+    }
+    if (/^\s+$/.test(tok)) { pushCur(); continue; }
+    pushCur();
+    let rest = tok;
+    while (rest.length > max) { out.push(rest.slice(0, max)); rest = rest.slice(max); }
+    cur = rest;
+  }
+  pushCur();
+  return out.length ? out : [""];
+}
+
+// Print multiple misc labels in a single print job, one per page.
+async function printMiscMultiPage(title: string, bodies: string[], size: LabelSize) {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  const single = buildGenericDoc(title, bodies[0] ?? "", size);
+  const labelsHtml = bodies
+    .map(
+      (b, i) =>
+        `<div class="label" style="page-break-after:${i === bodies.length - 1 ? "auto" : "always"};">${b}</div>`,
+    )
+    .join("");
+  const doc = single
+    .replace(/<div class="label">[\s\S]*?<\/div><\/body>/, `${labelsHtml}</body>`)
+    .replace(
+      "</body></html>",
+      `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    );
+  win.document.write(doc);
+  win.document.close();
+}
+
 async function qrDataUrl(text: string) {
   if (!text) return "";
   try {
@@ -2292,14 +2337,21 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(t)}</div>
       </div>`;
-  const previewHtml = buildGenericDoc("Misc Label", buildBody(text), size);
+  // Conservative per-label character budgets that match the .huge font on each size.
+  const maxChars = size === "2x4" ? 110 : 160;
+  const chunks = chunkMiscText(text, maxChars);
+  const previewHtml = buildGenericDoc("Misc Label", buildBody(chunks[0] ?? ""), size);
 
   const handlePrint = async () => {
     const m = new Set<string>();
     if (!text.trim()) m.add("text");
     setMissing(m);
     if (m.size) return;
-    await printLabel("Misc Label", buildBody(text), size);
+    if (chunks.length <= 1) {
+      await printLabel("Misc Label", buildBody(chunks[0] ?? ""), size);
+    } else {
+      await printMiscMultiPage("Misc Label", chunks.map(buildBody), size);
+    }
     setText("");
     setMissing(new Set());
     onOpenChange(false);
@@ -2328,6 +2380,11 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
           />
+          {chunks.length > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Text exceeds one label — will print {chunks.length} labels. Preview shows label 1 of {chunks.length}.
+            </p>
+          )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>

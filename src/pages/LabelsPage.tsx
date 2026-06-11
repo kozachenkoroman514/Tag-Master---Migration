@@ -2349,10 +2349,10 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(t)}</div>
       </div>`;
-  // Character budgets calibrated to each label's printable area + .huge font:
-  // 4x6 (528×336px usable, 36pt bold ≈ 25px/char, 52px/line) → ~6 lines × 21 chars ≈ 125
-  // 2x4 (361×169px usable, 22pt bold ≈ 18px/char, 32px/line) → ~5 lines × 20 chars ≈ 100
-  const maxChars = size === "2x4" ? 95 : 125;
+  // Character budgets calibrated to each label's printable area + .huge font,
+  // with a safety margin to prevent overlap into the next page when wrapping
+  // hits long words near the bottom edge.
+  const maxChars = size === "2x4" ? 80 : 110;
   const chunks = chunkMiscText(text, maxChars);
   const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c), size));
 

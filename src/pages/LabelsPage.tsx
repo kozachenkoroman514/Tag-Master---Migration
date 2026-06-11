@@ -766,10 +766,17 @@ async function printPart4x6Batched(parts: PartEntry[], perLabel = 2) {
 
 // 2x4 Part label — landscape 4in x 2in. Pure HTML doc builder shared by print + preview.
 // Optional fields (SO/Line/Rel, Rev, Item) are omitted when blank.
-function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: string }>): string {
-  const labels = parts.map((p, i) => {
+// Accepts pre-expanded rows so a part with unitTotal > 1 prints one label per selected unit.
+function buildPart2x4Doc(
+  rows: Part2x4Row[],
+  qrs: Array<{ part: string; job: string; unit: string }>,
+): string {
+  const labels = rows.map((row, i) => {
+    const p = row.part;
     const partQr = qrs[i]?.part || "";
     const jobQr = qrs[i]?.job || "";
+    const unitQr = qrs[i]?.unit || "";
+    const hasUnitCounter = !!(row.unitTotal && parseInt(row.unitTotal, 10) > 0 && row.unitNum);
 
     const jobVis  = p.jobNumber.trim() ? "" : "visibility:hidden;";
     const partVis = p.partNumber.trim() ? "" : "visibility:hidden;";
@@ -784,12 +791,19 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
     const partQrHtml = partQr
       ? `<div class="qr-box part-qr"><img src="${partQr}" alt="Part QR"/></div>`
       : `<div class="qr-box part-qr"></div>`;
+    const unitQrHtml = unitQr
+      ? `<div class="qr-box unit-qr"><img src="${unitQr}" alt="Unit QR"/></div>`
+      : "";
 
     const solBlock = `<div style="${solVis}"><span class="f-title">SO / Line / Rel</span>
          <div class="f-input sol-input">${escapeHtml(p.soNumber)}</div></div>`;
     const itemBlock = `<div style="${itemVis}"><span class="f-title" style="margin-top:3px;">Item</span>
          <div class="f-input item-input">${escapeHtml(p.item)}</div></div>`;
-    const infoCol = `<div class="info-col">${solBlock}${itemBlock}</div>`;
+    const unitCounterBlock = hasUnitCounter
+      ? `<div><span class="f-title" style="margin-top:3px;">Unit</span>
+           <div class="f-input unit-input">${escapeHtml(row.unitNum)} of ${escapeHtml(row.unitTotal)}</div></div>`
+      : "";
+    const infoCol = `<div class="info-col">${solBlock}${itemBlock}${unitCounterBlock}</div>`;
 
     const revBlock = `<div style="${revVis}"><span class="f-title" style="margin-top:4px;">Rev</span>
          <div class="f-input rev-input">${escapeHtml(p.rev)}</div></div>`;
@@ -797,6 +811,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
         <div style="${qtyVis}"><span class="f-title">QTY</span>
         <div class="f-input qty-input">${escapeHtml(p.qty)}</div></div>
         ${revBlock}
+        ${unitQrHtml}
       </div>`;
 
     return `
@@ -836,6 +851,7 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
           <div class="contact-text">Electric Mirror LLC<br>6101 Associated Blvd, Suite 101, Everett WA 98203<br>Toll Free +1-888-218-9238<br>Support +1-844-264-3217</div>
           <div class="contact-url">www.electricmirror.com</div>
           <div class="deut-text">DEUT 8:18 , 2 COR 3:18</div>
+          <div class="made-text">Made in America with U.S. and Global Components</div>
         </div>
       </div>
     </div>`;
@@ -845,14 +861,14 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   @page { size: 4in 2in; margin: 0; }
-  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
-  .label { width: 4in; height: 2in; background: #fff; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .label { width: 4in; height: 2in; background: #fff; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
   .label:last-child { page-break-after: auto; }
   .top-section { display: flex; flex-direction: row; border-bottom: 2px solid #000; flex: 1; min-height: 0; }
   .job-col { display: flex; flex-direction: column; border-right: 2px solid #000; padding: 3px 5px 3px 5px; min-width: 72px; align-items: flex-start; gap: 3px; }
   .part-qr-col { display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 4px 3px 4px; min-width: 70px; flex-shrink: 0; }
   .info-col { flex: 1; display: flex; flex-direction: column; padding: 2px 6px 3px 6px; gap: 1px; border-left: 2px solid #000; border-top: 2px solid #000; }
-  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 52px; gap: 4px; margin-left: auto; }
+  .qty-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding: 3px 5px 3px 4px; border-left: 2px solid #000; border-top: 2px solid #000; min-width: 56px; gap: 3px; margin-left: auto; }
   .part-body { flex: 1; display: flex; flex-direction: column; border-left: 2px solid #000; min-width: 0; }
   .part-header-bar { padding: 3px 6px 2px 6px; display: flex; flex-direction: column; gap: 0; }
   .part-lower { flex: 1; display: flex; flex-direction: row; align-items: stretch; }
@@ -863,15 +879,17 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .f-input.sol-input { font-size: 14px; font-weight: 900; }
   .f-input.rev-input { font-size: 11px; width: 40px; text-align: right; }
   .f-input.item-input { font-size: 11px; }
+  .f-input.unit-input { font-size: 11px; font-weight: 900; }
   .f-input.qty-input { font-size: 14px; width: 40px; text-align: right; }
   .qr-box { overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; flex-shrink: 0; }
   .qr-box img { width: 100% !important; height: 100% !important; display: block; }
   .qr-box.job-qr { width: 58px; height: 58px; margin-top: auto; margin-bottom: 6px; }
   .qr-box.part-qr { width: 58px; height: 58px; margin-bottom: 6px; }
+  .qr-box.unit-qr { width: 36px; height: 36px; margin-top: 2px; }
   .divider { border-top: 2px dashed #000; margin: 0; margin-top: auto; }
   .bottom-section { display: flex; flex-direction: row; align-items: stretch; min-height: 44px; }
-  .em-block { background: #000; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; }
-  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
+  .em-block { background: #000 !important; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 2px 6px; border-right: 2px solid #000; min-width: 86px; max-width: 86px; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .em-name { font-size: 11px; font-weight: 900; font-family: Arial Black, Arial, sans-serif; color: #fff !important; letter-spacing: 0.5px; line-height: 1.05; text-transform: uppercase; }
   .em-reg { font-size: 7px; vertical-align: super; }
   .warning-block { border-right: 2px solid #000; padding: 2px 4px; min-width: 110px; max-width: 110px; display: flex; flex-direction: column; }
   .warn-title { font-size: 7.5px; font-weight: 900; color: #000; text-transform: uppercase; }
@@ -883,16 +901,37 @@ function buildPart2x4Doc(parts: PartEntry[], qrs: Array<{ part: string; job: str
   .p65-arrow { font-size: 7px; font-weight: 900; }
   .p65-url { font-size: 6px; font-weight: 700; color: #000; }
   .deut-text { font-size: 5.5px; color: #555; font-style: italic; margin-top: 0; }
+  .made-text { font-size: 5.5px; color: #000; font-weight: 700; margin-top: 1px; line-height: 1.15; }
   @media print {
     html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
     .label { transform: scale(0.90); transform-origin: center center; }
+    .em-block { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    .em-name { color: #fff !important; }
   }
 </style></head><body>${labels}</body></html>`;
 }
 
+async function computePart2x4Qrs(rows: Part2x4Row[]): Promise<Array<{ part: string; job: string; unit: string }>> {
+  return Promise.all(
+    rows.map(async (r) => {
+      const p = r.part;
+      const job = p.jobNumber.trim();
+      const unitPayload = job
+        ? (r.unitNum ? `${job}-${r.unitNum}` : "")
+        : (r.unitNum || "");
+      return {
+        part: p.partNumber.trim() ? await cachedQr(p.partNumber.trim()) : "",
+        job: job ? await cachedQr(job) : "",
+        unit: unitPayload ? await cachedQr(unitPayload) : "",
+      };
+    }),
+  );
+}
+
 async function printPart2x4(parts: PartEntry[]) {
-  const qrs = await computePartQrs(parts);
-  const doc = buildPart2x4Doc(parts, qrs).replace(
+  const rows = expandParts2x4(parts);
+  const qrs = await computePart2x4Qrs(rows);
+  const doc = buildPart2x4Doc(rows, qrs).replace(
     "</body></html>",
     `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );

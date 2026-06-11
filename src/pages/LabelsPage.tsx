@@ -158,11 +158,12 @@ async function cachedQr(text: string): Promise<string> {
 
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
 // then CSS-transformed to fit the side panel.
-const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => {
+const LabelPreview = ({ html, size, landscape, fixedDisplayW }: { html: string; size: LabelSize; landscape?: boolean; fixedDisplayW?: number }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(() => {
     const nativeW = nativeWFor(size, landscape);
     const nativeH = nativeHFor(size, landscape);
+    if (fixedDisplayW) return fixedDisplayW / nativeW;
     const estAvailW = 640;
     const estAvailH = 700;
     return Math.min(estAvailW / nativeW, estAvailH / nativeH);
@@ -176,6 +177,7 @@ const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize
     const nativeH = nativeHFor(size, landscape);
 
     const update = () => {
+      if (fixedDisplayW) { setScale(fixedDisplayW / nativeW); return; }
       const rect = el.getBoundingClientRect();
       const s = Math.min(rect.width / nativeW, rect.height / nativeH);
       setScale(s);
@@ -185,13 +187,13 @@ const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [size, landscape]);
+  }, [size, landscape, fixedDisplayW]);
 
   const nativeW = nativeWFor(size, landscape);
   const nativeH = nativeHFor(size, landscape);
 
   return (
-    <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
+    <div ref={wrapperRef} className={fixedDisplayW ? "flex items-center justify-center" : "flex-1 w-full min-h-0 flex items-center justify-center"}>
       <div
         className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
         style={{ width: nativeW * scale, height: nativeH * scale }}
@@ -2347,10 +2349,10 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
         <div class="huge wrap center">${escapeHtml(t)}</div>
       </div>`;
-  // Character budgets calibrated to each label's printable area + .huge font:
-  // 4x6 (528×336px usable, 36pt bold ≈ 25px/char, 52px/line) → ~6 lines × 21 chars ≈ 125
-  // 2x4 (361×169px usable, 22pt bold ≈ 18px/char, 32px/line) → ~5 lines × 20 chars ≈ 100
-  const maxChars = size === "2x4" ? 95 : 125;
+  // Character budgets calibrated to each label's printable area + .huge font,
+  // with a safety margin to prevent overlap into the next page when wrapping
+  // hits long words near the bottom edge.
+  const maxChars = size === "2x4" ? 80 : 110;
   const chunks = chunkMiscText(text, maxChars);
   const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c), size));
 
@@ -2410,7 +2412,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                       Label {i + 1} of {previewDocs.length}
                     </div>
                   )}
-                  <LabelPreview html={html} size={size} landscape={size === "2x4"} />
+                  <LabelPreview html={html} size={size} landscape={size === "2x4"} fixedDisplayW={600} />
                 </div>
               ))}
             </div>

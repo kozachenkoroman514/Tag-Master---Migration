@@ -158,11 +158,12 @@ async function cachedQr(text: string): Promise<string> {
 
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
 // then CSS-transformed to fit the side panel.
-const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => {
+const LabelPreview = ({ html, size, landscape, fixedDisplayW }: { html: string; size: LabelSize; landscape?: boolean; fixedDisplayW?: number }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(() => {
     const nativeW = nativeWFor(size, landscape);
     const nativeH = nativeHFor(size, landscape);
+    if (fixedDisplayW) return fixedDisplayW / nativeW;
     const estAvailW = 640;
     const estAvailH = 700;
     return Math.min(estAvailW / nativeW, estAvailH / nativeH);
@@ -176,6 +177,7 @@ const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize
     const nativeH = nativeHFor(size, landscape);
 
     const update = () => {
+      if (fixedDisplayW) { setScale(fixedDisplayW / nativeW); return; }
       const rect = el.getBoundingClientRect();
       const s = Math.min(rect.width / nativeW, rect.height / nativeH);
       setScale(s);
@@ -185,13 +187,13 @@ const LabelPreview = ({ html, size, landscape }: { html: string; size: LabelSize
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [size, landscape]);
+  }, [size, landscape, fixedDisplayW]);
 
   const nativeW = nativeWFor(size, landscape);
   const nativeH = nativeHFor(size, landscape);
 
   return (
-    <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
+    <div ref={wrapperRef} className={fixedDisplayW ? "flex items-center justify-center" : "flex-1 w-full min-h-0 flex items-center justify-center"}>
       <div
         className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
         style={{ width: nativeW * scale, height: nativeH * scale }}

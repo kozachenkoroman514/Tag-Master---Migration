@@ -1587,6 +1587,7 @@ function escapeHtml(s: string) {
 // Any blank field (and its section title) is omitted from the output.
 type Unit4x6Opts = {
   orderNumber: string;
+  jobNumber: string;
   project: string;
   unitType: string;
   unitNum: string;
@@ -1595,12 +1596,24 @@ type Unit4x6Opts = {
   area: string;
   status: string;
   orderQr?: string;
+  jobQr?: string;
   projectQr?: string;
 };
 function buildUnit4x6Doc(opts: Unit4x6Opts): string {
-  const { orderNumber, project, unitType, unitNum, unitTotal, date, area, status, orderQr, projectQr } = opts;
+  const { orderNumber, jobNumber, project, unitType, unitNum, unitTotal, date, area, status, orderQr, jobQr, projectQr } = opts;
 
-  const orderVis   = orderNumber.trim() ? "" : "visibility:hidden;";
+  // When area is Mainline or Chassisline, swap Sales Order ↔ Job (titles + inputs + QRs).
+  const areaUpper = area.trim().toUpperCase();
+  const swap = areaUpper === "MAINLINE" || areaUpper === "CHASSISLINE";
+  const topTitle    = swap ? "Job" : "Sales Order";
+  const topValue    = swap ? jobNumber : orderNumber;
+  const topQr       = swap ? jobQr : orderQr;
+  const secondTitle = swap ? "Sales Order" : "Job";
+  const secondValue = swap ? orderNumber : jobNumber;
+  const secondQr    = swap ? orderQr : jobQr;
+
+  const topVis     = topValue.trim() ? "" : "visibility:hidden;";
+  const secondVis  = secondValue.trim() ? "" : "visibility:hidden;";
   const projectVis = project.trim() ? "" : "visibility:hidden;";
   const unitVis    = unitType.trim() ? "" : "visibility:hidden;";
   const ofVis      = (unitNum.trim() || unitTotal.trim()) ? "" : "visibility:hidden;";
@@ -1608,8 +1621,9 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   const areaVis    = area.trim() ? "" : "visibility:hidden;";
   const statusVis  = status.trim() ? "" : "visibility:hidden;";
 
-  const orderRow = `<div class="order-row" style="${orderVis}"><span class="section-title">Sales Order</span><div class="order-input-row"><div class="order-input">${escapeHtml(orderNumber)}</div>${orderQr ? `<div class="qr-box"><img src="${orderQr}" alt="Order QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
-  const projectRow = `<div class="project-row" style="${projectVis}"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div>${projectQr ? `<div class="qr-box"><img src="${projectQr}" alt="Project QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
+  const orderRow = `<div class="order-row" style="${topVis}"><span class="section-title">${escapeHtml(topTitle)}</span><div class="order-input-row"><div class="order-input">${escapeHtml(topValue)}</div>${topQr ? `<div class="qr-box"><img src="${topQr}" alt="QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
+  const jobRow = `<div class="job-row" style="${secondVis}"><span class="section-title">${escapeHtml(secondTitle)}</span><div class="job-input-row"><div class="job-input">${escapeHtml(secondValue)}</div>${secondQr ? `<div class="qr-box"><img src="${secondQr}" alt="QR"/></div>` : `<div class="qr-box"></div>`}</div></div>`;
+  const projectRow = `<div class="project-row" style="${projectVis}"><span class="section-title">Project</span><div class="project-input-row"><div class="project-input">${escapeHtml(project)}</div></div></div>`;
 
   const unitCell = `<div class="meta-cell unit-cell" style="${unitVis}"><span class="meta-label">Unit:</span><span class="unit-select">${escapeHtml(unitType)}</span></div>`;
   const ofCell = `<div class="meta-cell of-cell" style="${ofVis}">
@@ -1631,13 +1645,16 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; color: #000; }
   .label { width: 6in; height: 4in; border: 3px solid #000; display: flex; flex-direction: column; overflow: hidden; }
   .section-title { font-size: 16px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 1px; line-height: 1; margin-bottom: 2px; }
-  .order-row { border-bottom: 3px solid #000; padding: 6px 14px 4px 14px; display: flex; flex-direction: column; }
+  .order-row { border-bottom: 3px solid #000; padding: 4px 14px 3px 14px; display: flex; flex-direction: column; }
   .order-input-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
-  .order-input { font-size: 88px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.05; color: #000; }
-  .project-row { border-bottom: 3px solid #000; padding: 6px 14px 8px 14px; min-height: 90px; display: flex; flex-direction: column; }
+  .order-input { font-size: 64px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.0; color: #000; }
+  .job-row { border-bottom: 3px solid #000; padding: 4px 14px 3px 14px; display: flex; flex-direction: column; }
+  .job-input-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+  .job-input { flex: 1; min-width: 0; font-size: 42px; font-weight: 900; font-family: "Arial Black", Arial, sans-serif; line-height: 1.0; color: #000; }
+  .project-row { border-bottom: 3px solid #000; padding: 4px 14px 6px 14px; display: flex; flex-direction: column; }
   .project-input-row { display: flex; align-items: flex-start; gap: 10px; }
   .project-input { flex: 1; min-width: 0; font-size: 36px; font-weight: 700; line-height: 1.15; word-break: break-word; }
-  .qr-box { width: 82px; height: 82px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .qr-box { width: 64px; height: 64px; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
   .qr-box img { width: 100%; height: 100%; }
   .meta-row { border-bottom: 3px solid #000; display: flex; align-items: stretch; }
   .meta-cell { display: flex; align-items: center; padding: 6px 10px; gap: 6px; }
@@ -1661,6 +1678,7 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
 </style></head><body>
 <div class="label">
   ${orderRow}
+  ${jobRow}
   ${projectRow}
   ${metaRow}
   ${bottomRow}
@@ -1669,11 +1687,12 @@ function buildUnit4x6Doc(opts: Unit4x6Opts): string {
 }
 
 async function printUnit4x6(opts: Unit4x6Opts) {
-  const [orderQr, projectQr] = await Promise.all([
+  const [orderQr, jobQr, projectQr] = await Promise.all([
     opts.orderNumber.trim() ? cachedQr(opts.orderNumber.trim()) : Promise.resolve(""),
+    opts.jobNumber.trim() ? cachedQr(opts.jobNumber.trim()) : Promise.resolve(""),
     opts.project.trim() ? cachedQr(opts.project.trim()) : Promise.resolve(""),
   ]);
-  const doc = buildUnit4x6Doc({ ...opts, orderQr, projectQr }).replace(
+  const doc = buildUnit4x6Doc({ ...opts, orderQr, jobQr, projectQr }).replace(
     "</body></html>",
     `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
   );

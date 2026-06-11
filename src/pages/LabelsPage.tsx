@@ -1982,21 +1982,24 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
-            <Label htmlFor="pack-so">SO Number <Req /></Label>
+            <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-so"
               value={soNumbers[0] ?? ""}
-              onChange={(e) => setSoNumbers([e.target.value])}
+              onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("so") && invalidCls)}
             />
+            <div className="text-[10px] text-muted-foreground">Required unless Job Number is provided.</div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pack-job">Job Number</Label>
+            <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-job"
               value={jobNumbers[0] ?? ""}
-              onChange={(e) => setJobNumbers([e.target.value])}
+              onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
+              className={cls(missing.has("job") && invalidCls)}
             />
+            <div className="text-[10px] text-muted-foreground">Required unless SO Number is provided.</div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>

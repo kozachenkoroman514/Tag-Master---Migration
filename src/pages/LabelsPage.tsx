@@ -1172,6 +1172,7 @@ const ScanPicklistDialog = ({
       })();
       setPackUnit({ soNumber, jobNumber: "", project, unitType, unitNum: "1", unitTotal: "1", needByDate, priority: "" });
       const pm = new Set<string>();
+      // SO is required only if Job is not provided (and vice versa). Initially job is empty, so flag SO if missing.
       if (!soNumber.trim()) pm.add("soNumber");
       if (!project.trim()) pm.add("project");
       if (!String(pu?.unitIndicator ?? "").trim()) pm.add("unitType");

@@ -2340,7 +2340,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   // Conservative per-label character budgets that match the .huge font on each size.
   const maxChars = size === "2x4" ? 110 : 160;
   const chunks = chunkMiscText(text, maxChars);
-  const previewHtml = buildGenericDoc("Misc Label", buildBody(chunks[0] ?? ""), size);
+  const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c), size));
 
   const handlePrint = async () => {
     const m = new Set<string>();
@@ -2382,11 +2382,30 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           />
           {chunks.length > 1 && (
             <p className="text-xs text-muted-foreground">
-              Text exceeds one label — will print {chunks.length} labels. Preview shows label 1 of {chunks.length}.
+              Text exceeds one label — will print {chunks.length} labels.
             </p>
           )}
           </div>
-          <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
+          <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+              Live preview{previewDocs.length > 1 ? ` (${previewDocs.length} labels)` : ""}
+            </div>
+            <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-4 py-1">
+              {previewDocs.map((html, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  {previewDocs.length > 1 && (
+                    <div className="text-[10px] text-muted-foreground font-semibold">
+                      Label {i + 1} of {previewDocs.length}
+                    </div>
+                  )}
+                  <LabelPreview html={html} size={size} landscape={size === "2x4"} />
+                </div>
+              ))}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

@@ -25,6 +25,22 @@ const Svg = ({ children, className }: { children: React.ReactNode; className?: s
   </svg>
 );
 
+/* Outline-only Svg (no fill) used by the refreshed Bug + Settings icons. */
+const OutlineSvg = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <svg
+    viewBox="0 0 64 64"
+    className={className}
+    fill="none"
+    stroke={W}
+    strokeWidth={3}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {children}
+  </svg>
+);
+
 /* ============ ILD — delivery truck ============ */
 export const ILDIcon = ({ className }: Props) => (
   <Svg className={className}>
@@ -97,52 +113,52 @@ export const NotificationsIcon = ({ className }: Props) => (
   </Svg>
 );
 
-/* ============ Bug Report — bug ============ */
+/* ============ Bug Report — outline bug (rounded head + oval body, splayed legs) ============ */
 export const BugIcon = ({ className }: Props) => (
-  <Svg className={className}>
-    {/* legs */}
-    <path d="M20 30 L8 24" strokeWidth={4} fill="none" />
-    <path d="M20 38 L6 38" strokeWidth={4} fill="none" />
-    <path d="M20 46 L8 52" strokeWidth={4} fill="none" />
-    <path d="M44 30 L56 24" strokeWidth={4} fill="none" />
-    <path d="M44 38 L58 38" strokeWidth={4} fill="none" />
-    <path d="M44 46 L56 52" strokeWidth={4} fill="none" />
+  <OutlineSvg className={className}>
     {/* antennae */}
-    <path d="M26 18 L22 8" strokeWidth={4} fill="none" />
-    <path d="M38 18 L42 8" strokeWidth={4} fill="none" />
+    <path d="M26 14 L22 6" />
+    <path d="M38 14 L42 6" />
+    {/* head */}
+    <circle cx="32" cy="20" r="8" />
     {/* body */}
-    <ellipse cx="32" cy="38" rx="14" ry="16" />
-  </Svg>
+    <ellipse cx="32" cy="40" rx="13" ry="17" />
+    {/* center stripe */}
+    <path d="M32 28 L32 56" />
+    {/* left legs */}
+    <path d="M19 32 L8 28" />
+    <path d="M19 40 L6 40" />
+    <path d="M19 48 L9 55" />
+    {/* right legs */}
+    <path d="M45 32 L56 28" />
+    <path d="M45 40 L58 40" />
+    <path d="M45 48 L55 55" />
+  </OutlineSvg>
 );
 
-/* ============ Settings — gear ============ */
-export const SettingsIcon = ({ className }: Props) => {
-  const cx = 32;
-  const cy = 32;
-  const teeth = 8;
-  const inner = 16;
-  const outer = 26;
-  const tickW = 8;
-  const tickPaths = Array.from({ length: teeth }, (_, i) => {
-    const a = (i / teeth) * Math.PI * 2;
-    const x1 = cx + inner * Math.cos(a);
-    const y1 = cy + inner * Math.sin(a);
-    const x2 = cx + outer * Math.cos(a);
-    const y2 = cy + outer * Math.sin(a);
-    const px = -Math.sin(a) * (tickW / 2);
-    const py = Math.cos(a) * (tickW / 2);
-    return `M${x1 + px},${y1 + py} L${x2 + px},${y2 + py} L${x2 - px},${y2 - py} L${x1 - px},${y1 - py} Z`;
-  }).join(" ");
-
-  return (
-    <Svg className={className}>
-      {/* teeth */}
-      <path d={tickPaths} />
-      {/* body with center hole (even-odd) */}
-      <path
-        d={`M${cx + inner},${cy} a${inner},${inner} 0 1,1 -${inner * 2},0 a${inner},${inner} 0 1,1 ${inner * 2},0 M${cx + 6},${cy} a6,6 0 1,0 -12,0 a6,6 0 1,0 12,0`}
-        fillRule="evenodd"
-      />
-    </Svg>
-  );
+/* ============ Settings — two outline gears (large back gear + small front gear) ============ */
+const gearPath = (cx: number, cy: number, outer: number, inner: number, teeth = 8) => {
+  // Build a rounded-tooth gear outline by alternating between outer and inner radii.
+  const pts: string[] = [];
+  const steps = teeth * 2;
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2 - Math.PI / 2;
+    const r = i % 2 === 0 ? outer : inner;
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`);
+  }
+  pts.push("Z");
+  return pts.join(" ");
 };
+
+export const SettingsIcon = ({ className }: Props) => (
+  <OutlineSvg className={className}>
+    {/* back / larger gear */}
+    <path d={gearPath(38, 24, 18, 13, 8)} />
+    <circle cx={38} cy={24} r={6} />
+    {/* front / smaller gear */}
+    <path d={gearPath(24, 42, 14, 10, 8)} />
+    <circle cx={24} cy={42} r={4.5} />
+  </OutlineSvg>
+);

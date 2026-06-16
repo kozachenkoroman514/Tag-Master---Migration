@@ -20,19 +20,19 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
 );
 
 const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
-  const gold = "hsl(43 90% 50%)";
   const white = "hsl(0 0% 100%)";
+  const gray = "hsl(0 0% 85%)";
   return (
     <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* back label — gold */}
-      <rect x={10} y={8} width={38} height={24} rx={4} fill={gold} transform="rotate(12 29 20)" />
-      <line x1={16} y1={16} x2={42} y2={16} stroke="hsl(43 90% 70%)" strokeWidth={2} transform="rotate(12 29 20)" />
-      <line x1={16} y1={21} x2={38} y2={21} stroke="hsl(43 90% 70%)" strokeWidth={2} transform="rotate(12 29 20)" />
+      {/* back label — light gray, translucent */}
+      <rect x={10} y={8} width={38} height={24} rx={4} fill={gray} fillOpacity={0.6} transform="rotate(12 29 20)" />
+      <line x1={16} y1={16} x2={42} y2={16} stroke={white} strokeOpacity={0.7} strokeWidth={2} transform="rotate(12 29 20)" />
+      <line x1={16} y1={21} x2={38} y2={21} stroke={white} strokeOpacity={0.7} strokeWidth={2} transform="rotate(12 29 20)" />
 
-      {/* front label — white */}
-      <rect x={18} y={22} width={38} height={24} rx={4} fill={white} stroke={gold} strokeWidth={2.5} transform="rotate(-8 37 34)" />
-      <line x1={24} y1={30} x2={50} y2={30} stroke={gold} strokeWidth={2.2} transform="rotate(-8 37 34)" />
-      <line x1={24} y1={36} x2={46} y2={36} stroke={gold} strokeWidth={2.2} transform="rotate(-8 37 34)" />
+      {/* front label — white, translucent */}
+      <rect x={18} y={22} width={38} height={24} rx={4} fill={white} fillOpacity={0.9} transform="rotate(-8 37 34)" />
+      <line x1={24} y1={30} x2={50} y2={30} stroke={gray} strokeOpacity={0.8} strokeWidth={2.2} transform="rotate(-8 37 34)" />
+      <line x1={24} y1={36} x2={46} y2={36} stroke={gray} strokeOpacity={0.8} strokeWidth={2.2} transform="rotate(-8 37 34)" />
     </svg>
   );
 };

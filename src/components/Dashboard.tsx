@@ -1197,8 +1197,8 @@ const Dashboard = ({ fullscreen = false, onToggleFullscreen }: Props) => {
             <div className="space-y-3 py-2">
               <p className="text-sm text-muted-foreground">
                 {packagingType === "combo"
-                  ? "Combo request: custom calculation form will go here. Submission will later be linked to the Woodshop Manager via API."
-                  : `${packagingType === "crate" ? "Crate" : "Pallet"} request form placeholder. Submission will later be linked to the Woodshop Manager via API.`}
+                  ? "Combo request: custom calculation form will go here. Submission will later be linked to the the production system via API."
+                  : `${packagingType === "crate" ? "Crate" : "Pallet"} request form placeholder. Submission will later be linked to the the production system via API.`}
               </p>
               <div className="rounded-md border border-dashed border-border p-4 text-xs text-muted-foreground">
                 Selected line items from the order will be attached to this request to drive paperwork notation.

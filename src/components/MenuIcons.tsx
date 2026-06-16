@@ -1,12 +1,10 @@
 /**
- * Menu icons — glassmorphic overlap style.
- * Translucent white / light gray filled shapes, no heavy strokes.
+ * Menu icons — bold solid filled "Streamline" style.
+ * Single-color white silhouettes with thick chunky shapes.
  * Selection state is handled by the parent (outlined rounded-square), NOT by recoloring.
  */
 
 const W = "hsl(0 0% 100%)";
-const G = "hsl(0 0% 90%)";
-const G2 = "hsl(0 0% 80%)";
 
 interface Props {
   className?: string;
@@ -17,7 +15,8 @@ const Svg = ({ children, className }: { children: React.ReactNode; className?: s
   <svg
     viewBox="0 0 64 64"
     className={className}
-    fill="none"
+    fill={W}
+    stroke={W}
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -29,106 +28,90 @@ const Svg = ({ children, className }: { children: React.ReactNode; className?: s
 /* ============ ILD — delivery truck ============ */
 export const ILDIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* truck body */}
-    <rect x="6" y="18" width="34" height="26" rx="5" fill={W} fillOpacity={0.9} />
+    {/* cargo box */}
+    <path d="M4 18 h32 v22 h-32 z" />
     {/* cab */}
-    <path d="M34 24 H48 L58 34 V44 H34 Z" fill={G} fillOpacity={0.75} />
-    {/* cargo window */}
-    <rect x="38" y="28" width="9" height="6" rx="2" fill={W} fillOpacity={0.5} />
-    {/* wheels */}
-    <circle cx="18" cy="48" r="6" fill={W} fillOpacity={0.95} />
-    <circle cx="48" cy="48" r="6" fill={W} fillOpacity={0.95} />
-    {/* small detail line */}
-    <rect x="10" y="24" width="22" height="3" rx="1.5" fill={W} fillOpacity={0.35} />
+    <path d="M36 24 h12 l10 10 v6 h-22 z" />
+    {/* axle bar */}
+    <rect x="4" y="40" width="56" height="3" />
+    {/* wheels (hollow via even-odd-ish: draw circle then hole) */}
+    <path d="M18 54 a6 6 0 1 1 0.001 0 z M18 50 a2 2 0 1 0 0.001 0 z" fillRule="evenodd" />
+    <path d="M48 54 a6 6 0 1 1 0.001 0 z M48 50 a2 2 0 1 0 0.001 0 z" fillRule="evenodd" />
   </Svg>
 );
 
 /* ============ IMD — shelving / inventory ============ */
 export const IMDIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* back upright */}
-    <rect x="12" y="8" width="40" height="48" rx="4" fill={G} fillOpacity={0.6} />
+    {/* uprights */}
+    <rect x="6" y="8" width="4" height="48" />
+    <rect x="54" y="8" width="4" height="48" />
     {/* shelves */}
-    <rect x="8" y="14" width="48" height="8" rx="3" fill={W} fillOpacity={0.85} />
-    <rect x="8" y="30" width="48" height="8" rx="3" fill={W} fillOpacity={0.85} />
-    <rect x="8" y="46" width="48" height="8" rx="3" fill={W} fillOpacity={0.85} />
+    <rect x="6" y="14" width="52" height="5" />
+    <rect x="6" y="32" width="52" height="5" />
+    <rect x="6" y="50" width="52" height="5" />
     {/* boxes */}
-    <rect x="14" y="20" width="14" height="10" rx="2" fill={G2} fillOpacity={0.7} />
-    <rect x="34" y="36" width="14" height="10" rx="2" fill={G2} fillOpacity={0.7} />
+    <rect x="14" y="22" width="12" height="9" />
+    <rect x="32" y="40" width="14" height="9" />
   </Svg>
 );
 
 /* ============ Kiosk — monitor on stand ============ */
 export const KioskIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* stand base */}
-    <rect x="18" y="52" width="28" height="6" rx="3" fill={W} fillOpacity={0.85} />
-    {/* stand pole */}
-    <rect x="28" y="42" width="8" height="12" rx="2" fill={G} fillOpacity={0.7} />
-    {/* monitor frame */}
-    <rect x="6" y="8" width="52" height="36" rx="6" fill={W} fillOpacity={0.9} />
-    {/* screen */}
-    <rect x="11" y="13" width="42" height="26" rx="4" fill={G} fillOpacity={0.5} />
-    {/* screen content lines */}
-    <rect x="16" y="19" width="28" height="3" rx="1.5" fill={W} fillOpacity={0.6} />
-    <rect x="16" y="26" width="20" height="3" rx="1.5" fill={W} fillOpacity={0.4} />
+    {/* monitor — outer rect with screen cut-out (even-odd) */}
+    <path
+      d="M6 8 h52 v36 h-52 z M11 13 h42 v26 h-42 z"
+      fillRule="evenodd"
+    />
+    {/* stand */}
+    <rect x="28" y="44" width="8" height="10" />
+    <rect x="18" y="54" width="28" height="5" rx="1" />
   </Svg>
 );
 
 /* ============ Reports — bars + trend ============ */
 export const ReportsIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* back card */}
-    <rect x="8" y="8" width="48" height="48" rx="6" fill={G} fillOpacity={0.5} />
+    {/* axis */}
+    <rect x="6" y="52" width="52" height="4" />
+    <rect x="6" y="10" width="4" height="46" />
     {/* bars */}
-    <rect x="14" y="34" width="10" height="16" rx="3" fill={W} fillOpacity={0.9} />
-    <rect x="27" y="24" width="10" height="26" rx="3" fill={W} fillOpacity={0.8} />
-    <rect x="40" y="14" width="10" height="36" rx="3" fill={W} fillOpacity={0.65} />
-    {/* trend line overlay */}
-    <path d="M14 30 L27 22 L40 14 L52 8" stroke={W} strokeWidth={3} strokeOpacity={0.95} strokeLinecap="round" />
-    <circle cx="14" cy="30" r="3" fill={W} fillOpacity={0.95} />
-    <circle cx="27" cy="22" r="3" fill={W} fillOpacity={0.95} />
-    <circle cx="40" cy="14" r="3" fill={W} fillOpacity={0.95} />
+    <rect x="16" y="36" width="9" height="16" />
+    <rect x="29" y="26" width="9" height="26" />
+    <rect x="42" y="16" width="9" height="36" />
   </Svg>
 );
 
 /* ============ Notifications — bell with waves ============ */
 export const NotificationsIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* side waves */}
-    <path d="M10 28 Q4 36 10 46" stroke={G} strokeWidth={4} strokeOpacity={0.7} strokeLinecap="round" fill="none" />
-    <path d="M54 28 Q60 36 54 46" stroke={G} strokeWidth={4} strokeOpacity={0.7} strokeLinecap="round" fill="none" />
     {/* bell body */}
-    <path d="M16 44 C16 28 24 18 32 18 C40 18 48 28 48 44 Z" fill={W} fillOpacity={0.9} />
-    {/* gong */}
-    <path d="M28 48 Q32 54 36 48" fill={G} fillOpacity={0.7} />
-    {/* handle */}
-    <rect x="28" y="10" width="8" height="10" rx="4" fill={G} fillOpacity={0.8} />
+    <path d="M14 44 C14 26 22 16 32 16 C42 16 50 26 50 44 Z" />
+    {/* base bar */}
+    <rect x="10" y="44" width="44" height="4" rx="1" />
     {/* clapper */}
-    <circle cx="32" cy="38" r="4" fill={G2} fillOpacity={0.85} />
+    <circle cx="32" cy="54" r="4" />
+    {/* top handle */}
+    <rect x="28" y="10" width="8" height="6" rx="2" />
   </Svg>
 );
 
 /* ============ Bug Report — bug ============ */
 export const BugIcon = ({ className }: Props) => (
   <Svg className={className}>
-    {/* left legs */}
-    <path d="M20 30 L8 24" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    <path d="M20 38 L6 38" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    <path d="M20 46 L8 52" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    {/* right legs */}
-    <path d="M44 30 L56 24" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    <path d="M44 38 L58 38" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    <path d="M44 46 L56 52" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
+    {/* legs */}
+    <path d="M20 30 L8 24" strokeWidth={4} fill="none" />
+    <path d="M20 38 L6 38" strokeWidth={4} fill="none" />
+    <path d="M20 46 L8 52" strokeWidth={4} fill="none" />
+    <path d="M44 30 L56 24" strokeWidth={4} fill="none" />
+    <path d="M44 38 L58 38" strokeWidth={4} fill="none" />
+    <path d="M44 46 L56 52" strokeWidth={4} fill="none" />
     {/* antennae */}
-    <path d="M26 18 L22 10" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
-    <path d="M38 18 L42 10" stroke={G} strokeWidth={3.5} strokeLinecap="round" />
+    <path d="M26 18 L22 8" strokeWidth={4} fill="none" />
+    <path d="M38 18 L42 8" strokeWidth={4} fill="none" />
     {/* body */}
-    <ellipse cx="32" cy="38" rx="14" ry="16" fill={W} fillOpacity={0.9} />
-    {/* center stripe */}
-    <rect x="30" y="24" width="4" height="28" rx="2" fill={G} fillOpacity={0.6} />
-    {/* head */}
-    <circle cx="32" cy="18" r="5" fill={G2} fillOpacity={0.8} />
+    <ellipse cx="32" cy="38" rx="14" ry="16" />
   </Svg>
 );
 
@@ -137,9 +120,9 @@ export const SettingsIcon = ({ className }: Props) => {
   const cx = 32;
   const cy = 32;
   const teeth = 8;
-  const inner = 14;
+  const inner = 16;
   const outer = 26;
-  const tickW = 7;
+  const tickW = 8;
   const tickPaths = Array.from({ length: teeth }, (_, i) => {
     const a = (i / teeth) * Math.PI * 2;
     const x1 = cx + inner * Math.cos(a);
@@ -153,12 +136,13 @@ export const SettingsIcon = ({ className }: Props) => {
 
   return (
     <Svg className={className}>
-      {/* gear teeth */}
-      <path d={tickPaths} fill={W} fillOpacity={0.85} />
-      {/* inner ring */}
-      <circle cx={cx} cy={cy} r={inner} fill={G} fillOpacity={0.7} />
-      {/* center hole */}
-      <circle cx={cx} cy={cy} r={6} fill={G2} fillOpacity={0.9} />
+      {/* teeth */}
+      <path d={tickPaths} />
+      {/* body with center hole (even-odd) */}
+      <path
+        d={`M${cx + inner},${cy} a${inner},${inner} 0 1,1 -${inner * 2},0 a${inner},${inner} 0 1,1 ${inner * 2},0 M${cx + 6},${cy} a6,6 0 1,0 -12,0 a6,6 0 1,0 12,0`}
+        fillRule="evenodd"
+      />
     </Svg>
   );
 };

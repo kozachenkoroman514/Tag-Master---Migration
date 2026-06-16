@@ -107,7 +107,7 @@ export const STATUSES: OrderStatus[] = [
   "SHIPPED",
 ];
 
-// Statuses tracked from Woodshop Manager — Next/Back a Stage warnings on these.
+// Statuses tracked from the production system — Next/Back a Stage warnings on these.
 export const WSM_STATUSES: OrderStatus[] = ["ORDERED", "CUTTING", "PENDING", "IN-BUILD"];
 
 export type HoldReason = "Sales Changes" | "Material Issues" | "Other";

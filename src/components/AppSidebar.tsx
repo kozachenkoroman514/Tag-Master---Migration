@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import {
   BugIcon,
   SettingsIcon,
-} from "./NexusMenuIcons";
+} from "./MenuIcons";
 import tagMasterIcon from "@/assets/tag-master-icon.png.asset.json";
 
 const DISABLED_PAGES = {
@@ -21,18 +21,21 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
 
 const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
   const white = "hsl(0 0% 100%)";
-  const gray = "hsl(0 0% 85%)";
   return (
-    <svg viewBox="0 0 64 64" className={className} fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* back label — light gray, translucent */}
-      <rect x={10} y={8} width={38} height={24} rx={4} fill={gray} fillOpacity={0.6} transform="rotate(12 29 20)" />
-      <line x1={16} y1={16} x2={42} y2={16} stroke={white} strokeOpacity={0.7} strokeWidth={2} transform="rotate(12 29 20)" />
-      <line x1={16} y1={21} x2={38} y2={21} stroke={white} strokeOpacity={0.7} strokeWidth={2} transform="rotate(12 29 20)" />
-
-      {/* front label — white, translucent */}
-      <rect x={18} y={22} width={38} height={24} rx={4} fill={white} fillOpacity={0.9} transform="rotate(-8 37 34)" />
-      <line x1={24} y1={30} x2={50} y2={30} stroke={gray} strokeOpacity={0.8} strokeWidth={2.2} transform="rotate(-8 37 34)" />
-      <line x1={24} y1={36} x2={46} y2={36} stroke={gray} strokeOpacity={0.8} strokeWidth={2.2} transform="rotate(-8 37 34)" />
+    <svg viewBox="0 0 64 64" className={className} fill={white} stroke={white} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {/* back label (rotated, solid) */}
+      <g transform="rotate(12 29 20)">
+        <rect x={10} y={8} width={38} height={22} rx={3} />
+      </g>
+      {/* front label — solid with hollow lines via even-odd */}
+      <g transform="rotate(-8 37 34)">
+        <path
+          d="M18 22 h38 v22 h-38 z M24 28 h26 v2 h-26 z M24 34 h22 v2 h-22 z"
+          fillRule="evenodd"
+          fill="hsl(0 0% 15%)"
+        />
+        <rect x={18} y={22} width={38} height={22} rx={3} fill="none" stroke={white} strokeWidth={3} />
+      </g>
     </svg>
   );
 };

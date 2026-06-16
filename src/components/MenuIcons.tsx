@@ -117,12 +117,20 @@ export const NotificationsIcon = ({ className }: Props) => (
   </Svg>
 );
 
-/* ============ Bug Report — pulled from Woodshop Manager (lucide-react Bug) ============ */
+/* ============ Bug Report — bold PNG icon ============ */
 export const BugIcon = ({ className }: Props) => (
-  <Bug className={className} strokeWidth={2} />
+  <img
+    src={bugIcon.url}
+    alt="Bug Report"
+    className={`${className ?? ""} object-contain`}
+  />
 );
 
-/* ============ Settings — pulled from Woodshop Manager (lucide-react Settings) ============ */
+/* ============ Settings — bold PNG icon ============ */
 export const SettingsIcon = ({ className }: Props) => (
-  <Settings className={className} strokeWidth={2} />
+  <img
+    src={settingsIcon.url}
+    alt="Settings"
+    className={`${className ?? ""} object-contain`}
+  />
 );

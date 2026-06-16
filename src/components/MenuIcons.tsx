@@ -1,4 +1,5 @@
-import { Bug, Settings } from "lucide-react";
+import bugIcon from "@/assets/bug-icon.png.asset.json";
+import settingsIcon from "@/assets/settings-icon.png.asset.json";
 
 /**
  * Menu icons — bold solid filled "Streamline" style.
@@ -115,12 +116,20 @@ export const NotificationsIcon = ({ className }: Props) => (
   </Svg>
 );
 
-/* ============ Bug Report — pulled from Woodshop Manager (lucide-react Bug) ============ */
+/* ============ Bug Report — bold PNG icon ============ */
 export const BugIcon = ({ className }: Props) => (
-  <Bug className={className} strokeWidth={2} />
+  <img
+    src={bugIcon.url}
+    alt="Bug Report"
+    className={`${className ?? ""} object-contain`}
+  />
 );
 
-/* ============ Settings — pulled from Woodshop Manager (lucide-react Settings) ============ */
+/* ============ Settings — bold PNG icon ============ */
 export const SettingsIcon = ({ className }: Props) => (
-  <Settings className={className} strokeWidth={2} />
+  <img
+    src={settingsIcon.url}
+    alt="Settings"
+    className={`${className ?? ""} object-contain`}
+  />
 );

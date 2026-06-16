@@ -22,20 +22,30 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
 const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
   const white = "hsl(0 0% 100%)";
   return (
-    <svg viewBox="0 0 64 64" className={className} fill={white} stroke={white} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {/* back label (rotated, solid) */}
-      <g transform="rotate(12 29 20)">
-        <rect x={10} y={8} width={38} height={22} rx={3} />
-      </g>
-      {/* front label — solid with hollow lines via even-odd */}
-      <g transform="rotate(-8 37 34)">
-        <path
-          d="M18 22 h38 v22 h-38 z M24 28 h26 v2 h-26 z M24 34 h22 v2 h-22 z"
-          fillRule="evenodd"
-          fill="hsl(0 0% 15%)"
-        />
-        <rect x={18} y={22} width={38} height={22} rx={3} fill="none" stroke={white} strokeWidth={3} />
-      </g>
+    <svg
+      viewBox="0 0 64 64"
+      className={className}
+      fill="none"
+      stroke={white}
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {/* back-most sheet */}
+      <rect x={18} y={20} width={36} height={28} rx={2} />
+      {/* middle sheet */}
+      <rect x={13} y={15} width={36} height={28} rx={2} />
+      {/* front sheet with folded corner */}
+      <path d="M14 10 H38 L46 18 V38 H8 V10 Z" />
+      <path d="M38 10 V18 H46" />
+      {/* text lines */}
+      <path d="M14 24 H30" />
+      <path d="M33 24 H40" />
+      <path d="M14 29 H40" />
+      <path d="M14 33 H36" />
+      {/* bottom dotted/perforated row */}
+      <path d="M13 38 H41" strokeDasharray="2 2" />
     </svg>
   );
 };

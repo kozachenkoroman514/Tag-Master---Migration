@@ -4,7 +4,7 @@ import {
   BugIcon,
   SettingsIcon,
 } from "./MenuIcons";
-import tagMasterIcon from "@/assets/tag-master-icon.png.asset.json";
+import tagMasterIcon from "@/assets/printer-icon.png.asset.json";
 
 const DISABLED_PAGES = {
   bugReport: true,

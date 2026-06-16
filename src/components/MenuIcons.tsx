@@ -1,5 +1,4 @@
-import bugIcon from "@/assets/bug-icon.png.asset.json";
-import settingsIcon from "@/assets/settings-icon.png.asset.json";
+import { Bug, Settings } from "lucide-react";
 
 /**
  * Menu icons — bold solid filled "Streamline" style.
@@ -118,18 +117,10 @@ export const NotificationsIcon = ({ className }: Props) => (
 
 /* ============ Bug Report — bold PNG icon ============ */
 export const BugIcon = ({ className }: Props) => (
-  <img
-    src={bugIcon.url}
-    alt="Bug Report"
-    className={`${className ?? ""} object-contain`}
-  />
+  <Bug className={className} strokeWidth={2} aria-hidden="true" />
 );
 
 /* ============ Settings — bold PNG icon ============ */
 export const SettingsIcon = ({ className }: Props) => (
-  <img
-    src={settingsIcon.url}
-    alt="Settings"
-    className={`${className ?? ""} object-contain`}
-  />
+  <Settings className={className} strokeWidth={2} aria-hidden="true" />
 );

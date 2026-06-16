@@ -1,4 +1,3 @@
-import { Bug, Settings } from "lucide-react";
 import bugIcon from "@/assets/bug-icon.png.asset.json";
 import settingsIcon from "@/assets/settings-icon.png.asset.json";
 

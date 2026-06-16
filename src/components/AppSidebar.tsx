@@ -5,6 +5,7 @@ import {
   SettingsIcon,
 } from "./MenuIcons";
 import tagMasterIcon from "@/assets/printer-icon.png.asset.json";
+import labelIcon from "@/assets/label-icon.png.asset.json";
 
 const DISABLED_PAGES = {
   bugReport: true,

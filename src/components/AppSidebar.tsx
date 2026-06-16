@@ -5,6 +5,7 @@ import {
   SettingsIcon,
 } from "./MenuIcons";
 import tagMasterIcon from "@/assets/printer-icon.png.asset.json";
+import labelIcon from "@/assets/label-icon.png.asset.json";
 
 const DISABLED_PAGES = {
   bugReport: true,
@@ -19,36 +20,13 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
   />
 );
 
-const LabelsMenuIcon = ({ className }: { className?: string; active?: boolean }) => {
-  const white = "hsl(0 0% 100%)";
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      className={className}
-      fill="none"
-      stroke={white}
-      strokeWidth={2.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {/* back-most sheet */}
-      <rect x={18} y={20} width={36} height={28} rx={2} />
-      {/* middle sheet */}
-      <rect x={13} y={15} width={36} height={28} rx={2} />
-      {/* front sheet with folded corner */}
-      <path d="M14 10 H38 L46 18 V38 H8 V10 Z" />
-      <path d="M38 10 V18 H46" />
-      {/* text lines */}
-      <path d="M14 24 H30" />
-      <path d="M33 24 H40" />
-      <path d="M14 29 H40" />
-      <path d="M14 33 H36" />
-      {/* bottom dotted/perforated row */}
-      <path d="M13 38 H41" strokeDasharray="2 2" />
-    </svg>
-  );
-};
+const LabelsMenuIcon = ({ className }: { className?: string }) => (
+  <img
+    src={labelIcon.url}
+    alt="Labels"
+    className={`${className ?? ""} object-contain`}
+  />
+);
 import ThemeToggle from "./ThemeToggle";
 
 const SIDEBAR_W = "w-[100px]";
@@ -63,7 +41,7 @@ const AppSidebar = () => {
   const location = useLocation();
 
   const topItems: NavItem[] = [
-    { to: "/", label: "Labels", icon: (a) => <LabelsMenuIcon className="w-11 h-11" active={a} /> },
+    { to: "/", label: "Labels", icon: (a) => <LabelsMenuIcon className="w-11 h-11" /> },
   ];
   const bottomItems: NavItem[] = [
     { to: "/settings", label: "Settings", icon: (a) => <SettingsIcon className="w-11 h-11" active={a} /> },

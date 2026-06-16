@@ -1,3 +1,5 @@
+import { Bug, Settings } from "lucide-react";
+
 /**
  * Menu icons — bold solid filled "Streamline" style.
  * Single-color white silhouettes with thick chunky shapes.
@@ -113,52 +115,12 @@ export const NotificationsIcon = ({ className }: Props) => (
   </Svg>
 );
 
-/* ============ Bug Report — outline bug (rounded head + oval body, splayed legs) ============ */
+/* ============ Bug Report — pulled from Woodshop Manager (lucide-react Bug) ============ */
 export const BugIcon = ({ className }: Props) => (
-  <OutlineSvg className={className}>
-    {/* antennae */}
-    <path d="M26 14 L22 6" />
-    <path d="M38 14 L42 6" />
-    {/* head */}
-    <circle cx="32" cy="20" r="8" />
-    {/* body */}
-    <ellipse cx="32" cy="40" rx="13" ry="17" />
-    {/* center stripe */}
-    <path d="M32 28 L32 56" />
-    {/* left legs */}
-    <path d="M19 32 L8 28" />
-    <path d="M19 40 L6 40" />
-    <path d="M19 48 L9 55" />
-    {/* right legs */}
-    <path d="M45 32 L56 28" />
-    <path d="M45 40 L58 40" />
-    <path d="M45 48 L55 55" />
-  </OutlineSvg>
+  <Bug className={className} strokeWidth={2} />
 );
 
-/* ============ Settings — two outline gears (large back gear + small front gear) ============ */
-const gearPath = (cx: number, cy: number, outer: number, inner: number, teeth = 8) => {
-  // Build a rounded-tooth gear outline by alternating between outer and inner radii.
-  const pts: string[] = [];
-  const steps = teeth * 2;
-  for (let i = 0; i < steps; i++) {
-    const a = (i / steps) * Math.PI * 2 - Math.PI / 2;
-    const r = i % 2 === 0 ? outer : inner;
-    const x = cx + r * Math.cos(a);
-    const y = cy + r * Math.sin(a);
-    pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`);
-  }
-  pts.push("Z");
-  return pts.join(" ");
-};
-
+/* ============ Settings — pulled from Woodshop Manager (lucide-react Settings) ============ */
 export const SettingsIcon = ({ className }: Props) => (
-  <OutlineSvg className={className}>
-    {/* back / larger gear */}
-    <path d={gearPath(38, 24, 18, 13, 8)} />
-    <circle cx={38} cy={24} r={6} />
-    {/* front / smaller gear */}
-    <path d={gearPath(24, 42, 14, 10, 8)} />
-    <circle cx={24} cy={42} r={4.5} />
-  </OutlineSvg>
+  <Settings className={className} strokeWidth={2} />
 );

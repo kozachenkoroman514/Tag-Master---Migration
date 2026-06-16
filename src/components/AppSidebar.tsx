@@ -41,7 +41,7 @@ const AppSidebar = () => {
   const location = useLocation();
 
   const topItems: NavItem[] = [
-    { to: "/", label: "Labels", icon: (a) => <LabelsMenuIcon className="w-11 h-11" active={a} /> },
+    { to: "/", label: "Labels", icon: (a) => <LabelsMenuIcon className="w-11 h-11" /> },
   ];
   const bottomItems: NavItem[] = [
     { to: "/settings", label: "Settings", icon: (a) => <SettingsIcon className="w-11 h-11" active={a} /> },

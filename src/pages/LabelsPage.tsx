@@ -2592,3 +2592,172 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     </Dialog>
   );
 };
+// ----------------- Inspection Label (4x6 only) -----------------
+type Inspection4x6Opts = { rma: string; date: string };
+
+function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
+  const parts = (date || "").split("/");
+  const mm = escapeHtml(parts[0] ?? "");
+  const dd = escapeHtml(parts[1] ?? "");
+  const yy = escapeHtml(parts[2] ?? "");
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Inspection Label</title>
+<style>
+  :root{ --ink:#000; --rule:#000; --hint:#8a8a8a; --safe:0.22in; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#fff;}
+  body{font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .sheet{width:6in;height:4in;background:#fff;padding:var(--safe);}
+  .label{width:100%;height:100%;color:var(--ink);display:flex;flex-direction:column;overflow:hidden;}
+  .cap{font-size:17px;line-height:1;letter-spacing:.01em;white-space:nowrap;}
+  .cap.sm{font-size:14px;}
+  .fieldline{flex:0 0 auto;min-width:0;display:flex;border-bottom:3px solid var(--rule);}
+  .rma .fieldline{flex:1 1 auto;}
+  .fill{flex:1;width:100%;min-width:0;font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.1;color:var(--ink);background:transparent;border:0;padding:0 .04in 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;}
+  .rule{flex:1;border-bottom:3px solid var(--rule);height:.20in;}
+  .row{display:flex;align-items:flex-end;gap:.07in;}
+  .head{display:flex;gap:.16in;align-items:flex-end;}
+  .head .rma{flex:1 1 auto;min-width:0;display:flex;align-items:flex-end;gap:.07in;}
+  .head .req{flex:0 0 auto;margin-left:auto;display:flex;align-items:flex-end;gap:.07in;}
+  .reqdate{display:flex;align-items:flex-end;gap:.035in;font-size:16px;line-height:1;}
+  .fill.mini{width:.32in;flex:none;text-align:center;padding:0 1px 2px;}
+  .band{height:3px;background:#000;margin:.07in 0 .08in;}
+  .caprow{display:grid;grid-template-columns:1.55in auto 1.0in;gap:.09in;}
+  .init-cap{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:8px;letter-spacing:.12em;text-align:center;grid-column:3;}
+  .daterow{display:grid;grid-template-columns:1.55in auto 1.0in;align-items:center;gap:.09in;margin-bottom:.07in;}
+  .slots{display:flex;align-items:flex-end;gap:.04in;font-size:16px;line-height:1;}
+  .slot{border-bottom:3px solid var(--rule);height:.20in;width:.38in;}
+  .cell{height:.28in;border:3px solid #000;}
+  .foot{margin-top:auto;display:flex;align-items:flex-end;gap:.14in;}
+  .checks{display:flex;flex-direction:column;gap:.06in;}
+  .check{display:flex;align-items:center;gap:.08in;font-size:15px;line-height:1;}
+  .box{width:.20in;height:.20in;border:3px solid #000;flex:none;}
+  .stamp{margin-left:auto;width:1.9in;height:.85in;position:relative;display:flex;align-items:center;justify-content:center;}
+  .corner{position:absolute;width:.26in;height:.26in;}
+  .corner.tl{top:0;left:0;border-top:3px solid #000;border-left:3px solid #000;}
+  .corner.tr{top:0;right:0;border-top:3px solid #000;border-right:3px solid #000;}
+  .corner.bl{bottom:0;left:0;border-bottom:3px solid #000;border-left:3px solid #000;}
+  .corner.br{bottom:0;right:0;border-bottom:3px solid #000;border-right:3px solid #000;}
+  .stamp span:not(.corner){font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:9px;letter-spacing:.14em;color:var(--hint);text-align:center;line-height:1.5;}
+  @page{size:6in 4in;margin:0;}
+  @media print{ html,body{background:#fff;padding:0;margin:0;display:block;} .sheet{page-break-after:avoid;} .stamp span:not(.corner){color:#c4c4c4;} }
+</style></head><body>
+<div class="sheet"><div class="label">
+  <div class="head">
+    <div class="rma"><span class="cap">RMA #:</span><span class="fieldline"><span class="fill">${escapeHtml(rma)}</span></span></div>
+    <div class="req"><span class="cap">REQUEST:</span><span class="reqdate">
+      <span class="fieldline"><span class="fill mini">${mm}</span></span>/<span class="fieldline"><span class="fill mini">${dd}</span></span>/<span class="fieldline"><span class="fill mini">${yy}</span></span>
+    </span></div>
+  </div>
+  <div class="band"></div>
+  <div class="row" style="margin-bottom:.08in;"><span class="cap">CUSTOMER:</span><span class="rule"></span></div>
+  <div class="row" style="margin-bottom:.10in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
+  <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
+  <div class="daterow"><span class="cap sm">INSPECTED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
+  <div class="daterow"><span class="cap sm">DISPOSITIONED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
+  <div class="daterow"><span class="cap sm">BINNED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
+  <div class="foot">
+    <div class="checks">
+      <div class="check"><span class="box"></span>FAIL</div>
+      <div class="check"><span class="box"></span>RTS</div>
+      <div class="check"><span class="box"></span>REPACK</div>
+    </div>
+    <div class="stamp">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <span>RECEIVED<br>STAMP</span>
+    </div>
+  </div>
+</div></div>
+</body></html>`;
+}
+
+function printHtmlDoc(html: string) {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  const doc = html.replace(
+    "</body></html>",
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+  );
+  win.document.write(doc);
+  win.document.close();
+}
+
+const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => {
+  const [rma, setRma] = useState("");
+  const [date, setDate] = useState("");
+
+  const html = buildInspection4x6Doc({ rma, date });
+
+  const reset = () => { setRma(""); setDate(""); };
+
+  const handleClose = (val: boolean) => {
+    if (!val) reset();
+    onOpenChange(val);
+  };
+
+  const handlePrint = () => {
+    printHtmlDoc(html);
+    reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="w-[94vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Inspection Label</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
+          <div className="space-y-4 overflow-y-auto px-2 py-1">
+            <div className="space-y-2">
+              <Label htmlFor="insp-rma">RMA #</Label>
+              <Input id="insp-rma" value={rma} onChange={(e) => setRma(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="insp-date">Request Date (mm/dd/yy)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="insp-date"
+                  placeholder="mm/dd/yy"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="icon" aria-label="Pick a date">
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={(() => {
+                        const d = parse(date, "MM/dd/yy", new Date());
+                        return isValid(d) ? d : undefined;
+                      })()}
+                      onSelect={(d) => d && setDate(format(d, "MM/dd/yy"))}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">All fields are optional.</p>
+          </div>
+          <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+              Live preview
+            </div>
+            <LabelPreview html={html} size="4x6" />
+            <div className="text-[10px] text-muted-foreground">4" × 6" (scaled)</div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button onClick={handlePrint}>Print</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

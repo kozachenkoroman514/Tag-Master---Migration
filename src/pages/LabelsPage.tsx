@@ -27,6 +27,7 @@ import unitLabel2x4Icon from "@/assets/unit-label-2x4-icon.png.asset.json";
 import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
 import statusLabel2x4Icon from "@/assets/status-label-2x4-icon.png.asset.json";
 import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
+import inspectionLabelIcon from "@/assets/inspection-label-icon.png.asset.json";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";
@@ -297,13 +298,14 @@ const MiscIcon = () => (
 );
 
 type LabelSize = "2x4" | "4x6";
-type LabelKind = "part" | "pack-unit" | "status-note" | "misc";
+type LabelKind = "part" | "pack-unit" | "status-note" | "misc" | "inspection";
 
 const FOUR_BY_SIX_ICONS: Record<LabelKind, { url: string }> = {
   "part": partLabelIcon,
   "pack-unit": unitLabelIcon,
   "status-note": statusLabelIcon,
   "misc": sampleLabelIcon,
+  "inspection": inspectionLabelIcon,
 };
 
 const LabelTileIcon = ({ size }: { size: LabelSize }) => {

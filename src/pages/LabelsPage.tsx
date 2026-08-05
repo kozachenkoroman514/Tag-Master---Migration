@@ -408,6 +408,9 @@ const LabelsPage = () => {
               { kind: "pack-unit", label: "Pack Unit", Icon: PackUnitIcon },
               { kind: "status-note", label: "Status Note", Icon: StatusNoteIcon },
               { kind: "misc", label: "Misc", Icon: MiscIcon },
+              ...(size === "4x6"
+                ? [{ kind: "inspection", label: "Inspection", Icon: StatusNoteIcon }]
+                : []),
             ] as { kind: LabelKind; label: string; Icon: React.FC }[]
           ).map((tile) => (
             <button
@@ -474,6 +477,7 @@ const LabelsPage = () => {
         <PackUnitLabelDialog size={size} open={openKind === "pack-unit"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <StatusNoteLabelDialog size={size} open={openKind === "status-note"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <MiscLabelDialog size={size} open={openKind === "misc"} onOpenChange={(o) => !o && setOpenKind(null)} />
+        <InspectionLabelDialog open={openKind === "inspection"} onOpenChange={(o) => !o && setOpenKind(null)} />
         <ScanPicklistDialog open={scanOpen} onOpenChange={setScanOpen} defaultSize={size} />
 
       </main>

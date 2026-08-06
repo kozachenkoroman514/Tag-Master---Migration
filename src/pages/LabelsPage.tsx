@@ -2655,7 +2655,7 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   <div class="band"></div>
   <div class="row" style="margin-bottom:.06in;"><span class="cap">SO/JOB:</span><span class="rule"></span><span class="cap gap">CUSTOMER:</span><span class="rule wide"></span></div>
   <div class="row" style="margin-bottom:.06in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
-  <div class="qtyrow"><span class="cap sm">QUANTITY/UNIT:</span><span class="qtyrule"></span></div>
+  <div class="row" style="margin-bottom:.07in;"><span class="cap sm">QUANTITY/UNIT:</span><span class="rule"></span></div>
   <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
   <div class="daterow"><span class="cap sm">INSPECTED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
   <div class="daterow"><span class="cap sm">DISPOSITIONED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>

@@ -2602,7 +2602,7 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   const yy = escapeHtml(parts[2] ?? "");
   return `<!doctype html><html><head><meta charset="utf-8"><title>Inspection Label</title>
 <style>
-  :root{ --ink:#000; --rule:#000; --hint:#8a8a8a; --safe:0.22in; }
+  :root{ --ink:#000; --rule:#000; --hint:#8a8a8a; --safe:0.22in; --labelcol:1.55in; --slotcol:1.42in; --initcol:1.0in; --colgap:.09in; }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#fff;}
   body{font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
@@ -2613,25 +2613,27 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   .fieldline{flex:0 0 auto;min-width:0;display:flex;border-bottom:3px solid var(--rule);}
   .rma .fieldline{flex:1 1 auto;}
   .fill{flex:1;width:100%;min-width:0;font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.1;color:var(--ink);background:transparent;border:0;padding:0 .04in 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;}
-  .rule{flex:1;border-bottom:3px solid var(--rule);height:.20in;}
+  .rule{flex:1;border-bottom:3px solid var(--rule);height:.19in;}
   .row{display:flex;align-items:flex-end;gap:.07in;}
   .head{display:flex;gap:.16in;align-items:flex-end;}
   .head .rma{flex:1 1 auto;min-width:0;display:flex;align-items:flex-end;gap:.07in;}
   .head .req{flex:0 0 auto;margin-left:auto;display:flex;align-items:flex-end;gap:.07in;}
   .reqdate{display:flex;align-items:flex-end;gap:.035in;font-size:16px;line-height:1;}
   .fill.mini{width:.32in;flex:none;text-align:center;padding:0 1px 2px;}
-  .band{height:3px;background:#000;margin:.07in 0 .08in;}
-  .caprow{display:grid;grid-template-columns:1.55in auto 1.0in;gap:.09in;}
+  .band{height:3px;background:#000;margin:.05in 0 .06in;}
+  .caprow{display:grid;grid-template-columns:var(--labelcol) var(--slotcol) var(--initcol);gap:var(--colgap);}
   .init-cap{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:8px;letter-spacing:.12em;text-align:center;grid-column:3;}
-  .daterow{display:grid;grid-template-columns:1.55in auto 1.0in;align-items:center;gap:.09in;margin-bottom:.07in;}
-  .slots{display:flex;align-items:flex-end;gap:.04in;font-size:16px;line-height:1;}
-  .slot{border-bottom:3px solid var(--rule);height:.20in;width:.38in;}
+  .daterow,.qtyrow{display:grid;grid-template-columns:var(--labelcol) var(--slotcol) var(--initcol);align-items:center;gap:var(--colgap);margin-bottom:.05in;}
+  .qtyrow{margin-bottom:.07in;}
+  .qtyrule{border-bottom:3px solid var(--rule);height:.19in;}
+  .slots{display:flex;align-items:flex-end;gap:.04in;font-size:16px;line-height:1;width:100%;}
+  .slot{border-bottom:3px solid var(--rule);height:.19in;flex:1 1 0;min-width:0;}
   .cell{height:.28in;border:3px solid #000;}
   .foot{margin-top:auto;display:flex;align-items:flex-end;gap:.14in;}
   .checks{display:flex;flex-direction:column;gap:.06in;}
   .check{display:flex;align-items:center;gap:.08in;font-size:15px;line-height:1;}
   .box{width:.20in;height:.20in;border:3px solid #000;flex:none;}
-  .stamp{margin-left:auto;width:1.9in;height:.85in;position:relative;display:flex;align-items:center;justify-content:center;}
+  .stamp{margin-left:auto;width:2.38in;height:1.28in;position:relative;display:flex;align-items:center;justify-content:center;}
   .corner{position:absolute;width:.26in;height:.26in;}
   .corner.tl{top:0;left:0;border-top:3px solid #000;border-left:3px solid #000;}
   .corner.tr{top:0;right:0;border-top:3px solid #000;border-right:3px solid #000;}
@@ -2649,8 +2651,9 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
     </span></div>
   </div>
   <div class="band"></div>
-  <div class="row" style="margin-bottom:.08in;"><span class="cap">CUSTOMER:</span><span class="rule"></span></div>
-  <div class="row" style="margin-bottom:.10in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
+  <div class="row" style="margin-bottom:.06in;"><span class="cap">CUSTOMER:</span><span class="rule"></span></div>
+  <div class="row" style="margin-bottom:.06in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
+  <div class="qtyrow"><span class="cap sm">QUANTITY/UNIT:</span><span class="qtyrule"></span></div>
   <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
   <div class="daterow"><span class="cap sm">INSPECTED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
   <div class="daterow"><span class="cap sm">DISPOSITIONED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>

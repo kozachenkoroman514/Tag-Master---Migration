@@ -2615,6 +2615,8 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   .fill{flex:1;width:100%;min-width:0;font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.1;color:var(--ink);background:transparent;border:0;padding:0 .04in 2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;}
   .rule{flex:1;border-bottom:3px solid var(--rule);height:.19in;}
   .row{display:flex;align-items:flex-end;gap:.07in;}
+  .row .gap{margin-left:.16in;}
+  .rule.wide{flex:1.7;}
   .head{display:flex;gap:.16in;align-items:flex-end;}
   .head .rma{flex:1 1 auto;min-width:0;display:flex;align-items:flex-end;gap:.07in;}
   .head .req{flex:0 0 auto;margin-left:auto;display:flex;align-items:flex-end;gap:.07in;}
@@ -2651,7 +2653,7 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
     </span></div>
   </div>
   <div class="band"></div>
-  <div class="row" style="margin-bottom:.06in;"><span class="cap">CUSTOMER:</span><span class="rule"></span></div>
+  <div class="row" style="margin-bottom:.06in;"><span class="cap">SO/JOB:</span><span class="rule"></span><span class="cap gap">CUSTOMER:</span><span class="rule wide"></span></div>
   <div class="row" style="margin-bottom:.06in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
   <div class="qtyrow"><span class="cap sm">QUANTITY/UNIT:</span><span class="qtyrule"></span></div>
   <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
@@ -2667,7 +2669,6 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
     <div class="stamp">
       <span class="corner tl"></span><span class="corner tr"></span>
       <span class="corner bl"></span><span class="corner br"></span>
-      <span>RECEIVED<br>STAMP</span>
     </div>
   </div>
 </div></div>

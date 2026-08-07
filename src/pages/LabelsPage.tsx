@@ -2602,7 +2602,7 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   const yy = escapeHtml(parts[2] ?? "");
   return `<!doctype html><html><head><meta charset="utf-8"><title>Inspection Label</title>
 <style>
-  :root{ --ink:#000; --rule:#000; --hint:#8a8a8a; --safe:0.22in; --labelcol:1.55in; --slotcol:1.42in; --initcol:1.0in; --colgap:.09in; }
+  :root{ --ink:#000; --rule:#000; --hint:#8a8a8a; --safe:0.22in; --labelcol:1.85in; --slotcol:1.20in; --initcol:.85in; --colgap:.09in; }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:#fff;}
   body{font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
@@ -2622,19 +2622,22 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
   .head .req{flex:0 0 auto;margin-left:auto;display:flex;align-items:flex-end;gap:.07in;}
   .reqdate{display:flex;align-items:flex-end;gap:.035in;font-size:16px;line-height:1;}
   .fill.mini{width:.32in;flex:none;text-align:center;padding:0 1px 2px;}
-  .band{height:3px;background:#000;margin:.05in 0 .06in;}
+  .band{height:3px;background:#000;margin:.04in 0 .05in;}
+  .midblock{display:flex;gap:.14in;align-items:stretch;}
+  .rowsblock{flex:1 1 auto;min-width:0;}
+  .qtypanel{flex:0 0 1.02in;display:flex;flex-direction:column;}
+  .qty-cap{font-family:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:.01em;text-align:center;white-space:nowrap;margin-bottom:.04in;}
+  .qty-box{flex:1;border:3px solid #000;margin-bottom:.04in;}
   .caprow{display:grid;grid-template-columns:var(--labelcol) var(--slotcol) var(--initcol);gap:var(--colgap);}
   .init-cap{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:8px;letter-spacing:.12em;text-align:center;grid-column:3;}
-  .daterow,.qtyrow{display:grid;grid-template-columns:var(--labelcol) var(--slotcol) var(--initcol);align-items:center;gap:var(--colgap);margin-bottom:.05in;}
-  .qtyrow{margin-bottom:.07in;}
-  .qtyrule{border-bottom:3px solid var(--rule);height:.19in;}
+  .daterow{display:grid;grid-template-columns:var(--labelcol) var(--slotcol) var(--initcol);align-items:center;gap:var(--colgap);margin-bottom:.04in;}
   .slots{display:flex;align-items:flex-end;gap:.04in;font-size:16px;line-height:1;width:100%;}
-  .slot{border-bottom:3px solid var(--rule);height:.19in;flex:1 1 0;min-width:0;}
+  .slot{border-bottom:3px solid var(--rule);height:.18in;flex:1 1 0;min-width:0;}
   .cell{height:.28in;border:3px solid #000;}
-  .foot{margin-top:auto;display:flex;align-items:flex-end;gap:.14in;}
-  .checks{display:flex;flex-direction:column;gap:.06in;}
-  .check{display:flex;align-items:center;gap:.08in;font-size:15px;line-height:1;}
-  .box{width:.20in;height:.20in;border:3px solid #000;flex:none;}
+  .foot{margin-top:auto;display:flex;align-items:flex-end;}
+  .checks{display:flex;align-items:center;gap:.24in;margin:0 0 .05in .18in;}
+  .check{display:flex;align-items:center;gap:.07in;font-size:14px;line-height:1;}
+  .box{width:.18in;height:.18in;border:3px solid #000;flex:none;}
   .stamp{margin-left:auto;width:2.38in;height:1.28in;position:relative;display:flex;align-items:center;justify-content:center;}
   .corner{position:absolute;width:.26in;height:.26in;}
   .corner.tl{top:0;left:0;border-top:3px solid #000;border-left:3px solid #000;}
@@ -2648,24 +2651,31 @@ function buildInspection4x6Doc({ rma, date }: Inspection4x6Opts): string {
 <div class="sheet"><div class="label">
   <div class="head">
     <div class="rma"><span class="cap">RMA #:</span><span class="fieldline"><span class="fill">${escapeHtml(rma)}</span></span></div>
-    <div class="req"><span class="cap">REQUEST:</span><span class="reqdate">
+    <div class="req"><span class="cap">RMA REQUESTED:</span><span class="reqdate">
       <span class="fieldline"><span class="fill mini">${mm}</span></span>/<span class="fieldline"><span class="fill mini">${dd}</span></span>/<span class="fieldline"><span class="fill mini">${yy}</span></span>
     </span></div>
   </div>
   <div class="band"></div>
-  <div class="row" style="margin-bottom:.06in;"><span class="cap">SO/JOB:</span><span class="rule"></span><span class="cap gap">CUSTOMER:</span><span class="rule wide"></span></div>
+  <div class="row" style="margin-bottom:.06in;"><span class="cap">SO:</span><span class="rule"></span><span class="cap gap">CUSTOMER:</span><span class="rule wide"></span></div>
   <div class="row" style="margin-bottom:.06in;"><span class="cap">ADDRESS:</span><span class="rule"></span></div>
-  <div class="row" style="margin-bottom:.07in;"><span class="cap sm">QUANTITY/UNIT:</span><span class="rule"></span></div>
-  <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
-  <div class="daterow"><span class="cap sm">INSPECTED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
-  <div class="daterow"><span class="cap sm">DISPOSITIONED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
-  <div class="daterow"><span class="cap sm">BINNED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
-  <div class="foot">
-    <div class="checks">
+  <div class="midblock">
+    <div class="rowsblock">
+      <div class="caprow"><span></span><span></span><span class="init-cap">INITIALS</span></div>
+      <div class="daterow"><span class="cap sm">RMA RECEIVED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
+      <div class="daterow"><span class="cap sm">INSPECTED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
+      <div class="checks">
       <div class="check"><span class="box"></span>FAIL</div>
       <div class="check"><span class="box"></span>RTS</div>
       <div class="check"><span class="box"></span>REPACK</div>
+      </div>
+      <div class="daterow"><span class="cap sm">PROCESSED/BINNED:</span><span class="slots"><i class="slot"></i>/<i class="slot"></i>/<i class="slot"></i></span><span class="cell"></span></div>
     </div>
+    <div class="qtypanel">
+      <div class="qty-cap">QTY / UNIT</div>
+      <div class="qty-box"></div>
+    </div>
+  </div>
+  <div class="foot">
     <div class="stamp">
       <span class="corner tl"></span><span class="corner tr"></span>
       <span class="corner bl"></span><span class="corner br"></span>

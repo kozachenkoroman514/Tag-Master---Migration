@@ -1748,6 +1748,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
+                      name="soNumber"
+                      autoComplete="on"
                       value={packUnit.soNumber}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -1764,6 +1766,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Job #</Label>
                     <Input
+                      name="jobNumber"
+                      autoComplete="on"
                       value={packUnit.jobNumber}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -1780,6 +1784,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1 col-span-2">
                     <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
                     <Input
+                      name="project"
+                      autoComplete="on"
                       value={packUnit.project}
                       onChange={(e) => { setPackUnit({ ...packUnit, project: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("project"); return n; }); }}
                       className={cls("h-8 text-xs", packUnitMissing.has("project") && invalidCls)}
@@ -1804,12 +1810,16 @@ const ScanPicklistDialog = ({
                     <Label className="text-[10px] uppercase text-muted-foreground">N of M</Label>
                     <div className="flex items-center gap-1">
                       <Input
+                        name="unitNum"
+                        autoComplete="on"
                         value={packUnit.unitNum}
                         onChange={(e) => setPackUnit({ ...packUnit, unitNum: e.target.value })}
                         className="h-8 text-xs w-12 px-2"
                       />
                       <span className="text-xs text-muted-foreground">/</span>
                       <Input
+                        name="unitTotal"
+                        autoComplete="on"
                         value={packUnit.unitTotal}
                         onChange={(e) => setPackUnit({ ...packUnit, unitTotal: e.target.value })}
                         className="h-8 text-xs w-12 px-2"
@@ -1819,6 +1829,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Need By</Label>
                     <Input
+                      name="needByDate"
+                      autoComplete="on"
                       value={packUnit.needByDate}
                       onChange={(e) => { setPackUnit({ ...packUnit, needByDate: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("needByDate"); return n; }); }}
                       className={cls("h-8 text-xs", packUnitMissing.has("needByDate") && invalidCls)}

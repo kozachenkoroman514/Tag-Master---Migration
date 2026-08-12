@@ -2781,17 +2781,25 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         <DialogHeader>
           <DialogTitle>Inspection Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="inspection-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
             <div className="space-y-2">
               <Label htmlFor="insp-rma">RMA #</Label>
-              <Input id="insp-rma" value={rma} onChange={(e) => setRma(e.target.value)} />
+              <Input id="insp-rma" name="rma" autoComplete="on" value={rma} onChange={(e) => setRma(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="insp-date">Request Date (mm/dd/yy)</Label>
               <div className="flex gap-2">
                 <Input
                   id="insp-date"
+                  name="requestDate"
+                  autoComplete="on"
                   placeholder="mm/dd/yy"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -2828,9 +2836,10 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

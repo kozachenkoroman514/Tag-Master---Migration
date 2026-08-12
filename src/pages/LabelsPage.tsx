@@ -2516,6 +2516,12 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="status-note-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
@@ -2533,15 +2539,16 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           </div>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Textarea id="reason" name="reason" autoComplete="on" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -2592,11 +2599,19 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="misc-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto px-2 py-1">
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea
             id="misc-text"
+            name="miscText"
+            autoComplete="on"
             value={text}
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
@@ -2629,9 +2644,10 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

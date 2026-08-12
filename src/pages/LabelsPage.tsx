@@ -1651,6 +1651,8 @@ const ScanPicklistDialog = ({
                       <tr key={i} className="border-t border-border align-top">
                         <td className="p-1">
                           <Input
+                            name="partNumber"
+                            autoComplete="on"
                             value={p.partNumber}
                             onChange={(e) => updatePart(i, { partNumber: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`partNumber-${i}`) && invalidCls)}
@@ -1658,6 +1660,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="qty"
+                            autoComplete="on"
                             value={p.qty}
                             onChange={(e) => updatePart(i, { qty: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`qty-${i}`) && invalidCls)}
@@ -1665,6 +1669,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="jobNumber"
+                            autoComplete="on"
                             value={p.jobNumber}
                             onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
                             className="h-8 text-xs"
@@ -1672,6 +1678,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="soNumber"
+                            autoComplete="on"
                             value={p.soNumber}
                             onChange={(e) => updatePart(i, { soNumber: e.target.value })}
                             className="h-8 text-xs"
@@ -1679,6 +1687,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="description"
+                            autoComplete="on"
                             value={p.description}
                             onChange={(e) => updatePart(i, { description: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`description-${i}`) && invalidCls)}
@@ -1686,6 +1696,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="rev"
+                            autoComplete="on"
                             value={p.rev}
                             onChange={(e) => updatePart(i, { rev: e.target.value })}
                             className="h-8 text-xs"
@@ -1693,6 +1705,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="item"
+                            autoComplete="on"
                             value={p.item}
                             onChange={(e) => updatePart(i, { item: e.target.value })}
                             className="h-8 text-xs"

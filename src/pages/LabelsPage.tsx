@@ -2228,12 +2228,20 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="pack-unit-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
             <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-so"
+              name="soNumber"
+              autoComplete="on"
               value={soNumbers[0] ?? ""}
               onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("so") && invalidCls)}
@@ -2244,6 +2252,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-job"
+              name="jobNumber"
+              autoComplete="on"
               value={jobNumbers[0] ?? ""}
               onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("job") && invalidCls)}
@@ -2252,12 +2262,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
-            <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
+            <Input id="proj-id" name="project" autoComplete="on" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Unit Number</Label>
             <div className="flex items-center gap-2">
               <Input
+                name="unitNum"
+                autoComplete="on"
                 placeholder="X"
                 type="number"
                 value={unitX}
@@ -2266,6 +2278,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               />
               <span className="text-muted-foreground">out of</span>
               <Input
+                name="unitTotal"
+                autoComplete="on"
                 placeholder="N"
                 type="number"
                 value={unitN}
@@ -2295,6 +2309,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               <div className="flex gap-2">
                 <Input
                   id="pack-date"
+                  name="labelDate"
+                  autoComplete="on"
                   placeholder="mm/dd"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -2358,9 +2374,10 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

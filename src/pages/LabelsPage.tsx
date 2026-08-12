@@ -1023,6 +1023,12 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="part-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
           {parts.map((p, i) => (
@@ -1041,12 +1047,14 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <>
                 <div className="space-y-2">
                   <Label>Job Number</Label>
-                  <Input value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
+                  <Input name="jobNumber" autoComplete="on" value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
                   <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Qty <Req /></Label>
                   <Input
+                    name="qty"
+                    autoComplete="on"
                     type="number"
                     value={p.qty}
                     onChange={(e) => updatePart(i, { qty: e.target.value })}
@@ -1056,6 +1064,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <div className="space-y-2">
                   <Label>Rev</Label>
                   <Input
+                    name="rev"
+                    autoComplete="on"
                     value={p.rev}
                     onChange={(e) => updatePart(i, { rev: e.target.value })}
                     placeholder="A"
@@ -1065,6 +1075,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <div className="space-y-2">
                   <Label>Part Number <Req /></Label>
                   <Input
+                    name="partNumber"
+                    autoComplete="on"
                     value={p.partNumber}
                     onChange={(e) => updatePart(i, { partNumber: e.target.value })}
                     className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
@@ -1073,6 +1085,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 <div className="space-y-2">
                   <Label>Description <Req /></Label>
                   <Textarea
+                    name="description"
+                    autoComplete="on"
                     value={p.description}
                     onChange={(e) => updatePart(i, { description: e.target.value })}
                     placeholder="Optional description for this part"
@@ -1087,6 +1101,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Job Number</Label>
                     <Input
+                      name="jobNumber"
+                      autoComplete="on"
                       value={p.jobNumber}
                       onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
                     />
@@ -1095,6 +1111,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Part Number <Req /></Label>
                     <Input
+                      name="partNumber"
+                      autoComplete="on"
                       value={p.partNumber}
                       onChange={(e) => updatePart(i, { partNumber: e.target.value })}
                       className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
@@ -1103,6 +1121,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Qty <Req /></Label>
                     <Input
+                      name="qty"
+                      autoComplete="on"
                       type="number"
                       value={p.qty}
                       onChange={(e) => updatePart(i, { qty: e.target.value })}
@@ -1112,6 +1132,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Sales Order / Line / Release</Label>
                     <Input
+                      name="soNumber"
+                      autoComplete="on"
                       value={p.soNumber}
                       onChange={(e) => updatePart(i, { soNumber: e.target.value })}
                       placeholder="455100/2/1"
@@ -1121,6 +1143,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Rev</Label>
                     <Input
+                      name="rev"
+                      autoComplete="on"
                       value={p.rev}
                       onChange={(e) => updatePart(i, { rev: e.target.value })}
                       placeholder="A"
@@ -1130,6 +1154,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   <div className="space-y-2">
                     <Label>Item</Label>
                     <Input
+                      name="item"
+                      autoComplete="on"
                       value={p.item}
                       onChange={(e) => updatePart(i, { item: e.target.value })}
                       placeholder="Mirror"
@@ -1227,9 +1253,10 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -1624,6 +1651,8 @@ const ScanPicklistDialog = ({
                       <tr key={i} className="border-t border-border align-top">
                         <td className="p-1">
                           <Input
+                            name="partNumber"
+                            autoComplete="on"
                             value={p.partNumber}
                             onChange={(e) => updatePart(i, { partNumber: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`partNumber-${i}`) && invalidCls)}
@@ -1631,6 +1660,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="qty"
+                            autoComplete="on"
                             value={p.qty}
                             onChange={(e) => updatePart(i, { qty: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`qty-${i}`) && invalidCls)}
@@ -1638,6 +1669,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="jobNumber"
+                            autoComplete="on"
                             value={p.jobNumber}
                             onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
                             className="h-8 text-xs"
@@ -1645,6 +1678,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="soNumber"
+                            autoComplete="on"
                             value={p.soNumber}
                             onChange={(e) => updatePart(i, { soNumber: e.target.value })}
                             className="h-8 text-xs"
@@ -1652,6 +1687,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="description"
+                            autoComplete="on"
                             value={p.description}
                             onChange={(e) => updatePart(i, { description: e.target.value })}
                             className={cls("h-8 text-xs", missing.has(`description-${i}`) && invalidCls)}
@@ -1659,6 +1696,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="rev"
+                            autoComplete="on"
                             value={p.rev}
                             onChange={(e) => updatePart(i, { rev: e.target.value })}
                             className="h-8 text-xs"
@@ -1666,6 +1705,8 @@ const ScanPicklistDialog = ({
                         </td>
                         <td className="p-1">
                           <Input
+                            name="item"
+                            autoComplete="on"
                             value={p.item}
                             onChange={(e) => updatePart(i, { item: e.target.value })}
                             className="h-8 text-xs"
@@ -1707,6 +1748,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">SO #</Label>
                     <Input
+                      name="soNumber"
+                      autoComplete="on"
                       value={packUnit.soNumber}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -1723,6 +1766,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Job #</Label>
                     <Input
+                      name="jobNumber"
+                      autoComplete="on"
                       value={packUnit.jobNumber}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -1739,6 +1784,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1 col-span-2">
                     <Label className="text-[10px] uppercase text-muted-foreground">Project</Label>
                     <Input
+                      name="project"
+                      autoComplete="on"
                       value={packUnit.project}
                       onChange={(e) => { setPackUnit({ ...packUnit, project: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("project"); return n; }); }}
                       className={cls("h-8 text-xs", packUnitMissing.has("project") && invalidCls)}
@@ -1763,12 +1810,16 @@ const ScanPicklistDialog = ({
                     <Label className="text-[10px] uppercase text-muted-foreground">N of M</Label>
                     <div className="flex items-center gap-1">
                       <Input
+                        name="unitNum"
+                        autoComplete="on"
                         value={packUnit.unitNum}
                         onChange={(e) => setPackUnit({ ...packUnit, unitNum: e.target.value })}
                         className="h-8 text-xs w-12 px-2"
                       />
                       <span className="text-xs text-muted-foreground">/</span>
                       <Input
+                        name="unitTotal"
+                        autoComplete="on"
                         value={packUnit.unitTotal}
                         onChange={(e) => setPackUnit({ ...packUnit, unitTotal: e.target.value })}
                         className="h-8 text-xs w-12 px-2"
@@ -1778,6 +1829,8 @@ const ScanPicklistDialog = ({
                   <div className="space-y-1">
                     <Label className="text-[10px] uppercase text-muted-foreground">Need By</Label>
                     <Input
+                      name="needByDate"
+                      autoComplete="on"
                       value={packUnit.needByDate}
                       onChange={(e) => { setPackUnit({ ...packUnit, needByDate: e.target.value }); setPackUnitMissing((s) => { const n = new Set(s); n.delete("needByDate"); return n; }); }}
                       className={cls("h-8 text-xs", packUnitMissing.has("needByDate") && invalidCls)}
@@ -2201,12 +2254,20 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="pack-unit-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
             <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-so"
+              name="soNumber"
+              autoComplete="on"
               value={soNumbers[0] ?? ""}
               onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("so") && invalidCls)}
@@ -2217,6 +2278,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
             <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
             <Input
               id="pack-job"
+              name="jobNumber"
+              autoComplete="on"
               value={jobNumbers[0] ?? ""}
               onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
               className={cls(missing.has("job") && invalidCls)}
@@ -2225,12 +2288,14 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           </div>
           <div className="space-y-2">
             <Label htmlFor="proj-id">Project ID</Label>
-            <Input id="proj-id" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
+            <Input id="proj-id" name="project" autoComplete="on" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Unit Number</Label>
             <div className="flex items-center gap-2">
               <Input
+                name="unitNum"
+                autoComplete="on"
                 placeholder="X"
                 type="number"
                 value={unitX}
@@ -2239,6 +2304,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               />
               <span className="text-muted-foreground">out of</span>
               <Input
+                name="unitTotal"
+                autoComplete="on"
                 placeholder="N"
                 type="number"
                 value={unitN}
@@ -2268,6 +2335,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               <div className="flex gap-2">
                 <Input
                   id="pack-date"
+                  name="labelDate"
+                  autoComplete="on"
                   placeholder="mm/dd"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -2331,9 +2400,10 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -2472,6 +2542,12 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="status-note-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
           <div className="space-y-2">
@@ -2489,15 +2565,16 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           </div>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Textarea id="reason" name="reason" autoComplete="on" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -2548,11 +2625,19 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="misc-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto px-2 py-1">
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea
             id="misc-text"
+            name="miscText"
+            autoComplete="on"
             value={text}
             onChange={(e) => setText(e.target.value)}
             className={cls(missing.has("text") && invalidCls)}
@@ -2585,9 +2670,10 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -2721,17 +2807,25 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         <DialogHeader>
           <DialogTitle>Inspection Label</DialogTitle>
         </DialogHeader>
+        <form
+          className="contents"
+          name="inspection-label"
+          autoComplete="on"
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+        >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
             <div className="space-y-2">
               <Label htmlFor="insp-rma">RMA #</Label>
-              <Input id="insp-rma" value={rma} onChange={(e) => setRma(e.target.value)} />
+              <Input id="insp-rma" name="rma" autoComplete="on" value={rma} onChange={(e) => setRma(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="insp-date">Request Date (mm/dd/yy)</Label>
               <div className="flex gap-2">
                 <Input
                   id="insp-date"
+                  name="requestDate"
+                  autoComplete="on"
                   placeholder="mm/dd/yy"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -2768,9 +2862,10 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button onClick={handlePrint}>Print</Button>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="submit">Print</Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

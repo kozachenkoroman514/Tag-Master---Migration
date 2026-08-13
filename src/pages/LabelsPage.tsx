@@ -1027,7 +1027,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           className="contents"
           name="part-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+          onSubmit={(e) => { e.preventDefault(); }}
         >
         <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
@@ -1254,7 +1254,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="submit">Print</Button>
+          <Button type="button" onClick={handlePrint}>Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2258,7 +2258,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           className="contents"
           name="pack-unit-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+          onSubmit={(e) => { e.preventDefault(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2401,7 +2401,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="submit">Print</Button>
+          <Button type="button" onClick={handlePrint}>Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2546,7 +2546,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           className="contents"
           name="status-note-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+          onSubmit={(e) => { e.preventDefault(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2572,7 +2572,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="submit">Print</Button>
+          <Button type="button" onClick={handlePrint}>Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2629,7 +2629,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           className="contents"
           name="misc-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+          onSubmit={(e) => { e.preventDefault(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto px-2 py-1">
@@ -2671,7 +2671,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="submit">Print</Button>
+          <Button type="button" onClick={handlePrint}>Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2811,7 +2811,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
           className="contents"
           name="inspection-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
+          onSubmit={(e) => { e.preventDefault(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2863,7 +2863,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="submit">Print</Button>
+          <Button type="button" onClick={handlePrint}>Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>

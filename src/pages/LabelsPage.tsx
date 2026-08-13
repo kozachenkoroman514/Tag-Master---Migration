@@ -40,6 +40,15 @@ const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).j
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
 const Req = () => <span className="text-destructive">*</span>;
 
+// Prevent Enter (e.g. barcode scanners) from submitting/printing.
+// Textareas keep normal newline behavior.
+const blockEnterSubmit = (e: React.KeyboardEvent<HTMLFormElement>) => {
+  if (e.key !== "Enter") return;
+  const t = e.target as HTMLElement | null;
+  if (t && t.tagName === "TEXTAREA") return;
+  e.preventDefault();
+};
+
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
   const pageSize = size === "2x4" ? "4in 2in landscape" : "6in 4in landscape";
@@ -1025,9 +1034,11 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </DialogHeader>
         <form
           className="contents"
+          id="part-label-form"
           name="part-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
@@ -1254,7 +1265,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="part-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2256,9 +2267,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <form
           className="contents"
+          id="pack-unit-label-form"
           name="pack-unit-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2401,7 +2414,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="pack-unit-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2544,9 +2557,11 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         </DialogHeader>
         <form
           className="contents"
+          id="status-note-label-form"
           name="status-note-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2572,7 +2587,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="status-note-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2627,9 +2642,11 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </DialogHeader>
         <form
           className="contents"
+          id="misc-label-form"
           name="misc-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto px-2 py-1">
@@ -2671,7 +2688,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="misc-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2809,9 +2826,11 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </DialogHeader>
         <form
           className="contents"
+          id="inspection-label-form"
           name="inspection-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2863,7 +2882,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="inspection-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>

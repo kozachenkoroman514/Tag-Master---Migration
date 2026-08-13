@@ -40,6 +40,15 @@ const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).j
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
 const Req = () => <span className="text-destructive">*</span>;
 
+// Prevent Enter (e.g. barcode scanners) from submitting/printing.
+// Textareas keep normal newline behavior.
+const blockEnterSubmit = (e: React.KeyboardEvent<HTMLFormElement>) => {
+  if (e.key !== "Enter") return;
+  const t = e.target as HTMLElement | null;
+  if (t && t.tagName === "TEXTAREA") return;
+  e.preventDefault();
+};
+
 // --- Label HTML doc builders (shared by print window + live preview iframe) ---
 function buildGenericDoc(title: string, bodyHtml: string, size: LabelSize): string {
   const pageSize = size === "2x4" ? "4in 2in landscape" : "6in 4in landscape";

@@ -1034,9 +1034,11 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </DialogHeader>
         <form
           className="contents"
+          id="part-label-form"
           name="part-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
           <div className="space-y-6 overflow-y-auto px-2 py-1">
@@ -2265,9 +2267,11 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </DialogHeader>
         <form
           className="contents"
+          id="pack-unit-label-form"
           name="pack-unit-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2553,9 +2557,11 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         </DialogHeader>
         <form
           className="contents"
+          id="status-note-label-form"
           name="status-note-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">
@@ -2636,9 +2642,11 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </DialogHeader>
         <form
           className="contents"
+          id="misc-label-form"
           name="misc-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-2 overflow-y-auto px-2 py-1">
@@ -2818,9 +2826,11 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </DialogHeader>
         <form
           className="contents"
+          id="inspection-label-form"
           name="inspection-label"
           autoComplete="on"
-          onSubmit={(e) => { e.preventDefault(); }}
+          onKeyDown={blockEnterSubmit}
+          onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
         <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
           <div className="space-y-4 overflow-y-auto px-2 py-1">

@@ -1265,7 +1265,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="part-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2414,7 +2414,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="pack-unit-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2587,7 +2587,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="status-note-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2688,7 +2688,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="misc-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>
@@ -2882,7 +2882,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-          <Button type="button" onClick={handlePrint}>Print</Button>
+          <Button type="submit" form="inspection-label-form">Print</Button>
         </DialogFooter>
         </form>
       </DialogContent>

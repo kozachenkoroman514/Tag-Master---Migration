@@ -2625,9 +2625,9 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
     setMissing(m);
     if (m.size) return;
     if (chunks.length <= 1) {
-      await printLabel("Misc Label", buildBody(chunks[0] ?? ""), size);
+      await printLabel("Misc Label", buildBody(chunks[0] ?? "", fontPt), size);
     } else {
-      await printMiscMultiPage("Misc Label", chunks.map(buildBody), size);
+      await printMiscMultiPage("Misc Label", chunks.map((c) => buildBody(c, fontPt)), size);
     }
     setText("");
     setMissing(new Set());

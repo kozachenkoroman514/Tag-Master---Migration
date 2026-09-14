@@ -2600,16 +2600,24 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
 
-  const buildBody = (t: string) => `
+  const buildBody = (t: string, fontPt: number) => `
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
-        <div class="huge wrap center">${escapeHtml(t)}</div>
+        <div class="wrap center" style="font-size:${fontPt}pt;font-weight:800;line-height:1.1;">${escapeHtml(t)}</div>
       </div>`;
-  // Character budgets calibrated to each label's printable area + .huge font,
-  // with a safety margin to prevent overlap into the next page when wrapping
-  // hits long words near the bottom edge.
-  const maxChars = size === "2x4" ? 70 : 95;
+
+  // Font ladder: start at the label's largest size and shrink until the text
+  // fits, with 10pt as the hard floor. Capacity scales ~1/fontSize^2 from the
+  // calibrated base (4x6: 95 chars @ 36pt, 2x4: 70 chars @ 22pt).
+  const baseFont = size === "2x4" ? 22 : 36;
+  const baseChars = size === "2x4" ? 70 : 95;
+  const steps = size === "2x4" ? [22, 18, 15, 12, 10] : [36, 30, 24, 20, 16, 14, 12, 10];
+  const capacityFor = (pt: number) => Math.floor(baseChars * (baseFont / pt) ** 2);
+
+  const len = text.trim().length;
+  const fontPt = steps.find((pt) => len <= capacityFor(pt)) ?? 10;
+  const maxChars = capacityFor(fontPt);
   const chunks = chunkMiscText(text, maxChars);
-  const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c), size));
+  const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c, fontPt), size));
 
   const handlePrint = async () => {
     const m = new Set<string>();

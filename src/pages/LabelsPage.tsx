@@ -19,15 +19,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, CalendarIcon } from "lucide-react";
-import partLabelIcon from "@/assets/part-label-icon.png.asset.json";
-import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png.asset.json";
-import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png.asset.json";
-import unitLabelIcon from "@/assets/unit-label-icon.png.asset.json";
-import unitLabel2x4Icon from "@/assets/unit-label-2x4-icon.png.asset.json";
-import statusLabelIcon from "@/assets/status-label-icon.png.asset.json";
-import statusLabel2x4Icon from "@/assets/status-label-2x4-icon.png.asset.json";
-import sampleLabelIcon from "@/assets/sample-label-icon.png.asset.json";
-import inspectionLabelIcon from "@/assets/inspection-label-icon.png.asset.json";
+import partLabelIcon from "@/assets/part-label-icon.png";
+import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png";
+import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png";
+import unitLabelIcon from "@/assets/unit-label-icon.png";
+import unitLabel2x4Icon from "@/assets/unit-label-2x4-icon.png";
+import statusLabelIcon from "@/assets/status-label-icon.png";
+import statusLabel2x4Icon from "@/assets/status-label-2x4-icon.png";
+import sampleLabelIcon from "@/assets/sample-label-icon.png";
+import inspectionLabelIcon from "@/assets/inspection-label-icon.png";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, parse, isValid } from "date-fns";
@@ -307,7 +307,7 @@ const MiscIcon = () => (
 type LabelSize = "2x4" | "4x6";
 type LabelKind = "part" | "pack-unit" | "status-note" | "misc" | "inspection";
 
-const FOUR_BY_SIX_ICONS: Record<LabelKind, { url: string }> = {
+const FOUR_BY_SIX_ICONS: Record<LabelKind, string> = {
   "part": partLabelIcon,
   "pack-unit": unitLabelIcon,
   "status-note": statusLabelIcon,
@@ -428,31 +428,31 @@ const LabelsPage = () => {
               >
                 {size === "4x6" ? (
                   <img
-                    src={FOUR_BY_SIX_ICONS[tile.kind].url}
+                    src={FOUR_BY_SIX_ICONS[tile.kind]}
                     alt={`${tile.label} 4x6 label`}
                     className="w-full h-full object-contain"
                   />
                 ) : tile.kind === "part" ? (
                   <img
-                    src={partLabel2x4Icon.url}
+                    src={partLabel2x4Icon}
                     alt="Part 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : tile.kind === "misc" ? (
                   <img
-                    src={miscLabel2x4Icon.url}
+                    src={miscLabel2x4Icon}
                     alt="Misc 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : tile.kind === "pack-unit" ? (
                   <img
-                    src={unitLabel2x4Icon.url}
+                    src={unitLabel2x4Icon}
                     alt="Pack Unit 2x4 label"
                     className="w-full h-full object-contain"
                   />
                 ) : tile.kind === "status-note" ? (
                   <img
-                    src={statusLabel2x4Icon.url}
+                    src={statusLabel2x4Icon}
                     alt="Status Note 2x4 label"
                     className="w-full h-full object-contain"
                   />

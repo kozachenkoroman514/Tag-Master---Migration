@@ -4,8 +4,8 @@ import {
   BugIcon,
   SettingsIcon,
 } from "./MenuIcons";
-import tagMasterIcon from "@/assets/printer-icon.png.asset.json";
-import labelIcon from "@/assets/label-icon.png.asset.json";
+import tagMasterIcon from "@/assets/printer-icon.png";
+import labelIcon from "@/assets/label-icon.png";
 
 const DISABLED_PAGES = {
   bugReport: true,
@@ -14,7 +14,7 @@ const DISABLED_PAGES = {
 
 const TagMasterIcon = ({ className }: { className?: string }) => (
   <img
-    src={tagMasterIcon.url}
+    src={tagMasterIcon}
     alt="Tag Master"
     className={`${className ?? ""} object-contain`}
   />
@@ -22,7 +22,7 @@ const TagMasterIcon = ({ className }: { className?: string }) => (
 
 const LabelsMenuIcon = ({ className }: { className?: string }) => (
   <img
-    src={labelIcon.url}
+    src={labelIcon}
     alt="Labels"
     className={`${className ?? ""} object-contain`}
   />

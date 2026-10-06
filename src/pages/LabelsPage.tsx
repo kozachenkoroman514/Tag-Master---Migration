@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, CalendarIcon } from "lucide-react";
+import { Plus, X, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import partLabelIcon from "@/assets/part-label-icon.png";
 import partLabel2x4Icon from "@/assets/part-label-2x4-icon.png";
 import miscLabel2x4Icon from "@/assets/misc-label-2x4-icon.png";
@@ -37,6 +37,9 @@ import QRCode from "qrcode";
 const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 const invalidCls = "ring-2 ring-destructive border-destructive focus-visible:ring-destructive";
 const Req = () => <span className="text-destructive">*</span>;
+const OptionalNote = () => (
+  <p className="text-xs text-muted-foreground">Fields without <Req /> are optional and left off the printed label when blank.</p>
+);
 
 // Prevent Enter (e.g. barcode scanners) from submitting/printing.
 // Textareas keep normal newline behavior.
@@ -164,17 +167,35 @@ async function cachedQr(text: string): Promise<string> {
   return url;
 }
 
+// Shared shell for every label dialog so the form/preview split — and therefore the
+// preview size for a given label size — is identical across label kinds.
+const LABEL_DIALOG_CLS = "w-[96vw] max-w-[1600px] h-[92vh] max-h-[1000px] overflow-hidden flex flex-col";
+const LABEL_DIALOG_BODY_CLS = "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6 flex-1 min-h-0";
+// Forms are laid out to fit without scrolling; the scroll is only a fallback for very small windows.
+const LABEL_FORM_CLS = "min-h-0 overflow-y-auto gold-scroll px-2 py-1";
+
 // Scaled iframe preview of a label HTML document. Sized to actual inches at 96dpi
-// then CSS-transformed to fit the side panel.
-const LabelPreview = ({ html, size, landscape, fixedDisplayW }: { html: string; size: LabelSize; landscape?: boolean; fixedDisplayW?: number }) => {
+// then CSS-transformed to fit the preview pane. When the doc holds several labels
+// (one per printed page), only label `page` is shown so the preview never scrolls.
+const LabelPreview = ({
+  html,
+  size,
+  landscape,
+  page = 0,
+  onPageCount,
+}: {
+  html: string;
+  size: LabelSize;
+  landscape?: boolean;
+  page?: number;
+  onPageCount?: (n: number) => void;
+}) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [scale, setScale] = useState(() => {
-    const nativeW = nativeWFor(size, landscape);
-    const nativeH = nativeHFor(size, landscape);
-    if (fixedDisplayW) return fixedDisplayW / nativeW;
     const estAvailW = 640;
     const estAvailH = 700;
-    return Math.min(estAvailW / nativeW, estAvailH / nativeH);
+    return Math.min(estAvailW / nativeWFor(size, landscape), estAvailH / nativeHFor(size, landscape));
   });
 
   useEffect(() => {
@@ -184,32 +205,49 @@ const LabelPreview = ({ html, size, landscape, fixedDisplayW }: { html: string; 
     const nativeW = nativeWFor(size, landscape);
     const nativeH = nativeHFor(size, landscape);
 
+    // clientWidth/Height are layout sizes, unaffected by the dialog's zoom-in transform.
+    // getBoundingClientRect would capture the mid-animation size and ResizeObserver
+    // never fires again when the transform ends, leaving the preview ~5% too small.
     const update = () => {
-      if (fixedDisplayW) { setScale(fixedDisplayW / nativeW); return; }
-      const rect = el.getBoundingClientRect();
-      const s = Math.min(rect.width / nativeW, rect.height / nativeH);
-      setScale(s);
+      setScale(Math.min(el.clientWidth / nativeW, el.clientHeight / nativeH));
     };
 
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [size, landscape, fixedDisplayW]);
+  }, [size, landscape]);
+
+  const showPage = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc?.body) return;
+    doc.documentElement.style.overflow = "hidden";
+    doc.body.style.overflow = "hidden";
+    const labels = Array.from(doc.querySelectorAll<HTMLElement>(".label"));
+    labels.forEach((el, i) => {
+      el.style.display = labels.length > 1 && i !== page ? "none" : "";
+    });
+    onPageCount?.(Math.max(1, labels.length));
+  }, [page, onPageCount]);
+
+  useEffect(showPage, [showPage]);
 
   const nativeW = nativeWFor(size, landscape);
   const nativeH = nativeHFor(size, landscape);
 
   return (
-    <div ref={wrapperRef} className={fixedDisplayW ? "flex items-center justify-center" : "flex-1 w-full min-h-0 flex items-center justify-center"}>
+    <div ref={wrapperRef} className="flex-1 w-full min-h-0 flex items-center justify-center">
       <div
         className="rounded-md border border-border bg-white overflow-hidden shadow-sm"
         style={{ width: nativeW * scale, height: nativeH * scale }}
       >
         <iframe
+          ref={iframeRef}
           title="Label preview"
           srcDoc={html}
           sandbox="allow-same-origin"
+          scrolling="no"
+          onLoad={showPage}
           style={{
             width: nativeW,
             height: nativeH,
@@ -225,17 +263,62 @@ const LabelPreview = ({ html, size, landscape, fixedDisplayW }: { html: string; 
   );
 };
 
-const PreviewPane = ({ html, size, landscape }: { html: string; size: LabelSize; landscape?: boolean }) => (
-  <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
-    <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-      Live preview
+// `html` is either one doc (which may contain several .label pages) or one doc per label.
+// Multiple labels get a pager instead of a scrolling list, so the preview stays one size.
+const PreviewPane = ({ html, size, landscape }: { html: string | string[]; size: LabelSize; landscape?: boolean }) => {
+  const docs = Array.isArray(html) ? html : null;
+  const [page, setPage] = useState(0);
+  const [docLabelCount, setDocLabelCount] = useState(1);
+  const count = docs ? Math.max(1, docs.length) : docLabelCount;
+  const current = Math.min(page, count - 1);
+  const sizeText = size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)';
+
+  return (
+    <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full min-h-0 overflow-hidden">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
+        Live preview
+      </div>
+      <LabelPreview
+        html={docs ? docs[current] ?? "" : (html as string)}
+        size={size}
+        landscape={landscape}
+        page={docs ? 0 : current}
+        onPageCount={docs ? undefined : setDocLabelCount}
+      />
+      <div className="h-8 flex items-center gap-3 text-xs text-muted-foreground">
+        {count > 1 && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Previous label"
+              disabled={current === 0}
+              onClick={() => setPage(current - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-semibold text-foreground">Label {current + 1} of {count}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Next label"
+              disabled={current === count - 1}
+              onClick={() => setPage(current + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <span aria-hidden>·</span>
+          </>
+        )}
+        <span className="text-[10px]">{sizeText}</span>
+      </div>
     </div>
-    <LabelPreview html={html} size={size} landscape={landscape} />
-    <div className="text-[10px] text-muted-foreground">
-      {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
-    </div>
-  </div>
-);
+  );
+};
 
 // Native iframe dims (in CSS px at 96dpi). 4x6 is always landscape (6w x 4h).
 // 2x4 defaults to portrait (2w x 4h); set landscape=true for 4w x 2h labels.
@@ -894,7 +977,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[96vw] max-w-[1800px] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className={LABEL_DIALOG_CLS}>
         <DialogHeader>
           <DialogTitle>Part Label</DialogTitle>
         </DialogHeader>
@@ -906,11 +989,16 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           onKeyDown={blockEnterSubmit}
           onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
-        <div className="grid grid-cols-[460px_1fr] gap-6 flex-1 overflow-hidden">
-          <div className="space-y-6 overflow-y-auto px-2 py-1">
+        <div className={LABEL_DIALOG_BODY_CLS}>
+          <div className={cls(LABEL_FORM_CLS, "space-y-3")}>
+          <OptionalNote />
+          {/* 4x6 fits two parts side by side so both are visible without scrolling. */}
+          <div className={size === "4x6" ? "grid grid-cols-2 gap-4 items-stretch" : "space-y-4"}>
           {parts.map((p, i) => (
-            <div key={i} className="space-y-4 border border-border rounded-md p-4 relative">
-              <div className="flex items-center justify-between">
+            <div key={i} className="space-y-3 border border-border rounded-md p-4">
+              {/* 2x4 is always a single part, so the "Part 1" header is only shown on 4x6. */}
+              {size === "4x6" && (
+              <div className="flex items-center justify-between h-8">
                 <div className="text-sm font-semibold text-ring uppercase tracking-wide">
                   Part {i + 1}
                 </div>
@@ -920,14 +1008,23 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                   </Button>
                 )}
               </div>
-              {size === "4x6" && (
-                <>
-                <div className="space-y-2">
+              )}
+              <div className="space-y-1.5">
+                <Label>Part Number <Req /></Label>
+                <Input
+                  name="partNumber"
+                  autoComplete="on"
+                  value={p.partNumber}
+                  onChange={(e) => updatePart(i, { partNumber: e.target.value })}
+                  className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
+                />
+              </div>
+              <div className={cls("grid gap-3", size === "4x6" ? "grid-cols-[minmax(0,1fr)_5rem_4rem]" : "grid-cols-[minmax(0,1fr)_6rem]")}>
+                <div className="space-y-1.5">
                   <Label>Job Number</Label>
                   <Input name="jobNumber" autoComplete="on" value={p.jobNumber} onChange={(e) => updatePart(i, { jobNumber: e.target.value })} />
-                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label>Qty <Req /></Label>
                   <Input
                     name="qty"
@@ -938,86 +1035,8 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                     className={cls(missing.has(`qty-${i}`) && invalidCls)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Rev</Label>
-                  <Input
-                    name="rev"
-                    autoComplete="on"
-                    value={p.rev}
-                    onChange={(e) => updatePart(i, { rev: e.target.value })}
-                    placeholder="A"
-                  />
-                  <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Part Number <Req /></Label>
-                  <Input
-                    name="partNumber"
-                    autoComplete="on"
-                    value={p.partNumber}
-                    onChange={(e) => updatePart(i, { partNumber: e.target.value })}
-                    className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description <Req /></Label>
-                  <Textarea
-                    name="description"
-                    autoComplete="on"
-                    value={p.description}
-                    onChange={(e) => updatePart(i, { description: e.target.value })}
-                    placeholder="Optional description for this part"
-                    rows={2}
-                    className={cls(missing.has(`description-${i}`) && invalidCls)}
-                  />
-                </div>
-                </>
-              )}
-              {size === "2x4" && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Job Number</Label>
-                    <Input
-                      name="jobNumber"
-                      autoComplete="on"
-                      value={p.jobNumber}
-                      onChange={(e) => updatePart(i, { jobNumber: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Part Number <Req /></Label>
-                    <Input
-                      name="partNumber"
-                      autoComplete="on"
-                      value={p.partNumber}
-                      onChange={(e) => updatePart(i, { partNumber: e.target.value })}
-                      className={cls(missing.has(`partNumber-${i}`) && invalidCls)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Qty <Req /></Label>
-                    <Input
-                      name="qty"
-                      autoComplete="on"
-                      type="number"
-                      value={p.qty}
-                      onChange={(e) => updatePart(i, { qty: e.target.value })}
-                      className={cls(missing.has(`qty-${i}`) && invalidCls)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Sales Order / Line / Release</Label>
-                    <Input
-                      name="soNumber"
-                      autoComplete="on"
-                      value={p.soNumber}
-                      onChange={(e) => updatePart(i, { soNumber: e.target.value })}
-                      placeholder="455100/2/1"
-                    />
-                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
-                  </div>
-                  <div className="space-y-2">
+                {size === "4x6" && (
+                  <div className="space-y-1.5">
                     <Label>Rev</Label>
                     <Input
                       name="rev"
@@ -1026,21 +1045,59 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                       onChange={(e) => updatePart(i, { rev: e.target.value })}
                       placeholder="A"
                     />
-                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Item</Label>
-                    <Input
-                      name="item"
-                      autoComplete="on"
-                      value={p.item}
-                      onChange={(e) => updatePart(i, { item: e.target.value })}
-                      placeholder="Mirror"
-                    />
-                    <p className="text-xs text-muted-foreground">Optional. Leave blank to omit from the printed label.</p>
+                )}
+              </div>
+              {size === "4x6" && (
+                <div className="space-y-1.5">
+                  <Label>Description <Req /></Label>
+                  <Textarea
+                    name="description"
+                    autoComplete="on"
+                    value={p.description}
+                    onChange={(e) => updatePart(i, { description: e.target.value })}
+                    placeholder="Description for this part"
+                    rows={3}
+                    className={cls("resize-none", missing.has(`description-${i}`) && invalidCls)}
+                  />
+                </div>
+              )}
+              {size === "2x4" && (
+                <>
+                  <div className="grid grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] gap-3">
+                    <div className="space-y-1.5">
+                      <Label>SO / Line / Release</Label>
+                      <Input
+                        name="soNumber"
+                        autoComplete="on"
+                        value={p.soNumber}
+                        onChange={(e) => updatePart(i, { soNumber: e.target.value })}
+                        placeholder="455100/2/1"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Rev</Label>
+                      <Input
+                        name="rev"
+                        autoComplete="on"
+                        value={p.rev}
+                        onChange={(e) => updatePart(i, { rev: e.target.value })}
+                        placeholder="A"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Item</Label>
+                      <Input
+                        name="item"
+                        autoComplete="on"
+                        value={p.item}
+                        onChange={(e) => updatePart(i, { item: e.target.value })}
+                        placeholder="Mirror"
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label>Unit #</Label>
                       <Input
                         type="number"
@@ -1050,7 +1107,7 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                         placeholder="1"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label>Total Units</Label>
                       <Input
                         type="number"
@@ -1122,10 +1179,15 @@ const PartLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             </div>
           ))}
           {size === "4x6" && parts.length < 2 && (
-            <Button type="button" variant="outline" size="sm" onClick={addPart}>
-              <Plus className="h-4 w-4 mr-1" /> Add another part
-            </Button>
+            <button
+              type="button"
+              onClick={addPart}
+              className="rounded-md border border-dashed border-border flex flex-col items-center justify-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide transition-colors hover:border-ring hover:text-ring"
+            >
+              <Plus className="h-6 w-6" /> Add another part
+            </button>
           )}
+          </div>
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
         </div>
@@ -1510,7 +1572,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[96vw] max-w-[1800px] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className={LABEL_DIALOG_CLS}>
         <DialogHeader>
           <DialogTitle>Pack Unit Label</DialogTitle>
         </DialogHeader>
@@ -1522,37 +1584,41 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
           onKeyDown={blockEnterSubmit}
           onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
-          <div className="space-y-4 overflow-y-auto px-2 py-1">
-          <div className="space-y-2">
-            <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
-            <Input
-              id="pack-so"
-              name="soNumber"
-              autoComplete="on"
-              value={soNumbers[0] ?? ""}
-              onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
-              className={cls(missing.has("so") && invalidCls)}
-            />
-            <div className="text-[10px] text-muted-foreground">Required unless Job Number is provided.</div>
+        <div className={LABEL_DIALOG_BODY_CLS}>
+          <div className={cls(LABEL_FORM_CLS, "space-y-4")}>
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="pack-so">SO Number {(!(jobNumbers[0] ?? "").trim()) && <Req />}</Label>
+                <Input
+                  id="pack-so"
+                  name="soNumber"
+                  autoComplete="on"
+                  value={soNumbers[0] ?? ""}
+                  onChange={(e) => { setSoNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
+                  className={cls(missing.has("so") && invalidCls)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
+                <Input
+                  id="pack-job"
+                  name="jobNumber"
+                  autoComplete="on"
+                  value={jobNumbers[0] ?? ""}
+                  onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
+                  className={cls(missing.has("job") && invalidCls)}
+                />
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground">Enter an SO Number, a Job Number, or both.</div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="pack-job">Job Number {(!(soNumbers[0] ?? "").trim()) && <Req />}</Label>
-            <Input
-              id="pack-job"
-              name="jobNumber"
-              autoComplete="on"
-              value={jobNumbers[0] ?? ""}
-              onChange={(e) => { setJobNumbers([e.target.value]); setMissing((s) => { const n = new Set(s); n.delete("so"); n.delete("job"); return n; }); }}
-              className={cls(missing.has("job") && invalidCls)}
-            />
-            <div className="text-[10px] text-muted-foreground">Required unless SO Number is provided.</div>
-          </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="proj-id">Project ID</Label>
             <Input id="proj-id" name="project" autoComplete="on" value={projectId} onChange={(e) => setProjectId(e.target.value)} />
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
             <Label>Unit Number</Label>
             <div className="flex items-center gap-2">
               <Input
@@ -1562,9 +1628,8 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 type="number"
                 value={unitX}
                 onChange={(e) => setUnitX(e.target.value)}
-                className="w-24"
               />
-              <span className="text-muted-foreground">out of</span>
+              <span className="text-muted-foreground text-sm shrink-0">of</span>
               <Input
                 name="unitTotal"
                 autoComplete="on"
@@ -1572,11 +1637,10 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 type="number"
                 value={unitN}
                 onChange={(e) => setUnitN(e.target.value)}
-                className="w-24"
               />
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Unit</Label>
             <Select value={unitSel} onValueChange={setUnitSel}>
               <SelectTrigger>
@@ -1591,8 +1655,10 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
               </SelectContent>
             </Select>
           </div>
+          </div>
           {size === "4x6" && (
-            <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
               <Label htmlFor="pack-date">Date (mm/dd)</Label>
               <div className="flex gap-2">
                 <Input
@@ -1624,9 +1690,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 </Popover>
               </div>
             </div>
-          )}
-          {size === "4x6" && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Area</Label>
               <Select value={area} onValueChange={setArea}>
                 <SelectTrigger>
@@ -1642,9 +1706,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 </SelectContent>
               </Select>
             </div>
-          )}
-          {size === "4x6" && (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Priority (optional)</Label>
               <Select value={priority || "__none"} onValueChange={(v) => setPriority(v === "__none" ? "" : v)}>
                 <SelectTrigger>
@@ -1657,6 +1719,7 @@ const PackUnitLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; op
                 </SelectContent>
               </Select>
             </div>
+          </div>
           )}
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
@@ -1800,7 +1863,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[94vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className={LABEL_DIALOG_CLS}>
         <DialogHeader>
           <DialogTitle>Status Note Label</DialogTitle>
         </DialogHeader>
@@ -1812,8 +1875,8 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           onKeyDown={blockEnterSubmit}
           onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
-          <div className="space-y-4 overflow-y-auto px-2 py-1">
+        <div className={LABEL_DIALOG_BODY_CLS}>
+          <div className={cls(LABEL_FORM_CLS, "space-y-4")}>
           <div className="space-y-2">
             <Label>Status <Req /></Label>
             <Select value={status} onValueChange={setStatus}>
@@ -1829,7 +1892,7 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
           </div>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason</Label>
-            <Textarea id="reason" name="reason" autoComplete="on" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Textarea id="reason" name="reason" autoComplete="on" rows={5} className="resize-none" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
           </div>
           <PreviewPane html={previewHtml} size={size} landscape={size === "2x4"} />
@@ -1893,7 +1956,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[94vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className={LABEL_DIALOG_CLS}>
         <DialogHeader>
           <DialogTitle>Misc Label</DialogTitle>
         </DialogHeader>
@@ -1905,8 +1968,8 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           onKeyDown={blockEnterSubmit}
           onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
-          <div className="space-y-2 overflow-y-auto px-2 py-1">
+        <div className={LABEL_DIALOG_BODY_CLS}>
+          <div className={cls(LABEL_FORM_CLS, "flex flex-col gap-2")}>
           <Label htmlFor="misc-text">Text <Req /></Label>
           <Textarea
             id="misc-text"
@@ -1914,7 +1977,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             autoComplete="on"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className={cls(missing.has("text") && invalidCls)}
+            className={cls("flex-1 min-h-[12rem] resize-none", missing.has("text") && invalidCls)}
           />
           {chunks.length > 1 && (
             <p className="text-xs text-muted-foreground">
@@ -1922,26 +1985,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
             </p>
           )}
           </div>
-          <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-              Live preview{previewDocs.length > 1 ? ` (${previewDocs.length} labels)` : ""}
-            </div>
-            <div className="flex-1 w-full overflow-y-auto flex flex-col items-center gap-4 py-1">
-              {previewDocs.map((html, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  {previewDocs.length > 1 && (
-                    <div className="text-[10px] text-muted-foreground font-semibold">
-                      Label {i + 1} of {previewDocs.length}
-                    </div>
-                  )}
-                  <LabelPreview html={html} size={size} landscape={size === "2x4"} fixedDisplayW={600} />
-                </div>
-              ))}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {size === "4x6" ? '4" × 6" (scaled)' : '2" × 4" (scaled)'}
-            </div>
-          </div>
+          <PreviewPane html={previewDocs} size={size} landscape={size === "2x4"} />
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
@@ -2077,7 +2121,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[94vw] max-w-[1600px] max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className={LABEL_DIALOG_CLS}>
         <DialogHeader>
           <DialogTitle>Inspection Label</DialogTitle>
         </DialogHeader>
@@ -2089,8 +2133,8 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
           onKeyDown={blockEnterSubmit}
           onSubmit={(e) => { e.preventDefault(); handlePrint(); }}
         >
-        <div className="grid grid-cols-[1fr_820px] gap-6 flex-1 overflow-hidden">
-          <div className="space-y-4 overflow-y-auto px-2 py-1">
+        <div className={LABEL_DIALOG_BODY_CLS}>
+          <div className={cls(LABEL_FORM_CLS, "space-y-4")}>
             <div className="space-y-2">
               <Label htmlFor="insp-rma">RMA #</Label>
               <Input id="insp-rma" name="rma" autoComplete="on" value={rma} onChange={(e) => setRma(e.target.value)} />
@@ -2129,13 +2173,7 @@ const InspectionLabelDialog = ({ open, onOpenChange }: { open: boolean; onOpenCh
             </div>
             <p className="text-xs text-muted-foreground">All fields are optional.</p>
           </div>
-          <div className="border-l border-border pl-4 flex flex-col items-center gap-2 h-full overflow-hidden">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">
-              Live preview
-            </div>
-            <LabelPreview html={html} size="4x6" />
-            <div className="text-[10px] text-muted-foreground">4" × 6" (scaled)</div>
-          </div>
+          <PreviewPane html={html} size="4x6" />
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>

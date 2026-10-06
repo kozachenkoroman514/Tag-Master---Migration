@@ -1,1 +1,0 @@
-UPDATE orders SET comments='[5/6] HOLD REMOVED' WHERE id='58cdc080-e1ae-4de9-b2f2-c64d660636b8';

@@ -83,7 +83,7 @@ async function printLabel(title: string, bodyHtml: string, size: LabelSize = "4x
   if (!win) return;
   const doc = buildGenericDoc(title, bodyHtml, size).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   win.document.write(doc);
   win.document.close();
@@ -138,7 +138,7 @@ async function printMiscMultiPage(title: string, bodies: string[], size: LabelSi
     )
     .replace(
       "</body></html>",
-      `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+      `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
     );
   win.document.write(doc);
   win.document.close();
@@ -369,9 +369,9 @@ const LabelsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       <AppSidebar />
-      <main className="flex-1 ml-[100px] p-6 space-y-6">
+      <main className="flex-1 ml-[100px] h-screen overflow-y-auto gold-scroll p-6 space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-bold tracking-tight">Labels</h1>
           <div className="flex items-center gap-3">
@@ -398,7 +398,13 @@ const LabelsPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Up to 3 columns; each tile stays >= 23rem (320px preview + padding), so the
+            grid drops to 2 then 1 column as the window narrows. min(100%, …) keeps a
+            single column from overflowing on very narrow windows. */}
+        <div
+          className="grid gap-6"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(max(min(100%, 23rem), calc((100% - 3rem) / 3)), 1fr))" }}
+        >
           {(
             [
               { kind: "part", label: "Part", Icon: PartIcon },
@@ -422,8 +428,8 @@ const LabelsPage = () => {
               <div
                 className={
                   size === "2x4"
-                    ? "w-72 h-36"
-                    : "w-80 h-80"
+                    ? "w-full max-w-72 aspect-[2/1]"
+                    : "w-full max-w-80 aspect-square"
                 }
               >
                 {size === "4x6" ? (
@@ -631,7 +637,7 @@ async function printPart4x6(parts: PartEntry[]) {
   const qrs = await computePartQrs(parts);
   const doc = buildPart4x6Doc(parts, qrs).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -808,7 +814,7 @@ async function printPart2x4(parts: PartEntry[]) {
   const qrs = await computePart2x4Qrs(rows);
   const doc = buildPart2x4Doc(rows, qrs).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1249,7 +1255,7 @@ async function printUnit4x6(opts: Unit4x6Opts) {
   ]);
   const doc = buildUnit4x6Doc({ ...opts, orderQr, jobQr, projectQr }).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1334,7 +1340,7 @@ async function printUnit2x4(opts: Unit2x4Opts) {
   ]);
   const doc = buildUnit2x4Doc({ ...opts, orderQr, projectQr }).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1699,7 +1705,7 @@ function buildStatusNote4x6Doc(status: string, reason: string): string {
 async function printStatusNote4x6(status: string, reason: string) {
   const doc = buildStatusNote4x6Doc(status, reason).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -1744,7 +1750,7 @@ function buildStatusNote2x4Doc(status: string, reason: string): string {
 async function printStatusNote2x4(status: string, reason: string) {
   const doc = buildStatusNote2x4Doc(status, reason).replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 200); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   const win = window.open("", "_blank", "width=800,height=600");
   if (!win) return;
@@ -2044,7 +2050,7 @@ function printHtmlDoc(html: string) {
   if (!win) return;
   const doc = html.replace(
     "</body></html>",
-    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });<\/script></body></html>`,
+    `<script>window.onload = () => { setTimeout(() => { window.print(); }, 150); }; window.addEventListener('afterprint', () => { window.close(); });</script></body></html>`,
   );
   win.document.write(doc);
   win.document.close();

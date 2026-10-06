@@ -79,7 +79,7 @@ const AppSidebar = () => {
         <div className="w-full h-px bg-gradient-to-r from-transparent via-ring/40 to-transparent mt-1" />
       </div>
 
-      <nav className="flex flex-col gap-2 w-full px-2 mt-1 flex-1 min-h-0 overflow-y-auto">
+      <nav className="flex flex-col gap-2 w-full px-2 mt-1 flex-1 min-h-0 overflow-y-auto sidebar-gold-scroll">
         {topItems.map(renderLink)}
 
         {(() => {

@@ -1,2 +1,0 @@
-ALTER TABLE public.bug_reports ADD COLUMN IF NOT EXISTS entry_kind text NOT NULL DEFAULT 'bug';
-ALTER TABLE public.bug_reports ADD CONSTRAINT bug_reports_entry_kind_check CHECK (entry_kind IN ('bug','change'));

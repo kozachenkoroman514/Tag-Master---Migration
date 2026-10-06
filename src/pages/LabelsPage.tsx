@@ -1911,6 +1911,8 @@ const StatusNoteLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; 
 const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: boolean; onOpenChange: (o: boolean) => void }) => {
   const [text, setText] = useState("");
   const [missing, setMissing] = useState<Set<string>>(new Set());
+  // "auto" or a point size from the current label size's ladder.
+  const [fontChoice, setFontChoice] = useState("auto");
 
   const buildBody = (t: string, fontPt: number) => `
       <div class="grow" style="display:flex;align-items:center;justify-content:center;">
@@ -1925,8 +1927,12 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const steps = size === "2x4" ? [22, 18, 15, 12, 10] : [36, 30, 24, 20, 16, 14, 12, 10];
   const capacityFor = (pt: number) => Math.floor(baseChars * (baseFont / pt) ** 2);
 
+  // A user-picked size is used as-is (never shrunk); text that doesn't fit at that
+  // size spills onto extra labels using the same capacity rule as Auto. A size not
+  // on this label size's ladder (e.g. 36pt after switching to 2x4) falls back to Auto.
+  const fixedPt = steps.includes(Number(fontChoice)) ? Number(fontChoice) : null;
   const len = text.trim().length;
-  const fontPt = steps.find((pt) => len <= capacityFor(pt)) ?? 10;
+  const fontPt = fixedPt ?? steps.find((pt) => len <= capacityFor(pt)) ?? 10;
   const maxChars = capacityFor(fontPt);
   const chunks = chunkMiscText(text, maxChars);
   const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c, fontPt), size));
@@ -1942,6 +1948,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
       await printMiscMultiPage("Misc Label", chunks.map((c) => buildBody(c, fontPt)), size);
     }
     setText("");
+    setFontChoice("auto");
     setMissing(new Set());
     onOpenChange(false);
   };
@@ -1949,6 +1956,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const handleClose = (val: boolean) => {
     if (!val) {
       setText("");
+      setFontChoice("auto");
       setMissing(new Set());
     }
     onOpenChange(val);
@@ -1970,7 +1978,23 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
         >
         <div className={LABEL_DIALOG_BODY_CLS}>
           <div className={cls(LABEL_FORM_CLS, "flex flex-col gap-2")}>
-          <Label htmlFor="misc-text">Text <Req /></Label>
+          <div className="flex items-end justify-between gap-3">
+            <Label htmlFor="misc-text">Text <Req /></Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="misc-font" className="text-xs text-muted-foreground">Font size</Label>
+              <Select value={fixedPt ? String(fixedPt) : "auto"} onValueChange={setFontChoice}>
+                <SelectTrigger id="misc-font" className="w-40 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto ({fixedPt ? "fit" : `${fontPt} pt`})</SelectItem>
+                  {steps.map((pt) => (
+                    <SelectItem key={pt} value={String(pt)}>{pt} pt</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Textarea
             id="misc-text"
             name="miscText"
@@ -1981,7 +2005,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
           />
           {chunks.length > 1 && (
             <p className="text-xs text-muted-foreground">
-              Text exceeds one label — will print {chunks.length} labels.
+              Text exceeds one label at {fontPt} pt — will print {chunks.length} labels.
             </p>
           )}
           </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import {
   Dialog,
@@ -110,6 +110,63 @@ function chunkMiscText(text: string, max: number): string[] {
     pushCur();
     let rest = tok;
     while (rest.length > max) { out.push(rest.slice(0, max)); rest = rest.slice(max); }
+    cur = rest;
+  }
+  pushCur();
+  return out.length ? out : [""];
+}
+
+// Hidden box matching a generic label's content area (label minus padding), styled like
+// the Misc text, used to measure what actually fits at a given font size.
+let miscMeasureEl: HTMLDivElement | null = null;
+function miscMeasureBox(size: LabelSize, fontPt: number): HTMLDivElement {
+  if (!miscMeasureEl) {
+    miscMeasureEl = document.createElement("div");
+    Object.assign(miscMeasureEl.style, {
+      position: "absolute", left: "-10000px", top: "0", visibility: "hidden", overflow: "hidden",
+      boxSizing: "border-box", whiteSpace: "pre-wrap", wordBreak: "break-word", textAlign: "center",
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontWeight: "800", lineHeight: "1.1",
+    });
+    document.body.appendChild(miscMeasureEl);
+  }
+  // Same dimensions as buildGenericDoc: 6x4in / 4x2in with 0.25in / 0.12in padding.
+  miscMeasureEl.style.width = size === "2x4" ? "3.76in" : "5.5in";
+  miscMeasureEl.style.height = size === "2x4" ? "1.76in" : "3.5in";
+  miscMeasureEl.style.fontSize = `${fontPt}pt`;
+  return miscMeasureEl;
+}
+
+// Same rule as chunkMiscText (fill each label, break at word boundaries, split words
+// that can't fit on one label), but decided by measuring the rendered text. Used for
+// user-picked sizes, where very large fonts make a character-count estimate unreliable.
+function chunkMiscTextMeasured(text: string, size: LabelSize, fontPt: number): string[] {
+  const t = text ?? "";
+  if (!t.trim()) return [""];
+  const box = miscMeasureBox(size, fontPt);
+  const fits = (s: string) => {
+    box.textContent = s.replace(/\s+$/, "");
+    return box.scrollHeight <= box.clientHeight && box.scrollWidth <= box.clientWidth;
+  };
+  const out: string[] = [];
+  let cur = "";
+  const pushCur = () => { if (cur.trim()) out.push(cur.replace(/\s+$/, "")); cur = ""; };
+  for (const tok of t.split(/(\s+)/)) {
+    if (!tok) continue;
+    if (fits(cur + tok)) { cur += tok; continue; }
+    if (/^\s+$/.test(tok)) { pushCur(); continue; }
+    pushCur();
+    let rest = tok;
+    // Word too big for a whole label: take the longest prefix that fits (at least 1 char).
+    while (!fits(rest)) {
+      let lo = 1, hi = rest.length - 1;
+      while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        if (fits(rest.slice(0, mid))) lo = mid; else hi = mid - 1;
+      }
+      out.push(rest.slice(0, lo));
+      rest = rest.slice(lo);
+    }
     cur = rest;
   }
   pushCur();
@@ -1927,14 +1984,22 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
   const steps = size === "2x4" ? [22, 18, 15, 12, 10] : [36, 30, 24, 20, 16, 14, 12, 10];
   const capacityFor = (pt: number) => Math.floor(baseChars * (baseFont / pt) ** 2);
 
-  // A user-picked size is used as-is (never shrunk); text that doesn't fit at that
-  // size spills onto extra labels using the same capacity rule as Auto. A size not
-  // on this label size's ladder (e.g. 36pt after switching to 2x4) falls back to Auto.
-  const fixedPt = steps.includes(Number(fontChoice)) ? Number(fontChoice) : null;
+  // Sizes the user can pick: large display sizes up to about one line filling the label's
+  // height, then the Auto ladder. A picked size is used as-is (never shrunk); text that
+  // doesn't fit spills onto extra labels, measured at that size. A size not offered for
+  // this label size (e.g. 200pt after switching to 2x4) falls back to Auto.
+  const pickSizes = size === "2x4"
+    ? [96, 72, 60, 48, 36, 28, ...steps]
+    : [200, 160, 120, 96, 72, 60, 48, ...steps];
+  const fixedPt = pickSizes.includes(Number(fontChoice)) ? Number(fontChoice) : null;
   const len = text.trim().length;
   const fontPt = fixedPt ?? steps.find((pt) => len <= capacityFor(pt)) ?? 10;
-  const maxChars = capacityFor(fontPt);
-  const chunks = chunkMiscText(text, maxChars);
+  const chunks = useMemo(
+    () => (fixedPt ? chunkMiscTextMeasured(text, size, fixedPt) : chunkMiscText(text, capacityFor(fontPt))),
+    // capacityFor only depends on size, which is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [text, size, fixedPt, fontPt],
+  );
   const previewDocs = chunks.map((c) => buildGenericDoc("Misc Label", buildBody(c, fontPt), size));
 
   const handlePrint = async () => {
@@ -1988,7 +2053,7 @@ const MiscLabelDialog = ({ size, open, onOpenChange }: { size: LabelSize; open: 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto ({fixedPt ? "fit" : `${fontPt} pt`})</SelectItem>
-                  {steps.map((pt) => (
+                  {pickSizes.map((pt) => (
                     <SelectItem key={pt} value={String(pt)}>{pt} pt</SelectItem>
                   ))}
                 </SelectContent>
